@@ -1,5 +1,5 @@
 // ============================================================
-// MAHASISWA — CRUD + IMPORT CSV + PREVIEW DOKUMEN + STATUS + SEARCH
+// MAHASISWA — CRUD + IMPORT CSV (UPSERT) + PREVIEW DOKUMEN + STATUS
 // ============================================================
 
 import { supabase } from './config.js';
@@ -12,7 +12,7 @@ let currentMhsId = null;
 let parsedData = [], validData = [], errorData = [];
 let filterStatus = 'semua';
 let searchQuery = '';
-let allMahasiswa = []; // cache data
+let allMahasiswa = [];
 
 // ============================================================
 // HELPER
@@ -53,12 +53,11 @@ export async function loadMahasiswa() {
 }
 
 // ============================================================
-// RENDER (dengan filter pencarian)
+// RENDER
 // ============================================================
 function renderMahasiswa() {
   const tbody = document.getElementById('tbodyMahasiswa');
   
-  // Filter berdasarkan search
   let filtered = allMahasiswa;
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase().trim();
@@ -101,10 +100,8 @@ function renderMahasiswa() {
     </tr>`;
   }).join('');
   
-  // Update counter — tampilkan "X dari Y"
   if (searchQuery.trim()) {
-    document.getElementById('totalMahasiswa').textContent = 
-      `${filtered.length} dari ${allMahasiswa.length} mahasiswa`;
+    document.getElementById('totalMahasiswa').textContent = `${filtered.length} dari ${allMahasiswa.length} mahasiswa`;
   } else {
     document.getElementById('totalMahasiswa').textContent = `${filtered.length} mahasiswa`;
   }
@@ -591,7 +588,7 @@ function validateDataMhs() {
     const errors = [];
     
     if (!row.nim) errors.push('NIM kosong');
-    if (row.nim && nimCount[row.nim] > 1) errors.push('NIM duplikat');
+    if (row.nim && nimCount[row.nim] > 1) errors.push('NIM duplikat dalam file');
     
     if (row.jenis_kelamin && !['L','P'].includes(row.jenis_kelamin)) {
       errors.push('JK harus L/P');
@@ -638,17 +635,20 @@ function validateDataMhs() {
   document.getElementById('btnImportCSV').disabled = validData.length === 0;
 }
 
+// ============================================================
+// PROSES IMPORT (UPSERT — NIM sebagai kunci)
+// ============================================================
 export async function prosesImportMhs() {
   if (validData.length === 0) return;
   
   const btn = document.getElementById('btnImportCSV');
   const alertBox = document.getElementById('importAlert');
   
-  if (!confirm(`Import ${validData.length} baris?`)) return;
+  if (!confirm(`Import ${validData.length} baris?\n\nNIM yang sudah ada akan diupdate (hanya kolom yang diisi).\nNIM baru akan ditambahkan.`)) return;
   
   btn.disabled = true;
   alertBox.innerHTML = '';
-  let sukses = 0, gagal = 0;
+  let baru = 0, update = 0, gagal = 0;
   const gagalDetail = [];
   
   for (let i = 0; i < validData.length; i++) {
@@ -656,48 +656,129 @@ export async function prosesImportMhs() {
     btn.textContent = `Import ${i + 1}/${validData.length}...`;
     
     try {
-      const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
-        nim: row.nim,
-        nama: row.nama || null,
-        jenis_kelamin: row.jenis_kelamin || null,
-        jenjang: row.jenjang || null,
-        fakultas: row.fakultas || null,
-        prodi: row.prodi || null,
-        tahun_masuk: row.tahun_masuk ? parseInt(row.tahun_masuk) : null,
-        warga_negara: row.warga_negara || null,
-        email_kampus: row.email_kampus || null,
-        keterangan: row.keterangan || null,
-        link_foto: row.link_foto || null,
-        status: row.status || 'Aktif'
-      }).select('id').single();
+      // Cek NIM sudah ada atau belum
+      const { data: existing } = await supabase
+        .from('mahasiswa')
+        .select('id')
+        .eq('nim', row.nim)
+        .maybeSingle();
       
-      if (err1) throw err1;
-      const mhsId = mhsResult.id;
-      
-      await supabase.from('mahasiswa_dokumen').insert({
-        mahasiswa_id: mhsId,
-        no_paspor: row.no_paspor || null, no_itas: row.no_itas || null,
-        no_stm: row.no_stm || null, no_sktt: row.no_sktt || null,
-        masa_berlaku_paspor: row.masa_berlaku_paspor || null,
-        masa_berlaku_itas: row.masa_berlaku_itas || null,
-        masa_berlaku_skj_stm: row.masa_berlaku_skj_stm || null,
-        masa_berlaku_sktt: row.masa_berlaku_sktt || null,
-        link_paspor: row.link_paspor || null, link_itas: row.link_itas || null,
-        link_stm: row.link_stm || null, link_sktt: row.link_sktt || null
-      });
-      
-      await supabase.from('mahasiswa_kontak').insert({
-        mahasiswa_id: mhsId,
-        tempat_lahir: row.tempat_lahir || null,
-        tanggal_lahir: row.tanggal_lahir || null,
-        alamat_sekarang: row.alamat_sekarang || null,
-        alamat_asal: row.alamat_asal || null,
-        telepon: row.telepon || null, hp: row.hp || null,
-        no_paketdata: row.no_paketdata || null,
-        email_pribadi: row.email_pribadi || null
-      });
-      
-      sukses++;
+      if (existing) {
+        // ===== UPDATE — hanya kolom yang ada isinya =====
+        const updatePayload = {};
+        
+        if (row.nama) updatePayload.nama = row.nama;
+        if (row.jenis_kelamin) updatePayload.jenis_kelamin = row.jenis_kelamin;
+        if (row.jenjang) updatePayload.jenjang = row.jenjang;
+        if (row.fakultas) updatePayload.fakultas = row.fakultas;
+        if (row.prodi) updatePayload.prodi = row.prodi;
+        if (row.tahun_masuk) updatePayload.tahun_masuk = parseInt(row.tahun_masuk);
+        if (row.warga_negara) updatePayload.warga_negara = row.warga_negara;
+        if (row.email_kampus) updatePayload.email_kampus = row.email_kampus;
+        if (row.keterangan) updatePayload.keterangan = row.keterangan;
+        if (row.link_foto) updatePayload.link_foto = row.link_foto;
+        if (row.status) updatePayload.status = row.status;
+        
+        // Update tabel mahasiswa (kalau ada yang berubah)
+        if (Object.keys(updatePayload).length > 0) {
+          const { error: err1 } = await supabase
+            .from('mahasiswa')
+            .update(updatePayload)
+            .eq('id', existing.id);
+          if (err1) throw err1;
+        }
+        
+        // Update / insert dokumen
+        const dokPayload = {};
+        if (row.no_paspor) dokPayload.no_paspor = row.no_paspor;
+        if (row.no_itas) dokPayload.no_itas = row.no_itas;
+        if (row.no_stm) dokPayload.no_stm = row.no_stm;
+        if (row.no_sktt) dokPayload.no_sktt = row.no_sktt;
+        if (row.masa_berlaku_paspor) dokPayload.masa_berlaku_paspor = row.masa_berlaku_paspor;
+        if (row.masa_berlaku_itas) dokPayload.masa_berlaku_itas = row.masa_berlaku_itas;
+        if (row.masa_berlaku_skj_stm) dokPayload.masa_berlaku_skj_stm = row.masa_berlaku_skj_stm;
+        if (row.masa_berlaku_sktt) dokPayload.masa_berlaku_sktt = row.masa_berlaku_sktt;
+        if (row.link_paspor) dokPayload.link_paspor = row.link_paspor;
+        if (row.link_itas) dokPayload.link_itas = row.link_itas;
+        if (row.link_stm) dokPayload.link_stm = row.link_stm;
+        if (row.link_sktt) dokPayload.link_sktt = row.link_sktt;
+        
+        if (Object.keys(dokPayload).length > 0) {
+          const { data: exDok } = await supabase.from('mahasiswa_dokumen').select('id').eq('mahasiswa_id', existing.id).maybeSingle();
+          if (exDok) {
+            await supabase.from('mahasiswa_dokumen').update(dokPayload).eq('mahasiswa_id', existing.id);
+          } else {
+            await supabase.from('mahasiswa_dokumen').insert({ mahasiswa_id: existing.id, ...dokPayload });
+          }
+        }
+        
+        // Update / insert kontak
+        const kontakPayload = {};
+        if (row.tempat_lahir) kontakPayload.tempat_lahir = row.tempat_lahir;
+        if (row.tanggal_lahir) kontakPayload.tanggal_lahir = row.tanggal_lahir;
+        if (row.alamat_sekarang) kontakPayload.alamat_sekarang = row.alamat_sekarang;
+        if (row.alamat_asal) kontakPayload.alamat_asal = row.alamat_asal;
+        if (row.telepon) kontakPayload.telepon = row.telepon;
+        if (row.hp) kontakPayload.hp = row.hp;
+        if (row.no_paketdata) kontakPayload.no_paketdata = row.no_paketdata;
+        if (row.email_pribadi) kontakPayload.email_pribadi = row.email_pribadi;
+        
+        if (Object.keys(kontakPayload).length > 0) {
+          const { data: exKontak } = await supabase.from('mahasiswa_kontak').select('id').eq('mahasiswa_id', existing.id).maybeSingle();
+          if (exKontak) {
+            await supabase.from('mahasiswa_kontak').update(kontakPayload).eq('mahasiswa_id', existing.id);
+          } else {
+            await supabase.from('mahasiswa_kontak').insert({ mahasiswa_id: existing.id, ...kontakPayload });
+          }
+        }
+        
+        update++;
+        
+      } else {
+        // ===== INSERT BARU =====
+        const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
+          nim: row.nim,
+          nama: row.nama || null,
+          jenis_kelamin: row.jenis_kelamin || null,
+          jenjang: row.jenjang || null,
+          fakultas: row.fakultas || null,
+          prodi: row.prodi || null,
+          tahun_masuk: row.tahun_masuk ? parseInt(row.tahun_masuk) : null,
+          warga_negara: row.warga_negara || null,
+          email_kampus: row.email_kampus || null,
+          keterangan: row.keterangan || null,
+          link_foto: row.link_foto || null,
+          status: row.status || 'Aktif'
+        }).select('id').single();
+        
+        if (err1) throw err1;
+        const mhsId = mhsResult.id;
+        
+        await supabase.from('mahasiswa_dokumen').insert({
+          mahasiswa_id: mhsId,
+          no_paspor: row.no_paspor || null, no_itas: row.no_itas || null,
+          no_stm: row.no_stm || null, no_sktt: row.no_sktt || null,
+          masa_berlaku_paspor: row.masa_berlaku_paspor || null,
+          masa_berlaku_itas: row.masa_berlaku_itas || null,
+          masa_berlaku_skj_stm: row.masa_berlaku_skj_stm || null,
+          masa_berlaku_sktt: row.masa_berlaku_sktt || null,
+          link_paspor: row.link_paspor || null, link_itas: row.link_itas || null,
+          link_stm: row.link_stm || null, link_sktt: row.link_sktt || null
+        });
+        
+        await supabase.from('mahasiswa_kontak').insert({
+          mahasiswa_id: mhsId,
+          tempat_lahir: row.tempat_lahir || null,
+          tanggal_lahir: row.tanggal_lahir || null,
+          alamat_sekarang: row.alamat_sekarang || null,
+          alamat_asal: row.alamat_asal || null,
+          telepon: row.telepon || null, hp: row.hp || null,
+          no_paketdata: row.no_paketdata || null,
+          email_pribadi: row.email_pribadi || null
+        });
+        
+        baru++;
+      }
     } catch (err) {
       gagal++;
       gagalDetail.push(`Baris ${row._lineNumber} (${row.nim}): ${err.message}`);
@@ -707,14 +788,21 @@ export async function prosesImportMhs() {
   btn.textContent = 'Import Data';
   btn.disabled = false;
   
-  let html = `<div class="alert alert-success"><strong>✅ Selesai!</strong><br>Berhasil: <strong>${sukses}</strong><br>Gagal: <strong>${gagal}</strong></div>`;
+  let html = `<div class="alert alert-success">
+    <strong>✅ Selesai!</strong><br>
+    Baru: <strong>${baru}</strong><br>
+    Update: <strong>${update}</strong><br>
+    Gagal: <strong>${gagal}</strong>
+  </div>`;
+  
   if (gagalDetail.length > 0) {
     html += `<div class="error-list">${gagalDetail.map(d => `<div>❌ ${d}</div>`).join('')}</div>`;
   }
-  alertBox.innerHTML = html;
   
+  alertBox.innerHTML = html;
   loadMahasiswa();
-  if (gagal === 0) setTimeout(() => closeModal('modalImportCSV'), 3000);
+  
+  if (gagal === 0) setTimeout(() => closeModal('modalImportCSV'), 4000);
 }
 
 export function setupMahasiswaDragDrop() {
