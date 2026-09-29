@@ -689,3 +689,51 @@ tr.clickable:hover td { background: #f0f9f6; }
   .nav-item span:not(.nav-icon) { display: none; }
   .nav-label { display: none; }
 }
+
+/* ============================================================
+   STATISTIK KERJASAMA
+   ============================================================ */
+.statistik-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-box {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding: 18px 16px;
+  text-align: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.stat-box .stat-num {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.stat-box .stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Warna angka per kategori */
+.stat-total .stat-num { color: #0a5c4a; }
+.stat-ongoing .stat-num { color: #1e7a4d; }
+.stat-berakhir .stat-num { color: #a03a2a; }
+.stat-mou .stat-num { color: #0a5c4a; }
+.stat-moa .stat-num { color: #d4a017; }
+.stat-ia .stat-num { color: #6b7280; }
+.stat-loi .stat-num { color: #8a6015; }
