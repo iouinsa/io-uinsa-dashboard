@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — International Office UINSA</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0a5c4a 0%, #084a3b 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 32px;
+  }
+  
+  .logo {
+    width: 64px;
+    height: 64px;
+    background: #0a5c4a;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0 auto 20px;
+  }
+  
+  h1 {
+    font-size: 22px;
+    text-align: center;
+    color: #1a2332;
+    margin-bottom: 6px;
+  }
+  
+  .subtitle {
+    font-size: 13px;
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 32px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a2332;
+    margin-bottom: 6px;
+  }
+  
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border 0.2s;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: #0a5c4a;
+    box-shadow: 0 0 0 3px rgba(10, 92, 74, 0.1);
+  }
+  
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #0a5c4a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+  
+  button:hover {
+    background: #084a3b;
+  }
+  
+  button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+  
+  .error {
+    background: #fadbd4;
+    color: #a03a2a;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  
+  .error.show {
+    display: block;
+  }
+  
+  .loading {
+    display: none;
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 12px;
+  }
+  
+  .loading.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo">IO</div>
+  <h1>International Office</h1>
+  <p class="subtitle">UIN Sunan Ampel Surabaya</p>
+  
+  <div class="error" id="errorMsg"></div>
+  
+  <form id="loginForm">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="nama@uinsa.ac.id" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    
+    <button type="submit" id="loginBtn">Masuk</button>
+    <div class="loading" id="loadingMsg">Memproses...</div>
+  </form>
+</div>
+
+<script type="module">
+  // ============================================================
+  // KONFIGURASI SUPABASE
+  // ============================================================
+  const SUPABASE_URL = 'https://kkxovkdrzhthalpchmfx.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtreG92a2Ryemh0aGFscGNobWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MjM1ODgsImV4cCI6MjEwNjE5OTU4OH0.PvLnlGIs6PEn-oUoDi25_szVJxdcGtQqftaLyonSfNA';
+  // ============================================================
+  
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  const form = document.getElementById('loginForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const loginBtn = document.getElementById('loginBtn');
+  const loadingMsg = document.getElementById('loadingMsg');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    errorMsg.classList.remove('show');
+    loginBtn.disabled = true;
+    loadingMsg.classList.add('show');
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    
+    if (error) {
+      errorMsg.textContent = 'Login gagal: ' + error.message;
+      errorMsg.classList.add('show');
+      loginBtn.disabled = false;
+      loadingMsg.classList.remove('show');
+      return;
+    }
+    
+    // Login berhasil
+    alert('Login berhasil! Selamat datang, ' + data.user.email);
+    // Nanti diarahkan ke dashboard
+  });
+</script>
+
+</body>
+</html>
