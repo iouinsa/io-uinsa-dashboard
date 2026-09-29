@@ -383,22 +383,7 @@ function renderPetaKerjasama(data) {
     });
   }
   
-  // Render keterangan di bawah peta
-  const keteranganEl = document.getElementById('keteranganNegara');
-  if (keteranganEl) {
-    keteranganList.sort((a, b) => b.jumlah - a.jumlah);
-    keteranganEl.innerHTML = keteranganList.map(k => `
-      <div class="negara-item">
-        <div class="negara-nama">${k.nama}</div>
-        <div class="negara-detail">
-          <strong>${k.jumlah}</strong> mitra
-          ${k.onGoing > 0 ? `<span class="dot-ongoing"></span> ${k.onGoing} on going` : ''}
-          ${k.berakhir > 0 ? `<span class="dot-berakhir"></span> ${k.berakhir} berakhir` : ''}
-          ${k.noCoord ? '<span style="color:#e67e22;"> ⚠ koordinat belum ada</span>' : ''}
-        </div>
-      </div>
-    `).join('');
-  }
+
 }
 
 // ============================================================
