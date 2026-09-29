@@ -1,5 +1,5 @@
 // ============================================================
-// KERJASAMA — CRUD + IMPORT CSV
+// KERJASAMA — CRUD + IMPORT CSV + PETA SEBARAN
 // ============================================================
 
 import { supabase } from './config.js';
@@ -7,6 +7,156 @@ import {
   formatTanggal, hitungStatusKerjasama, statusClassKerjasama,
   escapeAttr, parseCSVLine, showModal, closeModal, konfirmasi, setupDragDrop
 } from './utils.js';
+
+// ============================================================
+// KOORDINAT NEGARA (hardcoded — untuk peta)
+// ============================================================
+// Format: nama_negara: [lat, lng]
+// Nama harus huruf kecil semua, cocok dengan kolom `negara` di DB.
+const KOORDINAT_NEGARA = {
+  'malaysia': [4.2105, 101.9758],
+  'singapura': [1.3521, 103.8198],
+  'singapore': [1.3521, 103.8198],
+  'thailand': [15.8700, 100.9925],
+  'indonesia': [-0.7893, 113.9213],
+  'brunei': [4.5353, 114.7277],
+  'brunei darussalam': [4.5353, 114.7277],
+  'vietnam': [14.0583, 108.2772],
+  'filipina': [12.8797, 121.7740],
+  'philippines': [12.8797, 121.7740],
+  'myanmar': [21.9162, 95.9560],
+  'kamboja': [12.5657, 104.9910],
+  'cambodia': [12.5657, 104.9910],
+  'laos': [19.8563, 102.4955],
+  'timor leste': [-8.8742, 125.7275],
+  
+  'mesir': [26.8206, 30.8025],
+  'egypt': [26.8206, 30.8025],
+  'arab saudi': [23.8859, 45.0792],
+  'saudi arabia': [23.8859, 45.0792],
+  'uni emirat arab': [23.4241, 53.8478],
+  'uae': [23.4241, 53.8478],
+  'qatar': [25.3548, 51.1839],
+  'kuwait': [29.3117, 47.4818],
+  'bahrain': [25.9304, 50.6378],
+  'oman': [21.4735, 55.9754],
+  'yordania': [30.5852, 36.2384],
+  'jordan': [30.5852, 36.2384],
+  'lebanon': [33.8547, 35.8623],
+  'suriah': [34.8021, 38.9968],
+  'irak': [33.2232, 43.6793],
+  'iran': [32.4279, 53.6880],
+  'turki': [38.9637, 35.2433],
+  'turkey': [38.9637, 35.2433],
+  'maroko': [31.7917, -7.0926],
+  'morocco': [31.7917, -7.0926],
+  'aljazair': [28.0339, 1.6596],
+  'algeria': [28.0339, 1.6596],
+  'tunisia': [33.8869, 9.5375],
+  'libya': [26.3351, 17.2283],
+  'sudan': [12.8628, 30.2176],
+  'yaman': [15.5527, 48.5164],
+  'yemen': [15.5527, 48.5164],
+  'palestina': [31.9522, 35.2332],
+  'palestine': [31.9522, 35.2332],
+  
+  'inggris': [55.3781, -3.4360],
+  'uk': [55.3781, -3.4360],
+  'united kingdom': [55.3781, -3.4360],
+  'prancis': [46.2276, 2.2137],
+  'francis': [46.2276, 2.2137],
+  'france': [46.2276, 2.2137],
+  'jerman': [51.1657, 10.4515],
+  'germany': [51.1657, 10.4515],
+  'belanda': [52.1326, 5.2913],
+  'netherlands': [52.1326, 5.2913],
+  'belgia': [50.5039, 4.4699],
+  'belgium': [50.5039, 4.4699],
+  'spanyol': [40.4637, -3.7492],
+  'spain': [40.4637, -3.7492],
+  'italia': [41.8719, 12.5674],
+  'italy': [41.8719, 12.5674],
+  'portugal': [39.3999, -8.2245],
+  'swiss': [46.8182, 8.2275],
+  'switzerland': [46.8182, 8.2275],
+  'austria': [47.5162, 14.5501],
+  'swedia': [60.1282, 18.6435],
+  'sweden': [60.1282, 18.6435],
+  'norwegia': [60.4720, 8.4689],
+  'norway': [60.4720, 8.4689],
+  'denmark': [56.2639, 9.5018],
+  'finlandia': [61.9241, 25.7482],
+  'finland': [61.9241, 25.7482],
+  'irlandia': [53.1424, -7.6921],
+  'ireland': [53.1424, -7.6921],
+  'polandia': [51.9194, 19.1451],
+  'poland': [51.9194, 19.1451],
+  'rusia': [61.5240, 105.3188],
+  'russia': [61.5240, 105.3188],
+  'ukraina': [48.3794, 31.1656],
+  'ukraine': [48.3794, 31.1656],
+  'yunani': [39.0742, 21.8243],
+  'greece': [39.0742, 21.8243],
+  'cek': [49.8175, 15.4730],
+  'czech': [49.8175, 15.4730],
+  'hungaria': [47.1625, 19.5033],
+  'hungary': [47.1625, 19.5033],
+  'rumania': [45.9432, 24.9668],
+  'romania': [45.9432, 24.9668],
+  
+  'amerika serikat': [37.0902, -95.7129],
+  'usa': [37.0902, -95.7129],
+  'united states': [37.0902, -95.7129],
+  'kanada': [56.1304, -106.3468],
+  'canada': [56.1304, -106.3468],
+  'meksiko': [23.6345, -102.5528],
+  'mexico': [23.6345, -102.5528],
+  'brasil': [-14.2350, -51.9253],
+  'brazil': [-14.2350, -51.9253],
+  'argentina': [-38.4161, -63.6167],
+  'chile': [-35.6751, -71.5430],
+  'peru': [-9.1900, -75.0152],
+  'kolombia': [4.5709, -74.2973],
+  'colombia': [4.5709, -74.2973],
+  'venezuela': [6.4238, -66.5897],
+  
+  'china': [35.8617, 104.1954],
+  'tiongkok': [35.8617, 104.1954],
+  'jepang': [36.2048, 138.2529],
+  'japan': [36.2048, 138.2529],
+  'korea selatan': [35.9078, 127.7669],
+  'south korea': [35.9078, 127.7669],
+  'korea': [35.9078, 127.7669],
+  'korea utara': [40.3399, 127.5101],
+  'north korea': [40.3399, 127.5101],
+  'india': [20.5937, 78.9629],
+  'pakistan': [30.3753, 69.3451],
+  'bangladesh': [23.6850, 90.3563],
+  'sri lanka': [7.8731, 80.7718],
+  'nepal': [28.3949, 84.1240],
+  'afghanistan': [33.9391, 67.7100],
+  'uzbekistan': [41.3775, 64.5853],
+  'kazakhstan': [48.0196, 66.9237],
+  'taiwan': [23.6978, 120.9605],
+  'hong kong': [22.3193, 114.1694],
+  'maldives': [3.2028, 73.2207],
+  
+  'australia': [-25.2744, 133.7751],
+  'selandia baru': [-40.9006, 174.8860],
+  'new zealand': [-40.9006, 174.8860],
+  'fiji': [-17.7134, 178.0650],
+  
+  'afrika selatan': [-30.5595, 22.9375],
+  'south africa': [-30.5595, 22.9375],
+  'nigeria': [9.0820, 8.6753],
+  'kenya': [-0.0236, 37.9062],
+  'ethiopia': [9.1450, 40.4897],
+  'ghana': [7.9465, -1.0232],
+  'senegal': [14.4974, -14.4524],
+  'tanzania': [-6.3690, 34.8888],
+  'uganda': [1.3733, 32.2903],
+  'tunisia': [33.8869, 9.5375]
+};
 
 // ============================================================
 // LOAD DAFTAR KERJASAMA
@@ -24,6 +174,10 @@ export async function loadKerjasama() {
     tbody.innerHTML = `<tr><td colspan="7" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
     return;
   }
+  
+  // Render peta & statistik
+  renderStatistikKerjasama(data || []);
+  renderPetaKerjasama(data || []);
   
   if (!data || data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Belum ada data.</td></tr>';
@@ -48,6 +202,236 @@ export async function loadKerjasama() {
   }).join('');
   
   document.getElementById('totalKerjasama').textContent = `${data.length} kerja sama`;
+}
+
+// ============================================================
+// RENDER STATISTIK
+// ============================================================
+function renderStatistikKerjasama(data) {
+  const total = data.length;
+  let onGoing = 0, berakhir = 0;
+  let mou = 0, moa = 0, ia = 0, loi = 0;
+  
+  data.forEach(k => {
+    const status = hitungStatusKerjasama(k.tanggal_berakhir);
+    if (status === 'Aktif') onGoing++;
+    if (status === 'Berakhir') berakhir++;
+    
+    const jenis = (k.jenis || '').toUpperCase();
+    if (jenis === 'MOU') mou++;
+    else if (jenis === 'MOA') moa++;
+    else if (jenis === 'IA') ia++;
+    else if (jenis === 'LOI') loi++;
+  });
+  
+  const container = document.getElementById('statistikKerjasama');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="stat-box stat-total">
+      <div class="stat-num">${total}</div>
+      <div class="stat-label">Total Mitra</div>
+    </div>
+    <div class="stat-box stat-ongoing">
+      <div class="stat-num">${onGoing}</div>
+      <div class="stat-label">On Going</div>
+    </div>
+    <div class="stat-box stat-berakhir">
+      <div class="stat-num">${berakhir}</div>
+      <div class="stat-label">Berakhir</div>
+    </div>
+    <div class="stat-box stat-mou">
+      <div class="stat-num">${mou}</div>
+      <div class="stat-label">Dokumen MoU</div>
+    </div>
+    <div class="stat-box stat-moa">
+      <div class="stat-num">${moa}</div>
+      <div class="stat-label">Dokumen MoA</div>
+    </div>
+    <div class="stat-box stat-ia">
+      <div class="stat-num">${ia}</div>
+      <div class="stat-label">Dokumen IA</div>
+    </div>
+    <div class="stat-box stat-loi">
+      <div class="stat-num">${loi}</div>
+      <div class="stat-label">Dokumen LoI</div>
+    </div>
+  `;
+}
+
+// ============================================================
+// RENDER PETA SEBARAN
+// ============================================================
+let petaKerjasama = null;
+let layerGaris = null;
+let layerMarkers = null;
+
+function renderPetaKerjasama(data) {
+  const mapEl = document.getElementById('mapKerjasama');
+  if (!mapEl) return;
+  
+  // Inisialisasi peta sekali saja
+  if (!petaKerjasama) {
+    petaKerjasama = L.map('mapKerjasama', {
+      center: [-2, 80],
+      zoom: 3,
+      minZoom: 2,
+      maxZoom: 8,
+      scrollWheelZoom: true,
+      worldCopyJump: true
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(petaKerjasama);
+    
+    // Marker UINSA
+    L.marker([-7.3214, 112.7344], {
+      icon: L.divIcon({
+        className: 'uinsa-marker',
+        html: '<div style="background:#0a5c4a; color:white; padding:4px 8px; border-radius:6px; font-weight:700; font-size:12px; white-space:nowrap; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏛 UINSA</div>',
+        iconSize: [80, 30],
+        iconAnchor: [40, 15]
+      })
+    }).addTo(petaKerjasama).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong><br>Pusat kerja sama internasional');
+    
+    layerGaris = L.layerGroup().addTo(petaKerjasama);
+    layerMarkers = L.layerGroup().addTo(petaKerjasama);
+  }
+  
+  // Bersihkan layer lama
+  layerGaris.clearLayers();
+  layerMarkers.clearLayers();
+  
+  // Kelompokkan per negara
+  const negaraMap = {};
+  data.forEach(k => {
+    const negara = (k.negara || '').trim().toLowerCase();
+    if (!negara) return;
+    
+    if (!negaraMap[negara]) {
+      negaraMap[negara] = {
+        nama: k.negara,
+        mitra: [],
+        onGoing: 0,
+        berakhir: 0
+      };
+    }
+    
+    negaraMap[negara].mitra.push(k.kampus);
+    const status = hitungStatusKerjasama(k.tanggal_berakhir);
+    if (status === 'Aktif') negaraMap[negara].onGoing++;
+    if (status === 'Berakhir') negaraMap[negara].berakhir++;
+  });
+  
+  const UINSA_COORD = [-7.3214, 112.7344];
+  const keteranganList = [];
+  
+  // Untuk tiap negara, pasang marker + garis
+  for (const [key, info] of Object.entries(negaraMap)) {
+    const coords = KOORDINAT_NEGARA[key];
+    
+    if (!coords) {
+      keteranganList.push({ nama: info.nama, jumlah: info.mitra.length, onGoing: info.onGoing, berakhir: info.berakhir, noCoord: true });
+      continue;
+    }
+    
+    // Garis melengkung dari UINSA ke negara
+    const arc = getArcPoints(UINSA_COORD, coords);
+    L.polyline(arc, {
+      color: '#0a5c4a',
+      weight: 1.8,
+      opacity: 0.6,
+      dashArray: '4, 6'
+    }).addTo(layerGaris);
+    
+    // Marker negara
+    const marker = L.circleMarker(coords, {
+      radius: 7,
+      fillColor: info.onGoing > 0 ? '#0a5c4a' : '#c0392b',
+      color: 'white',
+      weight: 2,
+      fillOpacity: 0.9
+    }).addTo(layerMarkers);
+    
+    const popup = `
+      <div style="font-size:13px; min-width: 180px;">
+        <strong style="font-size:14px;">${info.nama}</strong><br>
+        <em style="color:#6b7280;">${info.mitra.length} mitra</em>
+        <div style="margin-top:6px; font-size:12px;">
+          ${info.onGoing > 0 ? `<span style="color:#1e7a4d;">● ${info.onGoing} on going</span><br>` : ''}
+          ${info.berakhir > 0 ? `<span style="color:#a03a2a;">● ${info.berakhir} berakhir</span>` : ''}
+        </div>
+        <hr style="margin:6px 0; border:none; border-top:1px solid #e2e8f0;">
+        <div style="font-size:11px; color:#6b7280;">
+          ${info.mitra.slice(0, 5).map(m => `• ${m}`).join('<br>')}
+          ${info.mitra.length > 5 ? `<br><em>... dan ${info.mitra.length - 5} lainnya</em>` : ''}
+        </div>
+      </div>
+    `;
+    
+    marker.bindPopup(popup);
+    marker.bindTooltip(info.nama, { direction: 'top', offset: [0, -8] });
+    
+    keteranganList.push({
+      nama: info.nama,
+      jumlah: info.mitra.length,
+      onGoing: info.onGoing,
+      berakhir: info.berakhir,
+      noCoord: false
+    });
+  }
+  
+  // Render keterangan di bawah peta
+  const keteranganEl = document.getElementById('keteranganNegara');
+  if (keteranganEl) {
+    keteranganList.sort((a, b) => b.jumlah - a.jumlah);
+    keteranganEl.innerHTML = keteranganList.map(k => `
+      <div class="negara-item">
+        <div class="negara-nama">${k.nama}</div>
+        <div class="negara-detail">
+          <strong>${k.jumlah}</strong> mitra
+          ${k.onGoing > 0 ? `<span class="dot-ongoing"></span> ${k.onGoing} on going` : ''}
+          ${k.berakhir > 0 ? `<span class="dot-berakhir"></span> ${k.berakhir} berakhir` : ''}
+          ${k.noCoord ? '<span style="color:#e67e22;"> ⚠ koordinat belum ada</span>' : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ============================================================
+// HITUNG TITIK LENGKUNG (Arc) ANTARA 2 KOORDINAT
+// ============================================================
+function getArcPoints(start, end, numPoints = 40) {
+  const points = [];
+  const [lat1, lng1] = start;
+  const [lat2, lng2] = end;
+  
+  // Titik tengah + offset ke atas untuk efek melengkung
+  const midLat = (lat1 + lat2) / 2;
+  const midLng = (lng1 + lng2) / 2;
+  
+  // Jarak antar titik
+  const dist = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
+  
+  // Offset lengkungan (makin jauh, makin melengkung)
+  const offset = dist * 0.25;
+  
+  // Titik kontrol (control point) — di atas titik tengah
+  const ctrlLat = midLat + offset;
+  const ctrlLng = midLng;
+  
+  // Quadratic Bezier Curve
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints;
+    const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
+    const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * ctrlLng + t * t * lng2;
+    points.push([lat, lng]);
+  }
+  
+  return points;
 }
 
 // ============================================================
@@ -144,9 +528,6 @@ const KJS_LABELS = {
   jenis:'Jenis', link_dokumen:'Link Dokumen'
 };
 
-// ============================================================
-// BUKA MODAL IMPORT
-// ============================================================
 export function openImportKerjasama() {
   parsedKjs = []; validKjs = []; errorKjs = [];
   document.getElementById('fileCSVKjs').value = '';
@@ -157,9 +538,6 @@ export function openImportKerjasama() {
   showModal('modalImportKerjasama');
 }
 
-// ============================================================
-// DOWNLOAD TEMPLATE
-// ============================================================
 export function downloadTemplateKjs() {
   const header = KJS_COLUMNS.map(c => KJS_LABELS[c]).join(',');
   const contoh = [
@@ -175,9 +553,6 @@ export function downloadTemplateKjs() {
   link.click();
 }
 
-// ============================================================
-// HANDLE FILE SELECT
-// ============================================================
 export function handleFileSelectKjs(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -191,9 +566,6 @@ export function handleFileSelectKjs(event) {
   reader.readAsText(file, 'UTF-8');
 }
 
-// ============================================================
-// PARSE CSV
-// ============================================================
 function parseCSVKjs(text) {
   text = text.replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/).filter(l => l.trim());
@@ -219,9 +591,6 @@ function parseCSVKjs(text) {
   validateKjs();
 }
 
-// ============================================================
-// VALIDASI
-// ============================================================
 function validateKjs() {
   validKjs = []; errorKjs = [];
   
@@ -267,9 +636,6 @@ function validateKjs() {
   document.getElementById('btnImportKjs').disabled = validKjs.length === 0;
 }
 
-// ============================================================
-// PROSES IMPORT
-// ============================================================
 export async function prosesImportKjs() {
   if (validKjs.length === 0) return;
   
@@ -319,22 +685,4 @@ export async function prosesImportKjs() {
   if (gagal === 0) setTimeout(() => closeModal('modalImportKerjasama'), 3000);
 }
 
-// ============================================================
-// SETUP DRAG & DROP
-// ============================================================
-export function setupKerjasamaDragDrop() {
-  setupDragDrop('importAreaKjs', 'fileCSVKjs', handleFileSelectKjs);
-}
-
-// ============================================================
-// EXPOSE KE WINDOW
-// ============================================================
-window.loadKerjasama = loadKerjasama;
-window.openTambahKerjasama = openTambahKerjasama;
-window.editKerjasama = editKerjasama;
-window.simpanKerjasama = simpanKerjasama;
-window.hapusKerjasama = hapusKerjasama;
-window.openImportKerjasama = openImportKerjasama;
-window.downloadTemplateKjs = downloadTemplateKjs;
-window.handleFileSelectKjs = handleFileSelectKjs;
-window.prosesImportKjs = prosesImportKjs;
+export function setupKerjasama
