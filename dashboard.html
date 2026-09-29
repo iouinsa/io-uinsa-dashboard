@@ -1,52 +1,408 @@
-/* ============================================================
-   FILTER STATUS MAHASISWA
-   ============================================================ */
-.filter-bar {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — International Office UINSA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
 
-.filter-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #6b7280;
-  margin-right: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">IO</div>
+    <div class="brand-text">
+      <h1>International Office</h1>
+      <p>UIN Sunan Ampel Surabaya</p>
+    </div>
+  </div>
+  <div class="user-info">
+    <div class="avatar" id="avatar">?</div>
+    <span class="user-email" id="userEmail">Memuat...</span>
+    <button class="btn-logout" id="btnLogout">Keluar</button>
+  </div>
+</div>
 
-.filter-status-btn {
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #6b7280;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-label">Menu Utama</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" data-page="mahasiswa"><span class="nav-icon">👥</span> Mahasiswa</div>
+    <div class="nav-item" data-page="kerjasama"><span class="nav-icon">🤝</span> Kerjasama</div>
+    <div class="nav-item" data-page="tempat_tinggal"><span class="nav-icon">🏠</span> Tempat Tinggal</div>
+    <div class="nav-label">Pengaturan</div>
+    <div class="nav-item" data-page="penerima"><span class="nav-icon">📧</span> Penerima Email</div>
+  </aside>
+  
+  <main class="main">
+    
+    <div class="page-view active" id="page-dashboard">
+      <div class="page-header"><div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Dashboard International Office UINSA</p></div></div>
+      <div class="welcome-box">Pilih menu di sidebar untuk mulai menjelajah.</div>
+    </div>
+    
+    <div class="page-view" id="page-mahasiswa">
+      <div class="page-header">
+        <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline" onclick="openImportCSV()">📥 Import CSV</button>
+          <button class="btn btn-primary" onclick="openTambahMahasiswa()">+ Tambah Mahasiswa</button>
+        </div>
+      </div>
+      
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-status-btn active" data-status="semua" onclick="setFilterStatus('semua')">Semua</button>
+        <button class="filter-status-btn" data-status="Aktif" onclick="setFilterStatus('Aktif')">Aktif</button>
+        <button class="filter-status-btn" data-status="Alumni" onclick="setFilterStatus('Alumni')">Alumni</button>
+        <button class="filter-status-btn" data-status="Cuti" onclick="setFilterStatus('Cuti')">Cuti</button>
+        <button class="filter-status-btn" data-status="Keluar" onclick="setFilterStatus('Keluar')">Keluar</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h3>Daftar Mahasiswa</h3><span id="totalMahasiswa" class="count-label"></span></div>
+        <table>
+          <thead><tr><th style="width:60px;">Foto</th><th>NIM</th><th>Nama</th><th>Negara</th><th>Fakultas</th><th>Prodi</th><th>Angkatan</th><th>Status</th></tr></thead>
+          <tbody id="tbodyMahasiswa"><tr class="loading-row"><td colspan="8">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="page-view" id="page-kerjasama">
+      <div class="page-header">
+        <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline" onclick="openImportKerjasama()">📥 Import CSV</button>
+          <button class="btn btn-primary" onclick="openTambahKerjasama()">+ Tambah Kerjasama</button>
+        </div>
+      </div>
+      
+      <div class="statistik-grid" id="statistikKerjasama">
+        <div class="stat-box"><div class="stat-num">—</div><div class="stat-label">Memuat...</div></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h3>🗺️ Peta Sebaran Kerjasama Internasional</h3></div>
+        <div id="mapKerjasama" style="height: 450px; z-index: 1;"></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h3>Daftar Kerjasama</h3><span id="totalKerjasama" class="count-label"></span></div>
+        <table>
+          <thead><tr><th>Kampus</th><th>Negara</th><th>Jenis</th><th>Mulai</th><th>Berakhir</th><th>Status</th><th style="width:100px;">Dokumen</th><th style="width:120px;">Aksi</th></tr></thead>
+          <tbody id="tbodyKerjasama"><tr class="loading-row"><td colspan="8">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="page-view" id="page-tempat_tinggal">
+      <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & kamar mahad</p></div></div>
+      <div class="card">
+        <div class="card-header"><h3>🗺️ Peta Sebaran Mahasiswa</h3><span id="totalAlamat" class="count-label"></span></div>
+        <div id="map"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>🏠 Kamar Mahad (10 Kamar × 4 Orang)</h3><span id="totalKamar" class="count-label"></span></div>
+        <div class="kamar-grid" id="kamarGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>🏘️ Kos / Apartemen / Lainnya</h3><span id="totalNonMahad" class="count-label"></span></div>
+        <table>
+          <thead><tr><th>Nama</th><th>Jenis</th><th>Alamat</th><th>Pemilik</th><th>Status</th></tr></thead>
+          <tbody id="tbodyNonMahad"><tr><td colspan="5" class="empty-row">Belum ada data.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="page-view" id="page-penerima">
+      <div class="page-header">
+        <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
+        <button class="btn btn-primary" onclick="openTambahPenerima()">+ Tambah Penerima</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Daftar Penerima</h3><span id="totalPenerima" class="count-label"></span></div>
+        <table>
+          <thead><tr><th>Nama</th><th>Jabatan</th><th>Email</th><th>Kategori</th><th>Status</th><th style="width:160px;">Aksi</th></tr></thead>
+          <tbody id="tbodyPenerima"><tr class="loading-row"><td colspan="6">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    
+  </main>
+</div>
 
-.filter-status-btn:hover {
-  background: #f4f6f8;
-  color: #1a2332;
-}
+<!-- MODAL: PREVIEW DOKUMEN -->
+<div class="modal-overlay" id="modalPreviewDokumen">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h3 id="previewTitle">Preview Dokumen</h3>
+      <button class="modal-close" onclick="closePreviewDokumen()">&times;</button>
+    </div>
+    <div class="modal-body pdf-modal-body">
+      <iframe id="previewIframe" src="about:blank" allow="autoplay"></iframe>
+      <div class="pdf-fallback" id="previewFallback">
+        <div class="icon">📄</div>
+        <h3>Preview tidak tersedia</h3>
+        <p>Dokumen ini tidak bisa ditampilkan langsung di dashboard.<br>Klik tombol di bawah untuk membukanya di Google Drive.</p>
+        <a id="previewOpenBtn" href="#" target="_blank" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🔗 Buka di Google Drive</a>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a id="previewOpenBtnFooter" href="#" target="_blank" class="btn btn-outline" style="text-decoration:none; display:inline-block;">🔗 Buka di Drive</a>
+      <button class="btn btn-primary" onclick="closePreviewDokumen()">Tutup</button>
+    </div>
+  </div>
+</div>
 
-.filter-status-btn.active {
-  background: #0a5c4a;
-  color: white;
-  border-color: #0a5c4a;
-}
+<!-- MODAL: DETAIL MAHASISWA -->
+<div class="modal-overlay" id="modalDetailMahasiswa">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Detail Mahasiswa</h3><button class="modal-close" onclick="closeModal('modalDetailMahasiswa')">&times;</button></div>
+    <div class="modal-body" id="detailBody"><div class="loading-text">Memuat data...</div></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="hapusMahasiswa()">🗑 Hapus</button>
+      <button class="btn btn-outline" onclick="closeModal('modalDetailMahasiswa')">Tutup</button>
+      <button class="btn btn-primary" onclick="openEditMahasiswa()">✏️ Edit</button>
+    </div>
+  </div>
+</div>
 
-/* Tag warna untuk status */
-.tag-mou {
-  background: #dbeafe;
-  color: #1e40af;
-}
+<!-- MODAL: FORM MAHASISWA -->
+<div class="modal-overlay" id="modalFormMahasiswa">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="formMhsTitle">Tambah Mahasiswa</h3><button class="modal-close" onclick="closeModal('modalFormMahasiswa')">&times;</button></div>
+    <div class="modal-body">
+      <div id="modalAlert"></div>
+      <form id="formMahasiswa">
+        <input type="hidden" name="id_mahasiswa" id="id_mahasiswa">
+        <div class="form-section"><h4>Identitas Mahasiswa</h4>
+          <div class="form-row">
+            <div class="form-group"><label>NIM <span class="req">*</span></label><input type="text" name="nim" required></div>
+            <div class="form-group"><label>Nama Lengkap <span class="req">*</span></label><input type="text" name="nama" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Jenis Kelamin</label><select name="jenis_kelamin"><option value="">— Pilih —</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+            <div class="form-group"><label>Jenjang</label><select name="jenjang"><option value="">— Pilih —</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Fakultas <span class="req">*</span></label><input type="text" name="fakultas" required></div>
+            <div class="form-group"><label>Prodi <span class="req">*</span></label><input type="text" name="prodi" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Tahun Masuk</label><input type="number" name="tahun_masuk" placeholder="2024"></div>
+            <div class="form-group"><label>Status</label>
+              <select name="status">
+                <option value="Aktif">Aktif</option>
+                <option value="Alumni">Alumni</option>
+                <option value="Cuti">Cuti</option>
+                <option value="Keluar">Keluar</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Warga Negara</label><input type="text" name="warga_negara"></div>
+            <div class="form-group"><label>Email Kampus</label><input type="email" name="email_kampus"></div>
+          </div>
+          <div class="form-row"><div class="form-group full"><label>Link Foto Profil (Google Drive)</label><input type="url" name="link_foto"></div></div>
+          <div class="form-row"><div class="form-group full"><label>Keterangan</label><textarea name="keterangan" rows="2"></textarea></div></div>
+        </div>
+        <div class="form-section"><h4>Dokumen Imigrasi</h4>
+          <div class="form-row">
+            <div class="form-group"><label>No. Paspor</label><input type="text" name="no_paspor"></div>
+            <div class="form-group"><label>No. ITAS</label><input type="text" name="no_itas"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>No. STM</label><input type="text" name="no_stm"></div>
+            <div class="form-group"><label>No. SKTT</label><input type="text" name="no_sktt"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Masa Berlaku Paspor</label><input type="date" name="masa_berlaku_paspor"></div>
+            <div class="form-group"><label>Masa Berlaku ITAS</label><input type="date" name="masa_berlaku_itas"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Masa Berlaku SKJ/STM</label><input type="date" name="masa_berlaku_skj_stm"></div>
+            <div class="form-group"><label>Masa Berlaku SKTT</label><input type="date" name="masa_berlaku_sktt"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Link Foto Paspor</label><input type="url" name="link_paspor"></div>
+            <div class="form-group"><label>Link Foto ITAS</label><input type="url" name="link_itas"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Link Foto STM</label><input type="url" name="link_stm"></div>
+            <div class="form-group"><label>Link Foto SKTT</label><input type="url" name="link_sktt"></div>
+          </div>
+        </div>
+        <div class="form-section"><h4>Kontak & Alamat</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Tempat Lahir</label><input type="text" name="tempat_lahir"></div>
+            <div class="form-group"><label>Tanggal Lahir</label><input type="date" name="tanggal_lahir"></div>
+          </div>
+          <div class="form-row"><div class="form-group full"><label>Alamat Sekarang</label><textarea name="alamat_sekarang" rows="2"></textarea></div></div>
+          <div class="form-row"><div class="form-group full"><label>Alamat Asal</label><textarea name="alamat_asal" rows="2"></textarea></div></div>
+          <div class="form-row">
+            <div class="form-group"><label>Telepon</label><input type="text" name="telepon"></div>
+            <div class="form-group"><label>HP / WhatsApp</label><input type="text" name="hp"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>No. Paket Data</label><input type="text" name="no_paketdata"></div>
+            <div class="form-group"><label>Email Pribadi</label><input type="email" name="email_pribadi"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalFormMahasiswa')">Batal</button>
+      <button class="btn btn-primary" id="btnSimpanMahasiswa" onclick="simpanMahasiswa()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT CSV MAHASISWA -->
+<div class="modal-overlay" id="modalImportCSV">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Import Data Mahasiswa dari CSV</h3><button class="modal-close" onclick="closeModal('modalImportCSV')">&times;</button></div>
+    <div class="modal-body">
+      <div id="importAlert"></div>
+      <div class="alert alert-info"><strong>📋 Langkah 1:</strong> Download template CSV, isi data, simpan sebagai CSV.<br><br>
+        <button class="btn btn-outline" onclick="downloadTemplateMhs()">📥 Download Template CSV</button>
+      </div>
+      <div class="form-section"><h4>Langkah 2: Upload File CSV</h4>
+        <div class="import-area" id="importArea" onclick="document.getElementById('fileCSV').click()">
+          <div class="icon">📁</div><h4>Klik untuk pilih file, atau drag & drop</h4><p>Format: .csv</p>
+          <input type="file" id="fileCSV" accept=".csv" onchange="handleFileSelect(event)">
+        </div>
+        <div id="fileInfo" class="file-info-box"></div>
+      </div>
+      <div id="previewSection" style="display:none;">
+        <div class="form-section"><h4>Preview & Validasi</h4>
+          <div class="import-summary">
+            <div class="summary-card"><div class="num" id="sumTotal">0</div><div class="label">Total</div></div>
+            <div class="summary-card ok"><div class="num" id="sumValid">0</div><div class="label">Valid</div></div>
+            <div class="summary-card err"><div class="num" id="sumError">0</div><div class="label">Error</div></div>
+          </div>
+          <div id="errorSection" style="display:none;"><div class="error-list" id="errorList"></div></div>
+          <div class="preview-table" id="previewTable"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalImportCSV')">Batal</button>
+      <button class="btn btn-primary" id="btnImportCSV" onclick="prosesImportMhs()" disabled>Import Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FORM KERJASAMA -->
+<div class="modal-overlay" id="modalFormKerjasama">
+  <div class="modal">
+    <div class="modal-header"><h3 id="formKjsTitle">Tambah Kerjasama</h3><button class="modal-close" onclick="closeModal('modalFormKerjasama')">&times;</button></div>
+    <div class="modal-body">
+      <div id="modalAlertKjs"></div>
+      <form id="formKerjasama">
+        <input type="hidden" name="id_kerjasama" id="id_kerjasama">
+        <div class="form-row">
+          <div class="form-group"><label>Kampus <span class="req">*</span></label><input type="text" name="kampus" required></div>
+          <div class="form-group"><label>Negara</label><input type="text" name="negara"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Unit Fakultas</label><input type="text" name="unit_fakultas"></div>
+          <div class="form-group"><label>Jenis</label>
+            <select name="jenis">
+              <option value="">— Pilih —</option>
+              <option value="MoU">MoU</option>
+              <option value="MoA">MoA</option>
+              <option value="LoI">LoI</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Tanggal Mulai</label><input type="date" name="tanggal_mulai"></div>
+          <div class="form-group"><label>Tanggal Berakhir</label><input type="date" name="tanggal_berakhir"></div>
+        </div>
+        <div class="form-row"><div class="form-group full"><label>Link Dokumen</label><input type="url" name="link_dokumen"></div></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalFormKerjasama')">Batal</button>
+      <button class="btn btn-primary" id="btnSimpanKjs" onclick="simpanKerjasama()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT KERJASAMA -->
+<div class="modal-overlay" id="modalImportKerjasama">
+  <div class="modal">
+    <div class="modal-header"><h3>Import Data Kerjasama dari CSV</h3><button class="modal-close" onclick="closeModal('modalImportKerjasama')">&times;</button></div>
+    <div class="modal-body">
+      <div id="importKjsAlert"></div>
+      <div class="alert alert-info"><strong>📋 Langkah 1:</strong> Download template CSV.<br><br>
+        <button class="btn btn-outline" onclick="downloadTemplateKjs()">📥 Download Template CSV</button>
+      </div>
+      <div class="form-section"><h4>Langkah 2: Upload File CSV</h4>
+        <div class="import-area" id="importAreaKjs" onclick="document.getElementById('fileCSVKjs').click()">
+          <div class="icon">📁</div><h4>Klik untuk pilih file, atau drag & drop</h4><p>Format: .csv</p>
+          <input type="file" id="fileCSVKjs" accept=".csv" onchange="handleFileSelectKjs(event)">
+        </div>
+        <div id="fileInfoKjs" class="file-info-box"></div>
+      </div>
+      <div id="previewSectionKjs" style="display:none;">
+        <div class="form-section"><h4>Preview & Validasi</h4>
+          <div class="import-summary">
+            <div class="summary-card"><div class="num" id="sumTotalKjs">0</div><div class="label">Total</div></div>
+            <div class="summary-card ok"><div class="num" id="sumValidKjs">0</div><div class="label">Valid</div></div>
+            <div class="summary-card err"><div class="num" id="sumErrorKjs">0</div><div class="label">Error</div></div>
+          </div>
+          <div id="errorSectionKjs" style="display:none;"><div class="error-list" id="errorListKjs"></div></div>
+          <div class="preview-table" id="previewTableKjs"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalImportKerjasama')">Batal</button>
+      <button class="btn btn-primary" id="btnImportKjs" onclick="prosesImportKjs()" disabled>Import Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FORM PENERIMA -->
+<div class="modal-overlay" id="modalFormPenerima">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3 id="formPenerimaTitle">Tambah Penerima</h3><button class="modal-close" onclick="closeModal('modalFormPenerima')">&times;</button></div>
+    <div class="modal-body">
+      <div id="modalAlertPenerima"></div>
+      <form id="formPenerima">
+        <input type="hidden" name="id_penerima" id="id_penerima">
+        <div class="form-row"><div class="form-group full"><label>Nama <span class="req">*</span></label><input type="text" name="nama" required></div></div>
+        <div class="form-row"><div class="form-group full"><label>Jabatan</label><input type="text" name="jabatan"></div></div>
+        <div class="form-row"><div class="form-group full"><label>Email <span class="req">*</span></label><input type="email" name="email" required></div></div>
+        <div class="form-row"><div class="form-group full"><label>Kategori</label>
+          <select name="kategori"><option value="semua">Semua reminder</option><option value="visa">Visa/ITAS</option><option value="kerjasama">Kerjasama</option><option value="mahasiswa_baru">Mahasiswa baru</option></select>
+        </div></div>
+        <div class="form-row"><div class="form-group full"><label class="checkbox-label"><input type="checkbox" name="aktif" checked> Aktif (terima email)</label></div></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalFormPenerima')">Batal</button>
+      <button class="btn btn-primary" id="btnSimpanPenerima" onclick="simpanPenerima()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: KONFIRMASI -->
+<div class="modal-overlay" id="modalKonfirmasi">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3>Konfirmasi Hapus</h3><button class="modal-close" onclick="closeModal('modalKonfirmasi')">&times;</button></div>
+    <div class="modal-body"><p id="konfirmasiText">Yakin ingin menghapus data ini?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalKonfirmasi')">Batal</button>
+      <button class="btn btn-danger" id="btnKonfirmasiHapus">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
