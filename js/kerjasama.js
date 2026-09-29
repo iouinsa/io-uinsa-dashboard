@@ -685,4 +685,19 @@ export async function prosesImportKjs() {
   if (gagal === 0) setTimeout(() => closeModal('modalImportKerjasama'), 3000);
 }
 
-export function setupKerjasama
+export function setupKerjasamaDragDrop() {
+  setupDragDrop('importAreaKjs', 'fileCSVKjs', handleFileSelectKjs);
+}
+
+// ============================================================
+// EXPOSE KE WINDOW
+// ============================================================
+window.loadKerjasama = loadKerjasama;
+window.openTambahKerjasama = openTambahKerjasama;
+window.editKerjasama = editKerjasama;
+window.simpanKerjasama = simpanKerjasama;
+window.hapusKerjasama = hapusKerjasama;
+window.openImportKerjasama = openImportKerjasama;
+window.downloadTemplateKjs = downloadTemplateKjs;
+window.handleFileSelectKjs = handleFileSelectKjs;
+window.prosesImportKjs = prosesImportKjs;
