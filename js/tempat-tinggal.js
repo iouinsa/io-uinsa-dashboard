@@ -28,7 +28,7 @@ export async function loadTempatTinggal() {
 }
 
 // ============================================================
-// INISIALISASI PETA
+// INISIALISASI PETA (tanpa marker — marker dibuat di loadPetaMahasiswa)
 // ============================================================
 function initMap() {
   if (map) return;
@@ -39,15 +39,6 @@ function initMap() {
     attribution: '© OpenStreetMap',
     maxZoom: 19
   }).addTo(map);
-  
-  L.marker([UINSA_LAT, UINSA_LNG], {
-    icon: L.divIcon({
-      className: 'uinsa-marker',
-      html: '<div style="background:#0a5c4a; color:white; padding:4px 8px; border-radius:6px; font-weight:700; font-size:12px; white-space:nowrap; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏛 UINSA</div>',
-      iconSize: [80, 30],
-      iconAnchor: [40, 15]
-    })
-  }).addTo(map).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong>');
 }
 
 // ============================================================
@@ -128,20 +119,19 @@ async function loadKamarMahad() {
 }
 
 // ============================================================
-// PETA — MARKER DARI ALAMAT MAHASISWA
+// PETA — MARKER DARI ALAMAT MAHASISWA + MARKER UINSA
 // ============================================================
 async function loadPetaMahasiswa() {
   mapMarkers.forEach(m => map.removeLayer(m));
   mapMarkers = [];
   
-  // Query: ambil jenis_tinggal & no_kamar juga
   const { data, error } = await supabase
     .from('mahasiswa_kontak')
     .select('alamat_sekarang, mahasiswa:mahasiswa_id (nama, nim, fakultas, jenis_tinggal, no_kamar)');
   
   if (error || !data) return;
   
-  // Kelompokkan per alamat unik + pisahkan mahasiswa mahad
+  // Kelompokkan
   const alamatMap = {};
   const mahadList = [];
   
@@ -150,13 +140,13 @@ async function loadPetaMahasiswa() {
     
     const mhs = d.mahasiswa;
     
-    // Kalau mahad → masuk list mahad (nanti taruh di UINSA)
+    // Mahasiswa mahad → masuk list mahad
     if (mhs.jenis_tinggal === 'Mahad') {
       mahadList.push(mhs);
       return;
     }
     
-    // Kalau bukan mahad → butuh alamat
+    // Bukan mahad → butuh alamat
     const alamat = (d.alamat_sekarang || '').trim();
     if (!alamat) return;
     
@@ -172,7 +162,7 @@ async function loadPetaMahasiswa() {
   let berhasil = 0;
   let gagal = 0;
   
-  // Proses tiap alamat unik
+  // ===== Proses tiap alamat unik =====
   for (const alamat of alamatList) {
     let coords = getCachedCoords(alamat);
     let isFallback = false;
@@ -201,7 +191,7 @@ async function loadPetaMahasiswa() {
         <strong>${alamat}</strong>
         ${isFallback ? '<br><em style="color:#e67e22;">⚠ Titik perkiraan</em>' : ''}
         <br><em>${mhs.length} mahasiswa</em><br><br>
-        ${mhs.map(m => `• ${m.nama} (${m.nim})`).join('<br>')}
+        ${mhs.map(m => `• ${m.nama || '-'} (${m.nim})`).join('<br>')}
       </div>
     `;
     
@@ -221,31 +211,34 @@ async function loadPetaMahasiswa() {
     mapMarkers.push(marker);
   }
   
-  // Marker UINSA untuk mahasiswa mahad
-  if (mahadList.length > 0) {
-    const popupMahad = `
-      <div style="font-size:13px; max-width: 280px;">
-        <strong>🏠 Mahad UINSA</strong><br>
-        <em style="color:#6b7280;">${mahadList.length} mahasiswa</em><br><br>
-        ${mahadList.map(m => `• ${m.nama} (${m.nim})${m.no_kamar ? ' — ' + m.no_kamar : ''}`).join('<br>')}
-      </div>
-    `;
-    
-    const markerMahad = L.circleMarker([UINSA_LAT, UINSA_LNG], {
-      radius: 12,
-      fillColor: '#0a5c4a',
-      color: 'white',
-      weight: 3,
-      fillOpacity: 0.95
-    }).addTo(map).bindPopup(popupMahad);
-    
-    markerMahad.bindTooltip(`🏠 ${mahadList.length} mahasiswa di Mahad`, {
-      direction: 'top',
-      offset: [0, -12]
-    });
-    
-    mapMarkers.push(markerMahad);
-  }
+  // ===== Marker UINSA (SELALU tampil, popup = info kampus + daftar mahasiswa mahad) =====
+  const popupUinsa = `
+    <div style="font-size:13px; max-width: 320px;">
+      <strong style="font-size:14px;">🏛 UIN Sunan Ampel Surabaya</strong><br>
+      <em style="color:#6b7280; font-size:11px;">Jl. Ahmad Yani No. 117, Surabaya</em>
+      ${mahadList.length > 0 ? `
+        <hr style="margin:8px 0; border:none; border-top:1px solid #e2e8f0;">
+        <strong style="color:#0a5c4a;">🏠 Mahasiswa di Mahad (${mahadList.length})</strong>
+        <div style="margin-top:6px; font-size:12px; line-height:1.6;">
+          ${mahadList.map(m => `• ${m.nama || '-'} <span style="color:#6b7280; font-size:11px;">(${m.nim})</span>${m.no_kamar ? ` — <em style="color:#8a6015;">${m.no_kamar}</em>` : ''}`).join('<br>')}
+        </div>
+      ` : `
+        <hr style="margin:8px 0; border:none; border-top:1px solid #e2e8f0;">
+        <em style="color:#6b7280; font-size:12px;">Belum ada mahasiswa di Mahad</em>
+      `}
+    </div>
+  `;
+  
+  const markerUinsa = L.marker([UINSA_LAT, UINSA_LNG], {
+    icon: L.divIcon({
+      className: 'uinsa-marker',
+      html: `<div style="background:#0a5c4a; color:white; padding:6px 12px; border-radius:6px; font-weight:700; font-size:13px; white-space:nowrap; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏛 UINSA${mahadList.length > 0 ? ` · ${mahadList.length} mahad` : ''}</div>`,
+      iconSize: [130, 34],
+      iconAnchor: [65, 17]
+    })
+  }).addTo(map).bindPopup(popupUinsa);
+  
+  mapMarkers.push(markerUinsa);
   
   // Update status
   if (totalEl) {
@@ -303,7 +296,7 @@ async function geocodeWithFallback(alamat) {
     if (coords) return coords;
   }
   
-  // Level 4: 2 bagian terakhir (kecamatan, kota)
+  // Level 4: 2 bagian terakhir
   const parts = alamat.split(',').map(p => p.trim()).filter(p => p.length > 2);
   if (parts.length > 1) {
     const lastTwo = parts.slice(-2).join(', ');
@@ -319,7 +312,6 @@ async function geocodeWithFallback(alamat) {
 // ============================================================
 async function tryGeocode(alamat) {
   try {
-    // Cek apakah alamat sudah ada nama kota
     const alamatLower = alamat.toLowerCase();
     const sudahAdaKota = 
       alamatLower.includes('surabaya') ||
@@ -334,7 +326,6 @@ async function tryGeocode(alamat) {
       alamatLower.includes('medan') ||
       alamatLower.includes('makassar');
     
-    // Kalau tidak ada kota, tambah "Surabaya"
     const alamatFinal = sudahAdaKota 
       ? alamat + ', Indonesia'
       : alamat + ', Surabaya, Indonesia';
@@ -359,7 +350,7 @@ async function tryGeocode(alamat) {
 }
 
 // ============================================================
-// CACHE KOORDINAT
+// CACHE
 // ============================================================
 function getCachedCoords(alamat) {
   try {
