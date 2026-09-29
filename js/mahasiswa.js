@@ -1,5 +1,5 @@
 // ============================================================
-// MAHASISWA — CRUD + IMPORT CSV
+// MAHASISWA — CRUD + IMPORT CSV + PREVIEW DOKUMEN
 // ============================================================
 
 import { supabase } from './config.js';
@@ -8,7 +8,6 @@ import {
   escapeAttr, parseCSVLine, showModal, closeModal, konfirmasi, setupDragDrop
 } from './utils.js';
 
-// State
 let currentMhsId = null;
 let parsedData = [], validData = [], errorData = [];
 
@@ -83,16 +82,29 @@ export async function openDetailMahasiswa(id) {
     ? `<img src="${convertDriveLink(m.link_foto)}" class="detail-foto" onerror="this.outerHTML='<div class=\\'detail-foto-empty\\'>${initial}</div>'">`
     : `<div class="detail-foto-empty">${initial}</div>`;
   
+  // Kartu dokumen — klik buka popup preview
   function dokCard(title, noDok, tgl, link) {
-    const preview = link
-      ? `<img src="${convertDriveLink(link)}" onclick="window.open('${link}', '_blank')" onerror="this.outerHTML='<div class=\\'placeholder\\'>Gambar tidak bisa dimuat</div>'">`
-      : `<div class="placeholder">Belum ada foto</div>`;
+    let previewContent;
+    
+    if (link) {
+      // Ada link — tampilkan gambar (kalau bisa) atau ikon dokumen
+      previewContent = `
+        <img src="${convertDriveLink(link)}" 
+             onclick="window.previewDokumen('${escapeAttr(link)}', '${escapeAttr(title)}')"
+             onerror="this.outerHTML='<div class=\\'dokumen-buka-btn\\' onclick=\\'window.previewDokumen(\\&quot;${escapeAttr(link)}\\&quot;, \\&quot;${escapeAttr(title)}\\&quot;)\\'><div class=\\'icon-besar\\'>📄</div><div>Lihat ${title}</div></div>'">
+      `;
+    } else {
+      previewContent = `<div class="placeholder">Belum ada dokumen</div>`;
+    }
+    
     return `<div class="dokumen-card">
       <div class="dokumen-title">
         <span>${title}</span>
-        ${link ? `<a href="${link}" target="_blank" style="font-size:11px;color:#0a5c4a;">Buka ↗</a>` : ''}
+        ${link ? `<a href="${link}" target="_blank" style="font-size:11px; color:#0a5c4a; text-decoration:none;">Buka ↗</a>` : ''}
       </div>
-      <div class="dokumen-preview">${preview}</div>
+      <div class="dokumen-preview" ${link ? `onclick="window.previewDokumen('${escapeAttr(link)}', '${escapeAttr(title)}')"` : ''}>
+        ${previewContent}
+      </div>
       <div class="dokumen-info">
         <div>No: ${noDok || '—'}</div>
         <div>Berlaku: ${formatTanggal(tgl)}</div>
@@ -150,7 +162,81 @@ export async function openDetailMahasiswa(id) {
 }
 
 // ============================================================
-// FORM TAMBAH MAHASISWA
+// PREVIEW DOKUMEN (POPUP PDF)
+// ============================================================
+// Buka link Drive di modal dengan iframe preview.
+// Kalau file tidak bisa di-embed (misal restricted), tampilkan
+// fallback tombol "Buka di Drive".
+export function previewDokumen(driveLink, judul) {
+  const modal = document.getElementById('modalPreviewDokumen');
+  const iframe = document.getElementById('previewIframe');
+  const fallback = document.getElementById('previewFallback');
+  const title = document.getElementById('previewTitle');
+  const openBtn = document.getElementById('previewOpenBtn');
+  
+  title.textContent = judul || 'Preview Dokumen';
+  openBtn.href = driveLink;
+  
+  // Konversi link Drive ke format embed
+  const embedUrl = convertToEmbedUrl(driveLink);
+  
+  if (!embedUrl) {
+    // Tidak bisa di-embed → langsung tampilkan fallback
+    iframe.style.display = 'none';
+    fallback.classList.add('show');
+    modal.classList.add('show');
+    return;
+  }
+  
+  // Reset
+  iframe.style.display = 'block';
+  fallback.classList.remove('show');
+  
+  // Set iframe src
+  iframe.src = embedUrl;
+  
+  // Timer fallback: kalau iframe tidak load dalam 3 detik, tampilkan fallback
+  const loadTimer = setTimeout(() => {
+    iframe.style.display = 'none';
+    fallback.classList.add('show');
+  }, 3000);
+  
+  iframe.onload = () => {
+    clearTimeout(loadTimer);
+  };
+  
+  modal.classList.add('show');
+}
+
+// Konversi link Drive biasa → format embed
+function convertToEmbedUrl(url) {
+  if (!url) return null;
+  
+  // Format: https://drive.google.com/file/d/FILE_ID/view
+  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return `https://drive.google.com/file/d/${m1[1]}/preview`;
+  
+  // Format: https://drive.google.com/open?id=FILE_ID
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+  
+  // Format: sudah /preview
+  if (url.includes('/preview')) return url;
+  
+  // Format lain: kembalikan apa adanya
+  return url;
+}
+
+// Close modal preview — juga stop iframe biar tidak terus load
+export function closePreviewDokumen() {
+  const modal = document.getElementById('modalPreviewDokumen');
+  const iframe = document.getElementById('previewIframe');
+  iframe.src = 'about:blank';
+  modal.classList.remove('show');
+}
+
+// ============================================================
+// FORM TAMBAH
 // ============================================================
 export function openTambahMahasiswa() {
   document.getElementById('formMhsTitle').textContent = 'Tambah Mahasiswa';
@@ -161,7 +247,7 @@ export function openTambahMahasiswa() {
 }
 
 // ============================================================
-// FORM EDIT MAHASISWA
+// FORM EDIT
 // ============================================================
 export async function openEditMahasiswa() {
   if (!currentMhsId) return;
@@ -210,7 +296,7 @@ export async function openEditMahasiswa() {
 }
 
 // ============================================================
-// SIMPAN MAHASISWA (insert atau update)
+// SIMPAN
 // ============================================================
 export async function simpanMahasiswa() {
   const form = document.getElementById('formMahasiswa');
@@ -230,7 +316,6 @@ export async function simpanMahasiswa() {
   
   try {
     if (editId) {
-      // ===== UPDATE =====
       const { error: err1 } = await supabase.from('mahasiswa').update({
         nim: data.nim, nama: data.nama,
         jenis_kelamin: data.jenis_kelamin, jenjang: data.jenjang,
@@ -270,7 +355,6 @@ export async function simpanMahasiswa() {
       else await supabase.from('mahasiswa_kontak').insert({ mahasiswa_id: editId, ...kontakPayload });
       
     } else {
-      // ===== INSERT =====
       const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
         nim: data.nim, nama: data.nama,
         jenis_kelamin: data.jenis_kelamin, jenjang: data.jenjang,
@@ -320,7 +404,7 @@ export async function simpanMahasiswa() {
 }
 
 // ============================================================
-// HAPUS MAHASISWA
+// HAPUS
 // ============================================================
 export function hapusMahasiswa() {
   if (!currentMhsId) return;
@@ -333,7 +417,7 @@ export function hapusMahasiswa() {
 }
 
 // ============================================================
-// IMPORT CSV — BUKA MODAL
+// IMPORT CSV
 // ============================================================
 export function openImportCSV() {
   parsedData = []; validData = []; errorData = [];
@@ -345,9 +429,6 @@ export function openImportCSV() {
   showModal('modalImportCSV');
 }
 
-// ============================================================
-// DOWNLOAD TEMPLATE CSV
-// ============================================================
 const CSV_COLUMNS = ['nim','nama','jenis_kelamin','jenjang','fakultas','prodi','tahun_masuk','warga_negara','email_kampus','keterangan','link_foto','no_paspor','no_itas','no_stm','no_sktt','masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','link_paspor','link_itas','link_stm','link_sktt','tempat_lahir','tanggal_lahir','alamat_sekarang','alamat_asal','telepon','hp','no_paketdata','email_pribadi'];
 
 const COLUMN_LABELS = {
@@ -386,9 +467,6 @@ export function downloadTemplateMhs() {
   link.click();
 }
 
-// ============================================================
-// HANDLE FILE SELECT
-// ============================================================
 export function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -402,9 +480,6 @@ export function handleFileSelect(event) {
   reader.readAsText(file, 'UTF-8');
 }
 
-// ============================================================
-// PARSE CSV
-// ============================================================
 function parseCSVMhs(text) {
   text = text.replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/).filter(l => l.trim());
@@ -430,9 +505,6 @@ function parseCSVMhs(text) {
   validateDataMhs();
 }
 
-// ============================================================
-// VALIDASI DATA
-// ============================================================
 function validateDataMhs() {
   validData = []; errorData = [];
   const nimCount = {};
@@ -484,9 +556,6 @@ function validateDataMhs() {
   document.getElementById('btnImportCSV').disabled = validData.length === 0;
 }
 
-// ============================================================
-// PROSES IMPORT
-// ============================================================
 export async function prosesImportMhs() {
   if (validData.length === 0) return;
   
@@ -557,18 +626,17 @@ export async function prosesImportMhs() {
   if (gagal === 0) setTimeout(() => closeModal('modalImportCSV'), 3000);
 }
 
-// ============================================================
-// SETUP DRAG & DROP
-// ============================================================
 export function setupMahasiswaDragDrop() {
   setupDragDrop('importArea', 'fileCSV', handleFileSelect);
 }
 
 // ============================================================
-// EXPOSE KE WINDOW (untuk onclick di HTML)
+// EXPOSE KE WINDOW
 // ============================================================
 window.loadMahasiswa = loadMahasiswa;
 window.openDetailMahasiswa = openDetailMahasiswa;
+window.previewDokumen = previewDokumen;
+window.closePreviewDokumen = closePreviewDokumen;
 window.openTambahMahasiswa = openTambahMahasiswa;
 window.openEditMahasiswa = openEditMahasiswa;
 window.simpanMahasiswa = simpanMahasiswa;
