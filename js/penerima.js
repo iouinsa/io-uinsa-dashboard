@@ -1,9 +1,12 @@
 // ============================================================
-// PENERIMA EMAIL — CRUD
+// PENERIMA EMAIL — CRUD + SEARCH
 // ============================================================
 
 import { supabase } from './config.js';
 import { escapeAttr, showModal, closeModal, konfirmasi } from './utils.js';
+
+let allPenerima = [];
+let searchPenerimaQuery = '';
 
 // ============================================================
 // LOAD DAFTAR PENERIMA
@@ -22,12 +25,37 @@ export async function loadPenerima() {
     return;
   }
   
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Belum ada data.</td></tr>';
+  allPenerima = data || [];
+  renderPenerima();
+}
+
+// ============================================================
+// RENDER TABEL PENERIMA (dengan search)
+// ============================================================
+function renderPenerima() {
+  const tbody = document.getElementById('tbodyPenerima');
+  
+  let filtered = allPenerima;
+  if (searchPenerimaQuery.trim()) {
+    const q = searchPenerimaQuery.toLowerCase().trim();
+    filtered = allPenerima.filter(p => 
+      (p.nama || '').toLowerCase().includes(q) ||
+      (p.email || '').toLowerCase().includes(q) ||
+      (p.jabatan || '').toLowerCase().includes(q) ||
+      (p.kategori || '').toLowerCase().includes(q)
+    );
+  }
+  
+  if (filtered.length === 0) {
+    const msg = searchPenerimaQuery.trim() 
+      ? `Tidak ada hasil untuk "<strong>${searchPenerimaQuery}</strong>".`
+      : 'Belum ada data.';
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-row">${msg}</td></tr>`;
+    document.getElementById('totalPenerima').textContent = '0 penerima';
     return;
   }
   
-  tbody.innerHTML = data.map(p => `<tr>
+  tbody.innerHTML = filtered.map(p => `<tr>
     <td><strong>${p.nama}</strong></td>
     <td>${p.jabatan || '—'}</td>
     <td>${p.email}</td>
@@ -39,7 +67,20 @@ export async function loadPenerima() {
     </td>
   </tr>`).join('');
   
-  document.getElementById('totalPenerima').textContent = `${data.length} penerima`;
+  if (searchPenerimaQuery.trim()) {
+    document.getElementById('totalPenerima').textContent = 
+      `${filtered.length} dari ${allPenerima.length} penerima`;
+  } else {
+    document.getElementById('totalPenerima').textContent = `${filtered.length} penerima`;
+  }
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+export function searchPenerima(query) {
+  searchPenerimaQuery = query;
+  renderPenerima();
 }
 
 // ============================================================
@@ -81,7 +122,7 @@ export async function editPenerima(id) {
 }
 
 // ============================================================
-// SIMPAN (INSERT / UPDATE)
+// SIMPAN
 // ============================================================
 export async function simpanPenerima() {
   const form = document.getElementById('formPenerima');
@@ -138,6 +179,7 @@ export function hapusPenerima(id, nama) {
 // EXPOSE KE WINDOW
 // ============================================================
 window.loadPenerima = loadPenerima;
+window.searchPenerima = searchPenerima;
 window.openTambahPenerima = openTambahPenerima;
 window.editPenerima = editPenerima;
 window.simpanPenerima = simpanPenerima;
