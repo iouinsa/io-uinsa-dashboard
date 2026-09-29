@@ -137,9 +137,10 @@ async function loadTempatTinggalMahasiswa() {
   const tbody = document.getElementById('tbodyTempatTinggal');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
   
-  const { data: mhsData, error } = await supabase
+    const { data: mhsData, error } = await supabase
     .from('mahasiswa')
     .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar')
+    .in('status', ['Aktif', 'Cuti'])
     .order('nama');
   
   if (error) {
