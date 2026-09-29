@@ -1138,3 +1138,26 @@ tr.clickable:hover td { background: #f0f9f6; }
     width: 100%;
   }
 }
+
+/* ============================================================
+   KAMAR MAHAD — Grid 10 kotak
+   ============================================================ */
+.kamar-grid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.kamar-box {
+  padding: 14px;
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid;
+  transition: transform 0.15s;
+  cursor: default;
+}
+
+.kamar-box:hover {
+  transform: translateY(-2px);
+}
