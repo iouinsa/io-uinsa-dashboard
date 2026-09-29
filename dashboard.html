@@ -10,7 +10,6 @@
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="brand">
     <div class="brand-logo">IO</div>
@@ -26,10 +25,7 @@
   </div>
 </div>
 
-<!-- LAYOUT -->
 <div class="layout">
-  
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="nav-label">Menu Utama</div>
     <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
@@ -40,18 +36,13 @@
     <div class="nav-item" data-page="penerima"><span class="nav-icon">📧</span> Penerima Email</div>
   </aside>
   
-  <!-- MAIN CONTENT -->
   <main class="main">
     
-    <!-- Dashboard -->
     <div class="page-view active" id="page-dashboard">
-      <div class="page-header">
-        <div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Dashboard International Office UINSA</p></div>
-      </div>
+      <div class="page-header"><div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Dashboard International Office UINSA</p></div></div>
       <div class="welcome-box">Pilih menu di sidebar untuk mulai menjelajah.</div>
     </div>
     
-    <!-- Mahasiswa -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -69,7 +60,9 @@
       </div>
     </div>
     
-    <!-- Kerjasama -->
+    <!-- ============================================================ -->
+    <!-- KERJASAMA — DENGAN PETA & STATISTIK -->
+    <!-- ============================================================ -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -78,6 +71,20 @@
           <button class="btn btn-primary" onclick="openTambahKerjasama()">+ Tambah Kerjasama</button>
         </div>
       </div>
+      
+      <!-- STATISTIK -->
+      <div class="statistik-grid" id="statistikKerjasama">
+        <div class="stat-box"><div class="stat-num">—</div><div class="stat-label">Memuat...</div></div>
+      </div>
+      
+      <!-- PETA -->
+      <div class="card">
+        <div class="card-header"><h3>🗺️ Peta Sebaran Kerjasama Internasional</h3></div>
+        <div id="mapKerjasama" style="height: 450px; z-index: 1;"></div>
+        <div class="keterangan-negara" id="keteranganNegara"></div>
+      </div>
+      
+      <!-- TABEL -->
       <div class="card">
         <div class="card-header"><h3>Daftar Kerjasama</h3><span id="totalKerjasama" class="count-label"></span></div>
         <table>
@@ -87,7 +94,6 @@
       </div>
     </div>
     
-    <!-- Tempat Tinggal -->
     <div class="page-view" id="page-tempat_tinggal">
       <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & kamar mahad</p></div></div>
       <div class="card">
@@ -107,7 +113,6 @@
       </div>
     </div>
     
-    <!-- Penerima Email -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
@@ -125,9 +130,7 @@
   </main>
 </div>
 
-<!-- ============================================================ -->
 <!-- MODAL: DETAIL MAHASISWA -->
-<!-- ============================================================ -->
 <div class="modal-overlay" id="modalDetailMahasiswa">
   <div class="modal modal-lg">
     <div class="modal-header"><h3>Detail Mahasiswa</h3><button class="modal-close" onclick="closeModal('modalDetailMahasiswa')">&times;</button></div>
@@ -140,9 +143,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- MODAL: FORM MAHASISWA -->
-<!-- ============================================================ -->
 <div class="modal-overlay" id="modalFormMahasiswa">
   <div class="modal modal-lg">
     <div class="modal-header"><h3 id="formMhsTitle">Tambah Mahasiswa</h3><button class="modal-close" onclick="closeModal('modalFormMahasiswa')">&times;</button></div>
@@ -222,9 +223,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- MODAL: IMPORT CSV MAHASISWA -->
-<!-- ============================================================ -->
 <div class="modal-overlay" id="modalImportCSV">
   <div class="modal modal-lg">
     <div class="modal-header"><h3>Import Data Mahasiswa dari CSV</h3><button class="modal-close" onclick="closeModal('modalImportCSV')">&times;</button></div>
@@ -259,9 +258,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- MODAL: FORM KERJASAMA -->
-<!-- ============================================================ -->
 <div class="modal-overlay" id="modalFormKerjasama">
   <div class="modal">
     <div class="modal-header"><h3 id="formKjsTitle">Tambah Kerjasama</h3><button class="modal-close" onclick="closeModal('modalFormKerjasama')">&times;</button></div>
@@ -275,7 +272,15 @@
         </div>
         <div class="form-row">
           <div class="form-group"><label>Unit Fakultas</label><input type="text" name="unit_fakultas"></div>
-          <div class="form-group"><label>Jenis</label><select name="jenis"><option value="">— Pilih —</option><option value="MoU">MoU</option><option value="MoA">MoA</option><option value="IA">IA</option></select></div>
+          <div class="form-group"><label>Jenis</label>
+            <select name="jenis">
+              <option value="">— Pilih —</option>
+              <option value="MoU">MoU</option>
+              <option value="MoA">MoA</option>
+              <option value="IA">IA</option>
+              <option value="LoI">LoI</option>
+            </select>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Tanggal Mulai</label><input type="date" name="tanggal_mulai"></div>
@@ -291,9 +296,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: IMPORT CSV KERJASAMA -->
-<!-- ============================================================ -->
+<!-- MODAL: IMPORT KERJASAMA -->
 <div class="modal-overlay" id="modalImportKerjasama">
   <div class="modal">
     <div class="modal-header"><h3>Import Data Kerjasama dari CSV</h3><button class="modal-close" onclick="closeModal('modalImportKerjasama')">&times;</button></div>
@@ -328,9 +331,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: FORM PENERIMA EMAIL -->
-<!-- ============================================================ -->
+<!-- MODAL: FORM PENERIMA -->
 <div class="modal-overlay" id="modalFormPenerima">
   <div class="modal modal-sm">
     <div class="modal-header"><h3 id="formPenerimaTitle">Tambah Penerima</h3><button class="modal-close" onclick="closeModal('modalFormPenerima')">&times;</button></div>
@@ -354,9 +355,7 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: KONFIRMASI HAPUS -->
-<!-- ============================================================ -->
+<!-- MODAL: KONFIRMASI -->
 <div class="modal-overlay" id="modalKonfirmasi">
   <div class="modal modal-sm">
     <div class="modal-header"><h3>Konfirmasi Hapus</h3><button class="modal-close" onclick="closeModal('modalKonfirmasi')">&times;</button></div>
@@ -368,9 +367,6 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- SCRIPTS -->
-<!-- ============================================================ -->
 <script type="module" src="js/app.js"></script>
 
 </body>
