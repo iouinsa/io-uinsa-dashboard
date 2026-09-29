@@ -82,3 +82,41 @@ function setupNavigasi() {
     });
   });
 }
+
+// ============================================================
+// CETAK LAPORAN
+// ============================================================
+window.cetakLaporanMahasiswa = function() {
+  const status = document.querySelector('.filter-status-btn.active')?.dataset.status || 'semua';
+  const search = document.getElementById('searchMahasiswa')?.value || '';
+  
+  const params = new URLSearchParams({
+    jenis: 'mahasiswa',
+    status: status,
+    search: search
+  });
+  
+  window.open('report.html?' + params.toString(), '_blank');
+};
+
+window.cetakLaporanKerjasama = function() {
+  const search = document.getElementById('searchKerjasama')?.value || '';
+  
+  const params = new URLSearchParams({
+    jenis: 'kerjasama',
+    search: search
+  });
+  
+  window.open('report.html?' + params.toString(), '_blank');
+};
+
+window.cetakLaporanTempatTinggal = function() {
+  const search = document.getElementById('searchTempatTinggal')?.value || '';
+  
+  const params = new URLSearchParams({
+    jenis: 'tempat_tinggal',
+    search: search
+  });
+  
+  window.open('report.html?' + params.toString(), '_blank');
+};
