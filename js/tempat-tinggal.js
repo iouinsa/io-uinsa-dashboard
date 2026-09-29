@@ -1,16 +1,16 @@
 // ============================================================
-// TEMPAT TINGGAL — PETA + KAMAR MAHAD + NON-MAHAD + SEARCH
+// TEMPAT TINGGAL — PETA + DAFTAR MAHASISWA + JENIS TINGGAL
 // ============================================================
 
 import { supabase } from './config.js';
+import { showModal, closeModal } from './utils.js';
 
-// ============================================================
-// STATE
-// ============================================================
+// State
 let map = null;
 let mapMarkers = [];
-let allNonMahad = [];
-let searchNonMahadQuery = '';
+let allTempatTinggal = [];
+let searchTempatTinggalQuery = '';
+let daftarKamar = [];
 
 const UINSA_LAT = -7.3214;
 const UINSA_LNG = 112.7344;
@@ -20,9 +20,9 @@ const UINSA_LNG = 112.7344;
 // ============================================================
 export async function loadTempatTinggal() {
   initMap();
+  await loadDaftarKamar();
   await loadPetaMahasiswa();
-  await loadKamarGrid();
-  await loadNonMahad();
+  await loadTempatTinggalMahasiswa();
 }
 
 // ============================================================
@@ -45,7 +45,19 @@ function initMap() {
       iconSize: [80, 30],
       iconAnchor: [40, 15]
     })
-  }).addTo(map).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong><br>Jl. A. Yani 117, Surabaya');
+  }).addTo(map).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong>');
+}
+
+// ============================================================
+// LOAD DAFTAR KAMAR (untuk dropdown di modal edit)
+// ============================================================
+async function loadDaftarKamar() {
+  const { data } = await supabase
+    .from('kamar_mahad')
+    .select('no_kamar')
+    .order('no_kamar');
+  
+  daftarKamar = (data || []).map(k => k.no_kamar);
 }
 
 // ============================================================
@@ -89,7 +101,6 @@ async function loadPetaMahasiswa() {
         }
         await new Promise(r => setTimeout(r, 1100));
       } catch (e) {
-        console.error('Geocode error:', alamat, e);
         continue;
       }
     }
@@ -120,113 +131,215 @@ function setCachedCoords(alamat, coords) {
 }
 
 // ============================================================
-// KAMAR MAHAD
+// LOAD TEMPAT TINGGAL MAHASISWA (semua mahasiswa + jenis tinggal)
 // ============================================================
-async function loadKamarGrid() {
-  const { data, error } = await supabase
-    .from('kamar_mahad')
-    .select('*')
-    .order('no_kamar');
+async function loadTempatTinggalMahasiswa() {
+  const tbody = document.getElementById('tbodyTempatTinggal');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
   
-  if (error || !data) return;
-  
-  const grid = document.getElementById('kamarGrid');
-  
-  if (data.length === 0) {
-    grid.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280; grid-column: 1/-1;">Belum ada data kamar.</div>';
-    return;
-  }
-  
-  grid.innerHTML = data.map(k => {
-    const isFull = k.terisi >= k.kapasitas;
-    const isEmpty = k.terisi === 0;
-    const bg = isFull ? '#fadbd4' : isEmpty ? '#f4f6f8' : '#fef3d4';
-    const color = isFull ? '#a03a2a' : isEmpty ? '#6b7280' : '#8a6015';
-    
-    return `<div class="kamar-box" style="background:${bg}; border-color:${color}40;">
-      <div style="font-weight:700; font-size:15px; color:${color};">${k.no_kamar}</div>
-      <div style="font-size:24px; font-weight:700; color:${color}; margin:4px 0;">${k.terisi}/${k.kapasitas}</div>
-      <div style="font-size:11px; color:${color};">${isEmpty ? 'Kosong' : isFull ? 'Penuh' : 'Terisi'}</div>
-      ${k.nama_penghuni ? `<div style="font-size:11px; color:#6b7280; margin-top:6px;">${k.nama_penghuni}</div>` : ''}
-    </div>`;
-  }).join('');
-  
-  document.getElementById('totalKamar').textContent = `${data.length} kamar`;
-}
-
-// ============================================================
-// NON-MAHAD
-// ============================================================
-async function loadNonMahad() {
-  const { data, error } = await supabase
-    .from('tempat_tinggal')
-    .select('*')
-    .in('jenis', ['kos', 'apartemen', 'lainnya'])
-    .order('created_at', { ascending: false });
+  // Ambil semua mahasiswa + kontak (alamat) — join via mahasiswa_id
+  const { data: mhsData, error } = await supabase
+    .from('mahasiswa')
+    .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar')
+    .order('nama');
   
   if (error) {
-    document.getElementById('tbodyNonMahad').innerHTML = 
-      `<tr><td colspan="5" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
     return;
   }
   
-  allNonMahad = data || [];
-  renderNonMahad();
+  // Ambil alamat dari mahasiswa_kontak
+  const { data: kontakData } = await supabase
+    .from('mahasiswa_kontak')
+    .select('mahasiswa_id, alamat_sekarang');
+  
+  const alamatMap = {};
+  (kontakData || []).forEach(k => {
+    alamatMap[k.mahasiswa_id] = k.alamat_sekarang || '';
+  });
+  
+  // Gabung
+  allTempatTinggal = (mhsData || []).map(m => ({
+    id: m.id,
+    nim: m.nim,
+    nama: m.nama || '(Tanpa Nama)',
+    fakultas: m.fakultas || '—',
+    alamat_sekarang: alamatMap[m.id] || '—',
+    jenis_tinggal: m.jenis_tinggal || 'Lainnya',
+    no_kamar: m.no_kamar || null
+  }));
+  
+  renderTempatTinggal();
 }
 
 // ============================================================
-// RENDER TABEL NON-MAHAD (dengan search)
+// RENDER TABEL
 // ============================================================
-function renderNonMahad() {
-  const tbody = document.getElementById('tbodyNonMahad');
+function renderTempatTinggal() {
+  const tbody = document.getElementById('tbodyTempatTinggal');
   
-  let filtered = allNonMahad;
-  if (searchNonMahadQuery.trim()) {
-    const q = searchNonMahadQuery.toLowerCase().trim();
-    filtered = allNonMahad.filter(t => 
-      (t.nama_tempat || '').toLowerCase().includes(q) ||
-      (t.jenis || '').toLowerCase().includes(q) ||
-      (t.alamat_lengkap || '').toLowerCase().includes(q) ||
-      (t.nama_pemilik || '').toLowerCase().includes(q) ||
-      (t.kota || '').toLowerCase().includes(q)
+  let filtered = allTempatTinggal;
+  if (searchTempatTinggalQuery.trim()) {
+    const q = searchTempatTinggalQuery.toLowerCase().trim();
+    filtered = allTempatTinggal.filter(t => 
+      (t.nama || '').toLowerCase().includes(q) ||
+      (t.nim || '').toLowerCase().includes(q) ||
+      (t.fakultas || '').toLowerCase().includes(q) ||
+      (t.alamat_sekarang || '').toLowerCase().includes(q) ||
+      (t.jenis_tinggal || '').toLowerCase().includes(q)
     );
   }
   
   if (filtered.length === 0) {
-    const msg = searchNonMahadQuery.trim() 
-      ? `Tidak ada hasil untuk "<strong>${searchNonMahadQuery}</strong>".`
+    const msg = searchTempatTinggalQuery.trim() 
+      ? `Tidak ada hasil untuk "<strong>${searchTempatTinggalQuery}</strong>".`
       : 'Belum ada data.';
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-row">${msg}</td></tr>`;
-    document.getElementById('totalNonMahad').textContent = '0 tempat';
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-row">${msg}</td></tr>`;
+    document.getElementById('totalTempatTinggal').textContent = '0 mahasiswa';
     return;
   }
   
-  tbody.innerHTML = filtered.map(t => `<tr>
-    <td><strong>${t.nama_tempat || '—'}</strong></td>
-    <td>${t.jenis || '—'}</td>
-    <td>${t.alamat_lengkap || '—'}</td>
-    <td>${t.nama_pemilik ? `${t.nama_pemilik}<br><small>${t.telepon_pemilik || ''}</small>` : '—'}</td>
-    <td><span class="tag tag-active">${t.status || '—'}</span></td>
-  </tr>`).join('');
+  tbody.innerHTML = filtered.map(t => {
+    const jenisClass = 
+      t.jenis_tinggal === 'Mahad' ? 'tag-active' :
+      t.jenis_tinggal === 'Kos' ? 'tag-warning' :
+      t.jenis_tinggal === 'Apartemen' ? 'tag-mou' :
+      t.jenis_tinggal === 'Kontrak' ? 'tag-warning' :
+      'tag-muted';
+    
+    const kamarInfo = t.no_kamar ? ` (${t.no_kamar})` : '';
+    
+    return `<tr>
+      <td><strong>${t.nama}</strong></td>
+      <td>${t.nim}</td>
+      <td>${t.fakultas}</td>
+      <td>${t.alamat_sekarang}</td>
+      <td><span class="tag ${jenisClass}">${t.jenis_tinggal}${kamarInfo}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="window.editTempatTinggal(${t.id})">Edit</button></td>
+    </tr>`;
+  }).join('');
   
-  if (searchNonMahadQuery.trim()) {
-    document.getElementById('totalNonMahad').textContent = 
-      `${filtered.length} dari ${allNonMahad.length} tempat`;
+  if (searchTempatTinggalQuery.trim()) {
+    document.getElementById('totalTempatTinggal').textContent = 
+      `${filtered.length} dari ${allTempatTinggal.length} mahasiswa`;
   } else {
-    document.getElementById('totalNonMahad').textContent = `${filtered.length} tempat`;
+    document.getElementById('totalTempatTinggal').textContent = `${filtered.length} mahasiswa`;
   }
 }
 
 // ============================================================
-// SEARCH NON-MAHAD
+// SEARCH
 // ============================================================
-export function searchNonMahad(query) {
-  searchNonMahadQuery = query;
-  renderNonMahad();
+export function searchTempatTinggal(query) {
+  searchTempatTinggalQuery = query;
+  renderTempatTinggal();
+}
+
+// ============================================================
+// EDIT TEMPAT TINGGAL
+// ============================================================
+export function editTempatTinggal(id) {
+  const mhs = allTempatTinggal.find(t => t.id === id);
+  if (!mhs) { alert('Data tidak ditemukan'); return; }
+  
+  document.getElementById('id_mahasiswa_tt').value = mhs.id;
+  document.getElementById('nama_mahasiswa_tt').value = `${mhs.nama} (${mhs.nim})`;
+  
+  // Isi dropdown kamar
+  const kamarSelect = document.getElementById('no_kamar_tt');
+  kamarSelect.innerHTML = '<option value="">— Pilih Kamar —</option>' + 
+    daftarKamar.map(k => `<option value="${k}">${k}</option>`).join('');
+  
+  // Set jenis tinggal
+  const jenisSelect = document.getElementById('jenis_tinggal_tt');
+  jenisSelect.value = mhs.jenis_tinggal || 'Lainnya';
+  
+  // Set no kamar
+  kamarSelect.value = mhs.no_kamar || '';
+  
+  // Tampilkan/sembunyikan field kamar
+  toggleKamarField();
+  
+  document.getElementById('modalAlertTempatTinggal').innerHTML = '';
+  showModal('modalEditTempatTinggal');
+}
+
+// ============================================================
+// TOGGLE FIELD NO KAMAR
+// ============================================================
+export function toggleKamarField() {
+  const jenis = document.getElementById('jenis_tinggal_tt').value;
+  const rowKamar = document.getElementById('row_no_kamar');
+  const kamarSelect = document.getElementById('no_kamar_tt');
+  
+  if (jenis === 'Mahad') {
+    rowKamar.style.display = 'block';
+    kamarSelect.setAttribute('required', 'required');
+  } else {
+    rowKamar.style.display = 'none';
+    kamarSelect.removeAttribute('required');
+    kamarSelect.value = '';
+  }
+}
+
+// ============================================================
+// SIMPAN
+// ============================================================
+export async function simpanTempatTinggal() {
+  const form = document.getElementById('formEditTempatTinggal');
+  const btn = document.getElementById('btnSimpanTempatTinggal');
+  const alertBox = document.getElementById('modalAlertTempatTinggal');
+  
+  const id = document.getElementById('id_mahasiswa_tt').value;
+  const jenis = document.getElementById('jenis_tinggal_tt').value;
+  const noKamar = document.getElementById('no_kamar_tt').value;
+  
+  if (!jenis) {
+    alertBox.innerHTML = '<div class="alert alert-error">❌ Jenis tinggal wajib dipilih.</div>';
+    return;
+  }
+  
+  if (jenis === 'Mahad' && !noKamar) {
+    alertBox.innerHTML = '<div class="alert alert-error">❌ No. Kamar wajib diisi kalau tinggal di Mahad.</div>';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+  alertBox.innerHTML = '';
+  
+  try {
+    const payload = {
+      jenis_tinggal: jenis,
+      no_kamar: jenis === 'Mahad' ? noKamar : null
+    };
+    
+    const { error } = await supabase
+      .from('mahasiswa')
+      .update(payload)
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alertBox.innerHTML = '<div class="alert alert-success">✅ Data berhasil disimpan.</div>';
+    setTimeout(() => { 
+      closeModal('modalEditTempatTinggal'); 
+      loadTempatTinggalMahasiswa();
+    }, 1200);
+    
+  } catch (err) {
+    alertBox.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan';
+  }
 }
 
 // ============================================================
 // EXPOSE KE WINDOW
 // ============================================================
 window.loadTempatTinggal = loadTempatTinggal;
-window.searchNonMahad = searchNonMahad;
+window.searchTempatTinggal = searchTempatTinggal;
+window.editTempatTinggal = editTempatTinggal;
+window.simpanTempatTinggal = simpanTempatTinggal;
+window.toggleKamarField = toggleKamarField;
