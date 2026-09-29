@@ -1,5 +1,5 @@
 // ============================================================
-// KERJASAMA — CRUD + IMPORT CSV + PETA + PREVIEW DOKUMEN
+// KERJASAMA — CRUD + IMPORT CSV + PETA + PREVIEW DOKUMEN + SEARCH
 // ============================================================
 
 import { supabase } from './config.js';
@@ -9,7 +9,7 @@ import {
 } from './utils.js';
 
 // ============================================================
-// KOORDINAT NEGARA (hardcoded — untuk peta)
+// KOORDINAT NEGARA
 // ============================================================
 const KOORDINAT_NEGARA = {
   'malaysia': [4.2105, 101.9758],
@@ -154,7 +154,13 @@ const KOORDINAT_NEGARA = {
 };
 
 // ============================================================
-// PREVIEW DOKUMEN (PDF)
+// STATE
+// ============================================================
+let allKerjasama = [];
+let searchKjsQuery = '';
+
+// ============================================================
+// PREVIEW DOKUMEN
 // ============================================================
 export function previewDokumen(driveLink, judul) {
   const modal = document.getElementById('modalPreviewDokumen');
@@ -164,11 +170,7 @@ export function previewDokumen(driveLink, judul) {
   const openBtn = document.getElementById('previewOpenBtn');
   const openBtnFooter = document.getElementById('previewOpenBtnFooter');
   
-  if (!modal) {
-    // Modal tidak ada → buka langsung di tab baru
-    window.open(driveLink, '_blank');
-    return;
-  }
+  if (!modal) { window.open(driveLink, '_blank'); return; }
   
   title.textContent = judul || 'Preview Dokumen';
   if (openBtn) openBtn.href = driveLink;
@@ -187,15 +189,12 @@ export function previewDokumen(driveLink, judul) {
   fallback.classList.remove('show');
   iframe.src = embedUrl;
   
-  // Timer fallback kalau iframe tidak load dalam 4 detik
   const loadTimer = setTimeout(() => {
     iframe.style.display = 'none';
     fallback.classList.add('show');
   }, 4000);
   
-  iframe.onload = () => {
-    clearTimeout(loadTimer);
-  };
+  iframe.onload = () => clearTimeout(loadTimer);
   
   modal.classList.add('show');
 }
@@ -209,15 +208,11 @@ export function closePreviewDokumen() {
 
 function convertToEmbedUrl(url) {
   if (!url) return null;
-  
   const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (m1) return `https://drive.google.com/file/d/${m1[1]}/preview`;
-  
   const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
-  
   if (url.includes('/preview')) return url;
-  
   return url;
 }
 
@@ -238,19 +233,42 @@ export async function loadKerjasama() {
     return;
   }
   
-  renderStatistikKerjasama(data || []);
-  renderPetaKerjasama(data || []);
+  allKerjasama = data || [];
+  renderStatistikKerjasama(allKerjasama);
+  renderPetaKerjasama(allKerjasama);
+  renderKerjasama();
+}
+
+// ============================================================
+// RENDER TABEL KERJASAMA (dengan search)
+// ============================================================
+function renderKerjasama() {
+  const tbody = document.getElementById('tbodyKerjasama');
   
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Belum ada data.</td></tr>';
+  let filtered = allKerjasama;
+  if (searchKjsQuery.trim()) {
+    const q = searchKjsQuery.toLowerCase().trim();
+    filtered = allKerjasama.filter(k => 
+      (k.kampus || '').toLowerCase().includes(q) ||
+      (k.negara || '').toLowerCase().includes(q) ||
+      (k.jenis || '').toLowerCase().includes(q) ||
+      (k.unit_fakultas || '').toLowerCase().includes(q)
+    );
+  }
+  
+  if (filtered.length === 0) {
+    const msg = searchKjsQuery.trim() 
+      ? `Tidak ada hasil untuk "<strong>${searchKjsQuery}</strong>".`
+      : 'Belum ada data.';
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-row">${msg}</td></tr>`;
+    document.getElementById('totalKerjasama').textContent = '0 kerja sama';
     return;
   }
   
-  tbody.innerHTML = data.map(k => {
+  tbody.innerHTML = filtered.map(k => {
     const status = hitungStatusKerjasama(k.tanggal_berakhir);
     const cls = statusClassKerjasama(status);
     
-    // Kolom dokumen
     const dokHtml = k.link_dokumen
       ? `<button class="btn btn-outline btn-sm" onclick="window.previewDokumen('${escapeAttr(k.link_dokumen)}', 'Dokumen ${escapeAttr(k.kampus || '')}')">📄 Lihat</button>`
       : '—';
@@ -270,7 +288,20 @@ export async function loadKerjasama() {
     </tr>`;
   }).join('');
   
-  document.getElementById('totalKerjasama').textContent = `${data.length} kerja sama`;
+  if (searchKjsQuery.trim()) {
+    document.getElementById('totalKerjasama').textContent = 
+      `${filtered.length} dari ${allKerjasama.length} kerja sama`;
+  } else {
+    document.getElementById('totalKerjasama').textContent = `${filtered.length} kerja sama`;
+  }
+}
+
+// ============================================================
+// SEARCH KERJASAMA
+// ============================================================
+export function searchKerjasama(query) {
+  searchKjsQuery = query;
+  renderKerjasama();
 }
 
 // ============================================================
@@ -644,6 +675,7 @@ export function setupKerjasamaDragDrop() {
 // EXPOSE KE WINDOW
 // ============================================================
 window.loadKerjasama = loadKerjasama;
+window.searchKerjasama = searchKerjasama;
 window.previewDokumen = previewDokumen;
 window.closePreviewDokumen = closePreviewDokumen;
 window.openTambahKerjasama = openTambahKerjasama;
