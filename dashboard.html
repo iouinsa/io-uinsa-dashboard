@@ -43,7 +43,6 @@
       <div class="welcome-box">Pilih menu di sidebar untuk mulai menjelajah.</div>
     </div>
     
-    <!-- MAHASISWA -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -77,7 +76,6 @@
       </div>
     </div>
     
-    <!-- KERJASAMA -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -113,31 +111,39 @@
     
     <!-- TEMPAT TINGGAL -->
     <div class="page-view" id="page-tempat_tinggal">
-      <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & kamar mahad</p></div></div>
+      <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & jenis tempat tinggal</p></div></div>
+      
       <div class="card">
         <div class="card-header"><h3>🗺️ Peta Sebaran Mahasiswa</h3><span id="totalAlamat" class="count-label"></span></div>
         <div id="map"></div>
       </div>
-      <div class="card">
-        <div class="card-header"><h3>🏠 Kamar Mahad (10 Kamar × 4 Orang)</h3><span id="totalKamar" class="count-label"></span></div>
-        <div class="kamar-grid" id="kamarGrid"></div>
-      </div>
+      
       <div class="card">
         <div class="card-header">
-          <h3>🏘️ Kos / Apartemen / Lainnya</h3>
+          <h3>Daftar Tempat Tinggal Mahasiswa</h3>
           <div class="card-header-right">
-            <input type="text" class="search-input" id="searchNonMahad" placeholder="🔍 Cari nama, alamat, pemilik..." oninput="searchNonMahad(this.value)">
-            <span id="totalNonMahad" class="count-label"></span>
+            <input type="text" class="search-input" id="searchTempatTinggal" placeholder="🔍 Cari nama, NIM, alamat..." oninput="searchTempatTinggal(this.value)">
+            <span id="totalTempatTinggal" class="count-label"></span>
           </div>
         </div>
         <table>
-          <thead><tr><th>Nama</th><th>Jenis</th><th>Alamat</th><th>Pemilik</th><th>Status</th></tr></thead>
-          <tbody id="tbodyNonMahad"><tr><td colspan="5" class="empty-row">Belum ada data.</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>NIM</th>
+              <th>Fakultas</th>
+              <th>Alamat Sekarang</th>
+              <th>Jenis Tinggal</th>
+              <th style="width:80px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyTempatTinggal">
+            <tr class="loading-row"><td colspan="6">Memuat data...</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
     
-    <!-- PENERIMA -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
@@ -159,6 +165,57 @@
     </div>
     
   </main>
+</div>
+
+<!-- MODAL: EDIT TEMPAT TINGGAL -->
+<div class="modal-overlay" id="modalEditTempatTinggal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Edit Tempat Tinggal</h3>
+      <button class="modal-close" onclick="closeModal('modalEditTempatTinggal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalAlertTempatTinggal"></div>
+      <form id="formEditTempatTinggal">
+        <input type="hidden" name="id_mahasiswa" id="id_mahasiswa_tt">
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Mahasiswa</label>
+            <input type="text" id="nama_mahasiswa_tt" disabled style="background:#f4f6f8; cursor:not-allowed;">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Jenis Tinggal <span class="req">*</span></label>
+            <select name="jenis_tinggal" id="jenis_tinggal_tt" required onchange="toggleKamarField()">
+              <option value="">— Pilih —</option>
+              <option value="Mahad">Mahad</option>
+              <option value="Kos">Kos</option>
+              <option value="Apartemen">Apartemen</option>
+              <option value="Kontrak">Kontrak</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row" id="row_no_kamar" style="display:none;">
+          <div class="form-group full">
+            <label>No. Kamar <span class="req">*</span></label>
+            <select name="no_kamar" id="no_kamar_tt">
+              <option value="">— Pilih Kamar —</option>
+            </select>
+          </div>
+        </div>
+        
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalEditTempatTinggal')">Batal</button>
+      <button class="btn btn-primary" id="btnSimpanTempatTinggal" onclick="simpanTempatTinggal()">Simpan</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: PREVIEW DOKUMEN -->
