@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="css/style.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -38,11 +39,70 @@
   
   <main class="main">
     
+    <!-- DASHBOARD -->
     <div class="page-view active" id="page-dashboard">
-      <div class="page-header"><div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Dashboard International Office UINSA</p></div></div>
-      <div class="welcome-box">Pilih menu di sidebar untuk mulai menjelajah.</div>
+      <div class="page-header">
+        <div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Ringkasan data International Office UINSA</p></div>
+      </div>
+      
+      <!-- Kartu Ringkasan -->
+      <div class="summary-grid" id="summaryDashboard">
+        <div class="summary-card-dash"><div class="value">—</div></div>
+      </div>
+      
+      <!-- Reminder -->
+      <div class="reminder-grid" id="reminderDashboard"></div>
+      
+      <!-- Grafik Baris 1 -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>🌍 Mahasiswa per Negara (Top 10)</h3>
+          <div class="chart-container"><canvas id="chartNegara"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🏛️ Mahasiswa per Fakultas</h3>
+          <div class="chart-container"><canvas id="chartFakultas"></canvas></div>
+        </div>
+      </div>
+      
+      <!-- Grafik Baris 2 -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>📋 Status Mahasiswa</h3>
+          <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🎓 Mahasiswa per Jenjang</h3>
+          <div class="chart-container"><canvas id="chartJenjang"></canvas></div>
+        </div>
+      </div>
+      
+      <!-- Grafik Baris 3 -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>🤝 Kerjasama per Negara (Top 10)</h3>
+          <div class="chart-container"><canvas id="chartKerjasamaNegara"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>📄 Jenis Kerjasama</h3>
+          <div class="chart-container"><canvas id="chartJenisKerjasama"></canvas></div>
+        </div>
+      </div>
+      
+      <!-- Grafik Baris 4 -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>📈 Tren Mahasiswa Baru per Tahun</h3>
+          <div class="chart-container"><canvas id="chartTrenTahun"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🏠 Jenis Tempat Tinggal</h3>
+          <div class="chart-container"><canvas id="chartJenisTinggal"></canvas></div>
+        </div>
+      </div>
     </div>
     
+    <!-- MAHASISWA -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -76,6 +136,7 @@
       </div>
     </div>
     
+    <!-- KERJASAMA -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -144,6 +205,7 @@
       </div>
     </div>
     
+    <!-- PENERIMA -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
@@ -178,14 +240,12 @@
       <div id="modalAlertTempatTinggal"></div>
       <form id="formEditTempatTinggal">
         <input type="hidden" name="id_mahasiswa" id="id_mahasiswa_tt">
-        
         <div class="form-row">
           <div class="form-group full">
             <label>Mahasiswa</label>
             <input type="text" id="nama_mahasiswa_tt" disabled style="background:#f4f6f8; cursor:not-allowed;">
           </div>
         </div>
-        
         <div class="form-row">
           <div class="form-group full">
             <label>Jenis Tinggal <span class="req">*</span></label>
@@ -199,7 +259,6 @@
             </select>
           </div>
         </div>
-        
         <div class="form-row" id="row_no_kamar" style="display:none;">
           <div class="form-group full">
             <label>No. Kamar <span class="req">*</span></label>
@@ -208,7 +267,6 @@
             </select>
           </div>
         </div>
-        
       </form>
     </div>
     <div class="modal-footer">
