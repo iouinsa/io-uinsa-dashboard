@@ -861,3 +861,53 @@ tr.clickable:hover td { background: #f0f9f6; }
     width: 100%;
   }
 }
+
+/* ============================================================
+   TAG WARNA — JENIS TINGGAL
+   ============================================================ */
+.tag-mou {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* ============================================================
+   SEARCH INPUT
+   ============================================================ */
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-input {
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 260px;
+  transition: all 0.2s;
+  background: #f8fafc;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0a5c4a;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(10,92,74,0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .card-header-right {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .search-input {
+    width: 100%;
+  }
+}
