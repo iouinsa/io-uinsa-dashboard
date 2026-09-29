@@ -4,22 +4,27 @@
 
 import { supabase, requireLogin, logout } from './config.js';
 import { showModal, closeModal, konfirmasi } from './utils.js';
+import { loadDashboard } from './dashboard.js';
 import {
   loadMahasiswa, openDetailMahasiswa, openTambahMahasiswa,
   openEditMahasiswa, simpanMahasiswa, hapusMahasiswa,
   openImportCSV, downloadTemplateMhs, handleFileSelect,
-  prosesImportMhs, setupMahasiswaDragDrop
+  prosesImportMhs, setupMahasiswaDragDrop,
+  previewDokumen, closePreviewDokumen, searchMahasiswa, setFilterStatus
 } from './mahasiswa.js';
 import {
   loadKerjasama, openTambahKerjasama, editKerjasama,
   simpanKerjasama, hapusKerjasama, openImportKerjasama,
   downloadTemplateKjs, handleFileSelectKjs, prosesImportKjs,
-  setupKerjasamaDragDrop, previewDokumen, closePreviewDokumen
+  setupKerjasamaDragDrop, searchKerjasama
 } from './kerjasama.js';
-import { loadTempatTinggal } from './tempat-tinggal.js';
+import {
+  loadTempatTinggal, searchTempatTinggal, editTempatTinggal,
+  simpanTempatTinggal, toggleKamarField
+} from './tempat-tinggal.js';
 import {
   loadPenerima, openTambahPenerima, editPenerima,
-  simpanPenerima, hapusPenerima
+  simpanPenerima, hapusPenerima, searchPenerima
 } from './penerima.js';
 
 // ============================================================
@@ -28,12 +33,10 @@ import {
 const session = await requireLogin();
 
 if (session) {
-  // Set info user di topbar
   const email = session.user.email;
   document.getElementById('userEmail').textContent = email;
   document.getElementById('avatar').textContent = email.charAt(0).toUpperCase();
   
-  // Ambil nama lengkap dari tabel users
   const { data: profile } = await supabase
     .from('users')
     .select('nama_lengkap')
@@ -46,15 +49,15 @@ if (session) {
     document.getElementById('userName').textContent = email;
   }
   
-  // Setup navigasi sidebar
   setupNavigasi();
   
-  // Setup tombol logout
   document.getElementById('btnLogout').addEventListener('click', logout);
   
-  // Setup drag & drop untuk import CSV
   setupMahasiswaDragDrop();
   setupKerjasamaDragDrop();
+  
+  // Load dashboard pertama kali
+  loadDashboard();
 }
 
 // ============================================================
@@ -65,14 +68,13 @@ function setupNavigasi() {
     item.addEventListener('click', () => {
       const page = item.dataset.page;
       
-      // Update active state
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
       item.classList.add('active');
       
       document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
       document.getElementById('page-' + page).classList.add('active');
       
-      // Load data sesuai halaman
+      if (page === 'dashboard') loadDashboard();
       if (page === 'mahasiswa') loadMahasiswa();
       if (page === 'kerjasama') loadKerjasama();
       if (page === 'tempat_tinggal') loadTempatTinggal();
