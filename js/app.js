@@ -24,7 +24,8 @@ import {
 } from './tempat-tinggal.js';
 import {
   loadPenerima, openTambahPenerima, editPenerima,
-  simpanPenerima, hapusPenerima, searchPenerima
+  simpanPenerima, hapusPenerima, searchPenerima,
+  openBuatAkun, prosesBuatAkun, hapusAkunPenerima
 } from './penerima.js';
 
 // ============================================================
