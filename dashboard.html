@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — International Office UINSA</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f4f6f8;
+    color: #1a2332;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* TOPBAR */
+  .topbar {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 40px; height: 40px;
+    background: #0a5c4a; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 16px;
+  }
+  .brand-text h1 { font-size: 15px; font-weight: 700; }
+  .brand-text p { font-size: 11px; color: #6b7280; }
+  
+  .user-info { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #d4a017; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .user-email { font-size: 13px; font-weight: 600; }
+  .btn-logout {
+    padding: 8px 14px; background: white;
+    border: 1px solid #e2e8f0; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-logout:hover { background: #f4f6f8; }
+  
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 65px); }
+  
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; background: white;
+    border-right: 1px solid #e2e8f0;
+    padding: 20px 12px;
+    flex-shrink: 0;
+  }
+  .nav-label {
+    font-size: 10px; font-weight: 700;
+    color: #6b7280; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0 12px 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 6px;
+    cursor: pointer; font-size: 13px;
+    color: #1a2332; font-weight: 500;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+  }
+  .nav-item:hover { background: #f4f6f8; }
+  .nav-item.active {
+    background: #e8f3f0; color: #0a5c4a;
+    font-weight: 600;
+  }
+  .nav-icon { width: 18px; text-align: center; font-size: 15px; }
+  
+  /* MAIN */
+  .main { flex: 1; padding: 24px; overflow-x: auto; }
+  
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-header h2 { font-size: 20px; font-weight: 700; }
+  .page-header p { font-size: 13px; color: #6b7280; margin-top: 2px; }
+  
+  .card {
+    background: white; border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header h3 { font-size: 15px; font-weight: 700; }
+  
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 12px 20px;
+    font-size: 11px; font-weight: 700;
+    color: #6b7280; text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: #f4f6f8;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  td {
+    padding: 14px 20px; font-size: 13px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  
+  .tag {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 12px; font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-active { background: #d4f4e2; color: #1e7a4d; }
+  
+  .loading-row td {
+    text-align: center; color: #6b7280;
+    padding: 40px; font-style: italic;
+  }
+  
+  .welcome-box {
+    background: white; border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 32px; text-align: center;
+    color: #6b7280;
+  }
+  
+  /* Page views */
+  .page-view { display: none; }
+  .page-view.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">IO</div>
+    <div class="brand-text">
+      <h1>International Office</h1>
+      <p>UIN Sunan Ampel Surabaya</p>
+    </div>
+  </div>
+  <div class="user-info">
+    <div class="avatar" id="avatar">?</div>
+    <span class="user-email" id="userEmail">Memuat...</span>
+    <button class="btn-logout" id="btnLogout">Keluar</button>
+  </div>
+</div>
+
+<div class="layout">
+  
+  <aside class="sidebar">
+    <div class="nav-label">Menu Utama</div>
+    <div class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="mahasiswa">
+      <span class="nav-icon">👥</span> Mahasiswa
+    </div>
+    <div class="nav-item" data-page="kerjasama">
+      <span class="nav-icon">🤝</span> Kerjasama
+    </div>
+    <div class="nav-item" data-page="kamar">
+      <span class="nav-icon">🏠</span> Kamar Mahad
+    </div>
+  </aside>
+  
+  <main class="main">
+    
+    <!-- PAGE: DASHBOARD -->
+    <div class="page-view active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h2>Selamat datang, <span id="userName">...</span> 👋</h2>
+          <p>Dashboard International Office UINSA</p>
+        </div>
+      </div>
+      <div class="welcome-box">
+        Pilih menu di sidebar untuk mulai menjelajah.
+      </div>
+    </div>
+    
+    <!-- PAGE: MAHASISWA -->
+    <div class="page-view" id="page-mahasiswa">
+      <div class="page-header">
+        <div>
+          <h2>Data Mahasiswa</h2>
+          <p>Mahasiswa internasional yang terdaftar</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Daftar Mahasiswa</h3>
+          <span id="totalMahasiswa" style="font-size: 13px; color: #6b7280;"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>NIM</th>
+              <th>Nama</th>
+              <th>Negara</th>
+              <th>Fakultas</th>
+              <th>Prodi</th>
+              <th>Angkatan</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyMahasiswa">
+            <tr class="loading-row"><td colspan="6">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- PAGE: KERJASAMA -->
+    <div class="page-view" id="page-kerjasama">
+      <div class="page-header">
+        <div>
+          <h2>Data Kerjasama</h2>
+          <p>Mitra universitas dan kerja sama internasional</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Daftar Kerjasama</h3>
+          <span id="totalKerjasama" style="font-size: 13px; color: #6b7280;"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Kampus</th>
+              <th>Negara</th>
+              <th>Jenis</th>
+              <th>Mulai</th>
+              <th>Berakhir</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKerjasama">
+            <tr class="loading-row"><td colspan="6">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- PAGE: KAMAR -->
+    <div class="page-view" id="page-kamar">
+      <div class="page-header">
+        <div>
+          <h2>Kamar Mahad</h2>
+          <p>Status kamar dan penghuni mahad</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Daftar Kamar</h3>
+          <span id="totalKamar" style="font-size: 13px; color: #6b7280;"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>No Kamar</th>
+              <th>Kapasitas</th>
+              <th>Terisi</th>
+              <th>Penghuni</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKamar">
+            <tr class="loading-row"><td colspan="5">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+  </main>
+</div>
+
+<script type="module">
+  // ============================================================
+  // KONFIGURASI
+  // ============================================================
+  const SUPABASE_URL = 'https://kkxovkdrzhthalpchmfx.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtreG92a2Ryemh0aGFscGNobWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MjM1ODgsImV4cCI6MjEwNjE5OTU4OH0.PvLnlGIs6PEn-oUoDi25_szVJxdcGtQqftaLyonSfNA';
+  
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  });
+  
+  // ============================================================
+  // TUNGGU SESSION SIAP DULU
+  // ============================================================
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session) {
+    window.location.href = 'index.html';
+  } else {
+    initDashboard(session);
+  }
+  
+  // ============================================================
+  // INIT DASHBOARD
+  // ============================================================
+  async function initDashboard(session) {
+    const email = session.user.email;
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('avatar').textContent = email.charAt(0).toUpperCase();
+    
+    // Ambil profil user
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('nama_lengkap')
+      .eq('id', session.user.id)
+      .maybeSingle();
+    
+    if (profileError) {
+     console.error('Error profile:', JSON.stringify(profileError, null, 2));
+    }
+    
+    document.getElementById('userName').textContent = 
+      (profile && profile.nama_lengkap) ? profile.nama_lengkap : email;
+    
+    // Setup navigasi menu
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        
+        if (page === 'mahasiswa') loadMahasiswa();
+        if (page === 'kerjasama') loadKerjasama();
+        if (page === 'kamar') loadKamar();
+      });
+    });
+    
+    // Logout
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    });
+  }
+  
+  // ============================================================
+  // FORMAT TANGGAL
+  // ============================================================
+  function formatTanggal(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    }).format(d);
+  }
+  
+  // ============================================================
+  // LOAD MAHASISWA
+  // ============================================================
+  async function loadMahasiswa() {
+    const tbody = document.getElementById('tbodyMahasiswa');
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
+    
+    const { data, error } = await supabase
+      .from('mahasiswa')
+      .select('nim, nama, warga_negara, fakultas, prodi, tahun_masuk')
+      .order('nim');
+    
+    if (error) {
+    console.error('Error mahasiswa:', JSON.stringify(error, null, 2));
+      tbody.innerHTML = `<tr><td colspan="6" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:20px;">Belum ada data.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(m => `
+      <tr>
+        <td><strong>${m.nim}</strong></td>
+        <td>${m.nama}</td>
+        <td>${m.warga_negara || '—'}</td>
+        <td>${m.fakultas || '—'}</td>
+        <td>${m.prodi || '—'}</td>
+        <td>${m.tahun_masuk || '—'}</td>
+      </tr>
+    `).join('');
+    
+    document.getElementById('totalMahasiswa').textContent = `${data.length} mahasiswa`;
+  }
+  
+  // ============================================================
+  // LOAD KERJASAMA
+  // ============================================================
+  async function loadKerjasama() {
+    const tbody = document.getElementById('tbodyKerjasama');
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
+    
+    const { data, error } = await supabase
+      .from('kerjasama')
+      .select('kampus, negara, jenis, tanggal_mulai, tanggal_berakhir, status')
+      .order('tanggal_mulai', { ascending: false });
+    
+    if (error) {
+      console.error('Error kerjasama:', error);
+      tbody.innerHTML = `<tr><td colspan="6" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:20px;">Belum ada data.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(k => `
+      <tr>
+        <td><strong>${k.kampus}</strong></td>
+        <td>${k.negara || '—'}</td>
+        <td>${k.jenis || '—'}</td>
+        <td>${formatTanggal(k.tanggal_mulai)}</td>
+        <td>${formatTanggal(k.tanggal_berakhir)}</td>
+        <td><span class="tag tag-active">${k.status || '—'}</span></td>
+      </tr>
+    `).join('');
+    
+    document.getElementById('totalKerjasama').textContent = `${data.length} kerja sama`;
+  }
+  
+  // ============================================================
+  // LOAD KAMAR
+  // ============================================================
+  async function loadKamar() {
+    const tbody = document.getElementById('tbodyKamar');
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Memuat data...</td></tr>';
+    
+    const { data, error } = await supabase
+      .from('kamar_mahad')
+      .select('no_kamar, kapasitas, terisi, nama_penghuni, status')
+      .order('no_kamar');
+    
+    if (error) {
+      console.error('Error kamar:', error);
+      tbody.innerHTML = `<tr><td colspan="5" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:20px;">Belum ada data.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(k => `
+      <tr>
+        <td><strong>${k.no_kamar}</strong></td>
+        <td>${k.kapasitas}</td>
+        <td>${k.terisi}</td>
+        <td>${k.nama_penghuni || '—'}</td>
+        <td><span class="tag tag-active">${k.status || '—'}</span></td>
+      </tr>
+    `).join('');
+    
+    document.getElementById('totalKamar').textContent = `${data.length} kamar`;
+  }
+</script>
+
+</body>
+</html>

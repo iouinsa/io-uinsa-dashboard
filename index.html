@@ -166,7 +166,13 @@
   
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
   
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
   
   const form = document.getElementById('loginForm');
   const errorMsg = document.getElementById('errorMsg');
@@ -196,9 +202,8 @@
       return;
     }
     
-    // Login berhasil
-    alert('Login berhasil! Selamat datang, ' + data.user.email);
-    // Nanti diarahkan ke dashboard
+    // Login berhasil → redirect ke dashboard
+    window.location.href = 'dashboard.html';
   });
 </script>
 
