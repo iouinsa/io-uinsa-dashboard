@@ -49,7 +49,7 @@ function initMap() {
 }
 
 // ============================================================
-// LOAD DAFTAR KAMAR (untuk dropdown di modal edit)
+// LOAD DAFTAR KAMAR (untuk dropdown)
 // ============================================================
 async function loadDaftarKamar() {
   const { data } = await supabase
@@ -131,13 +131,12 @@ function setCachedCoords(alamat, coords) {
 }
 
 // ============================================================
-// LOAD TEMPAT TINGGAL MAHASISWA (semua mahasiswa + jenis tinggal)
+// LOAD TEMPAT TINGGAL MAHASISWA
 // ============================================================
 async function loadTempatTinggalMahasiswa() {
   const tbody = document.getElementById('tbodyTempatTinggal');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
   
-  // Ambil semua mahasiswa + kontak (alamat) — join via mahasiswa_id
   const { data: mhsData, error } = await supabase
     .from('mahasiswa')
     .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar')
@@ -158,7 +157,6 @@ async function loadTempatTinggalMahasiswa() {
     alamatMap[k.mahasiswa_id] = k.alamat_sekarang || '';
   });
   
-  // Gabung
   allTempatTinggal = (mhsData || []).map(m => ({
     id: m.id,
     nim: m.nim,
@@ -250,11 +248,8 @@ export function editTempatTinggal(id) {
   kamarSelect.innerHTML = '<option value="">— Pilih Kamar —</option>' + 
     daftarKamar.map(k => `<option value="${k}">${k}</option>`).join('');
   
-  // Set jenis tinggal
-  const jenisSelect = document.getElementById('jenis_tinggal_tt');
-  jenisSelect.value = mhs.jenis_tinggal || 'Lainnya';
-  
-  // Set no kamar
+  // Set jenis tinggal & no kamar
+  document.getElementById('jenis_tinggal_tt').value = mhs.jenis_tinggal || 'Lainnya';
   kamarSelect.value = mhs.no_kamar || '';
   
   // Tampilkan/sembunyikan field kamar
@@ -286,7 +281,6 @@ export function toggleKamarField() {
 // SIMPAN
 // ============================================================
 export async function simpanTempatTinggal() {
-  const form = document.getElementById('formEditTempatTinggal');
   const btn = document.getElementById('btnSimpanTempatTinggal');
   const alertBox = document.getElementById('modalAlertTempatTinggal');
   
