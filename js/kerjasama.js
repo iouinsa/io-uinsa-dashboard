@@ -1,5 +1,5 @@
 // ============================================================
-// KERJASAMA — CRUD + IMPORT CSV + PETA SEBARAN
+// KERJASAMA — CRUD + IMPORT CSV + PETA + PREVIEW DOKUMEN
 // ============================================================
 
 import { supabase } from './config.js';
@@ -27,7 +27,6 @@ const KOORDINAT_NEGARA = {
   'cambodia': [12.5657, 104.9910],
   'laos': [19.8563, 102.4955],
   'timor leste': [-8.8742, 125.7275],
-
   'mesir': [26.8206, 30.8025],
   'egypt': [26.8206, 30.8025],
   'arab republic of egypt': [26.8206, 30.8025],
@@ -60,7 +59,6 @@ const KOORDINAT_NEGARA = {
   'yemen': [15.5527, 48.5164],
   'palestina': [31.9522, 35.2332],
   'palestine': [31.9522, 35.2332],
-
   'inggris': [55.3781, -3.4360],
   'uk': [55.3781, -3.4360],
   'united kingdom': [55.3781, -3.4360],
@@ -104,7 +102,6 @@ const KOORDINAT_NEGARA = {
   'hungary': [47.1625, 19.5033],
   'rumania': [45.9432, 24.9668],
   'romania': [45.9432, 24.9668],
-
   'amerika serikat': [37.0902, -95.7129],
   'usa': [37.0902, -95.7129],
   'united states': [37.0902, -95.7129],
@@ -120,7 +117,6 @@ const KOORDINAT_NEGARA = {
   'kolombia': [4.5709, -74.2973],
   'colombia': [4.5709, -74.2973],
   'venezuela': [6.4238, -66.5897],
-
   'china': [35.8617, 104.1954],
   'tiongkok': [35.8617, 104.1954],
   'jepang': [36.2048, 138.2529],
@@ -142,12 +138,10 @@ const KOORDINAT_NEGARA = {
   'taiwan': [23.6978, 120.9605],
   'hong kong': [22.3193, 114.1694],
   'maldives': [3.2028, 73.2207],
-
   'australia': [-25.2744, 133.7751],
   'selandia baru': [-40.9006, 174.8860],
   'new zealand': [-40.9006, 174.8860],
   'fiji': [-17.7134, 178.0650],
-
   'afrika selatan': [-30.5595, 22.9375],
   'south africa': [-30.5595, 22.9375],
   'nigeria': [9.0820, 8.6753],
@@ -160,11 +154,79 @@ const KOORDINAT_NEGARA = {
 };
 
 // ============================================================
+// PREVIEW DOKUMEN (PDF)
+// ============================================================
+export function previewDokumen(driveLink, judul) {
+  const modal = document.getElementById('modalPreviewDokumen');
+  const iframe = document.getElementById('previewIframe');
+  const fallback = document.getElementById('previewFallback');
+  const title = document.getElementById('previewTitle');
+  const openBtn = document.getElementById('previewOpenBtn');
+  const openBtnFooter = document.getElementById('previewOpenBtnFooter');
+  
+  if (!modal) {
+    // Modal tidak ada → buka langsung di tab baru
+    window.open(driveLink, '_blank');
+    return;
+  }
+  
+  title.textContent = judul || 'Preview Dokumen';
+  if (openBtn) openBtn.href = driveLink;
+  if (openBtnFooter) openBtnFooter.href = driveLink;
+  
+  const embedUrl = convertToEmbedUrl(driveLink);
+  
+  if (!embedUrl) {
+    iframe.style.display = 'none';
+    fallback.classList.add('show');
+    modal.classList.add('show');
+    return;
+  }
+  
+  iframe.style.display = 'block';
+  fallback.classList.remove('show');
+  iframe.src = embedUrl;
+  
+  // Timer fallback kalau iframe tidak load dalam 4 detik
+  const loadTimer = setTimeout(() => {
+    iframe.style.display = 'none';
+    fallback.classList.add('show');
+  }, 4000);
+  
+  iframe.onload = () => {
+    clearTimeout(loadTimer);
+  };
+  
+  modal.classList.add('show');
+}
+
+export function closePreviewDokumen() {
+  const modal = document.getElementById('modalPreviewDokumen');
+  const iframe = document.getElementById('previewIframe');
+  if (iframe) iframe.src = 'about:blank';
+  if (modal) modal.classList.remove('show');
+}
+
+function convertToEmbedUrl(url) {
+  if (!url) return null;
+  
+  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return `https://drive.google.com/file/d/${m1[1]}/preview`;
+  
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+  
+  if (url.includes('/preview')) return url;
+  
+  return url;
+}
+
+// ============================================================
 // LOAD DAFTAR KERJASAMA
 // ============================================================
 export async function loadKerjasama() {
   const tbody = document.getElementById('tbodyKerjasama');
-  tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Memuat data...</td></tr>';
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Memuat data...</td></tr>';
   
   const { data, error } = await supabase
     .from('kerjasama')
@@ -172,7 +234,7 @@ export async function loadKerjasama() {
     .order('tanggal_mulai', { ascending: false });
   
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
     return;
   }
   
@@ -180,13 +242,19 @@ export async function loadKerjasama() {
   renderPetaKerjasama(data || []);
   
   if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Belum ada data.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Belum ada data.</td></tr>';
     return;
   }
   
   tbody.innerHTML = data.map(k => {
     const status = hitungStatusKerjasama(k.tanggal_berakhir);
     const cls = statusClassKerjasama(status);
+    
+    // Kolom dokumen
+    const dokHtml = k.link_dokumen
+      ? `<button class="btn btn-outline btn-sm" onclick="window.previewDokumen('${escapeAttr(k.link_dokumen)}', 'Dokumen ${escapeAttr(k.kampus || '')}')">📄 Lihat</button>`
+      : '—';
+    
     return `<tr>
       <td><strong>${k.kampus}</strong></td>
       <td>${k.negara || '—'}</td>
@@ -194,6 +262,7 @@ export async function loadKerjasama() {
       <td>${formatTanggal(k.tanggal_mulai)}</td>
       <td>${formatTanggal(k.tanggal_berakhir)}</td>
       <td><span class="tag ${cls}">${status}</span></td>
+      <td>${dokHtml}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick="window.editKerjasama(${k.id})">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="window.hapusKerjasama(${k.id}, '${escapeAttr(k.kampus || '')}')">Hapus</button>
@@ -205,7 +274,7 @@ export async function loadKerjasama() {
 }
 
 // ============================================================
-// RENDER STATISTIK (tanpa IA)
+// RENDER STATISTIK
 // ============================================================
 function renderStatistikKerjasama(data) {
   const total = data.length;
@@ -227,35 +296,17 @@ function renderStatistikKerjasama(data) {
   if (!container) return;
   
   container.innerHTML = `
-    <div class="stat-box stat-total">
-      <div class="stat-num">${total}</div>
-      <div class="stat-label">Total Mitra</div>
-    </div>
-    <div class="stat-box stat-ongoing">
-      <div class="stat-num">${onGoing}</div>
-      <div class="stat-label">On Going</div>
-    </div>
-    <div class="stat-box stat-berakhir">
-      <div class="stat-num">${berakhir}</div>
-      <div class="stat-label">Berakhir</div>
-    </div>
-    <div class="stat-box stat-mou">
-      <div class="stat-num">${mou}</div>
-      <div class="stat-label">Dokumen MoU</div>
-    </div>
-    <div class="stat-box stat-moa">
-      <div class="stat-num">${moa}</div>
-      <div class="stat-label">Dokumen MoA</div>
-    </div>
-    <div class="stat-box stat-loi">
-      <div class="stat-num">${loi}</div>
-      <div class="stat-label">Dokumen LoI</div>
-    </div>
+    <div class="stat-box stat-total"><div class="stat-num">${total}</div><div class="stat-label">Total Mitra</div></div>
+    <div class="stat-box stat-ongoing"><div class="stat-num">${onGoing}</div><div class="stat-label">On Going</div></div>
+    <div class="stat-box stat-berakhir"><div class="stat-num">${berakhir}</div><div class="stat-label">Berakhir</div></div>
+    <div class="stat-box stat-mou"><div class="stat-num">${mou}</div><div class="stat-label">Dokumen MoU</div></div>
+    <div class="stat-box stat-moa"><div class="stat-num">${moa}</div><div class="stat-label">Dokumen MoA</div></div>
+    <div class="stat-box stat-loi"><div class="stat-num">${loi}</div><div class="stat-label">Dokumen LoI</div></div>
   `;
 }
 
 // ============================================================
-// RENDER PETA SEBARAN (tanpa keterangan negara)
+// RENDER PETA
 // ============================================================
 let petaKerjasama = null;
 let layerGaris = null;
@@ -267,27 +318,21 @@ function renderPetaKerjasama(data) {
   
   if (!petaKerjasama) {
     petaKerjasama = L.map('mapKerjasama', {
-      center: [-2, 80],
-      zoom: 3,
-      minZoom: 2,
-      maxZoom: 8,
-      scrollWheelZoom: true,
-      worldCopyJump: true
+      center: [-2, 80], zoom: 3, minZoom: 2, maxZoom: 8,
+      scrollWheelZoom: true, worldCopyJump: true
     });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19
+      attribution: '© OpenStreetMap', maxZoom: 19
     }).addTo(petaKerjasama);
     
     L.marker([-7.3214, 112.7344], {
       icon: L.divIcon({
         className: 'uinsa-marker',
         html: '<div style="background:#0a5c4a; color:white; padding:4px 8px; border-radius:6px; font-weight:700; font-size:12px; white-space:nowrap; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏛 UINSA</div>',
-        iconSize: [80, 30],
-        iconAnchor: [40, 15]
+        iconSize: [80, 30], iconAnchor: [40, 15]
       })
-    }).addTo(petaKerjasama).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong><br>Pusat kerja sama internasional');
+    }).addTo(petaKerjasama).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong>');
     
     layerGaris = L.layerGroup().addTo(petaKerjasama);
     layerMarkers = L.layerGroup().addTo(petaKerjasama);
@@ -300,16 +345,7 @@ function renderPetaKerjasama(data) {
   data.forEach(k => {
     const negara = (k.negara || '').trim().toLowerCase();
     if (!negara) return;
-    
-    if (!negaraMap[negara]) {
-      negaraMap[negara] = {
-        nama: k.negara,
-        mitra: [],
-        onGoing: 0,
-        berakhir: 0
-      };
-    }
-    
+    if (!negaraMap[negara]) negaraMap[negara] = { nama: k.negara, mitra: [], onGoing: 0, berakhir: 0 };
     negaraMap[negara].mitra.push(k.kampus);
     const status = hitungStatusKerjasama(k.tanggal_berakhir);
     if (status === 'Aktif') negaraMap[negara].onGoing++;
@@ -323,19 +359,12 @@ function renderPetaKerjasama(data) {
     if (!coords) continue;
     
     const arc = getArcPoints(UINSA_COORD, coords);
-    L.polyline(arc, {
-      color: '#0a5c4a',
-      weight: 1.8,
-      opacity: 0.6,
-      dashArray: '4, 6'
-    }).addTo(layerGaris);
+    L.polyline(arc, { color: '#0a5c4a', weight: 1.8, opacity: 0.6, dashArray: '4, 6' }).addTo(layerGaris);
     
     const marker = L.circleMarker(coords, {
       radius: 7,
       fillColor: info.onGoing > 0 ? '#0a5c4a' : '#c0392b',
-      color: 'white',
-      weight: 2,
-      fillOpacity: 0.9
+      color: 'white', weight: 2, fillOpacity: 0.9
     }).addTo(layerMarkers);
     
     const popup = `
@@ -351,37 +380,29 @@ function renderPetaKerjasama(data) {
           ${info.mitra.slice(0, 5).map(m => `• ${m}`).join('<br>')}
           ${info.mitra.length > 5 ? `<br><em>... dan ${info.mitra.length - 5} lainnya</em>` : ''}
         </div>
-      </div>
-    `;
+      </div>`;
     
     marker.bindPopup(popup);
     marker.bindTooltip(info.nama, { direction: 'top', offset: [0, -8] });
   }
 }
 
-// ============================================================
-// HITUNG TITIK LENGKUNG (Arc)
-// ============================================================
 function getArcPoints(start, end, numPoints = 40) {
   const points = [];
   const [lat1, lng1] = start;
   const [lat2, lng2] = end;
-  
   const midLat = (lat1 + lat2) / 2;
   const midLng = (lng1 + lng2) / 2;
   const dist = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
   const offset = dist * 0.25;
-  
   const ctrlLat = midLat + offset;
   const ctrlLng = midLng;
-  
   for (let i = 0; i <= numPoints; i++) {
     const t = i / numPoints;
     const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
     const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * ctrlLng + t * t * lng2;
     points.push([lat, lng]);
   }
-  
   return points;
 }
 
@@ -444,10 +465,8 @@ export async function simpanKerjasama() {
       const { error } = await supabase.from('kerjasama').insert(data);
       if (error) throw error;
     }
-    
     alertBox.innerHTML = '<div class="alert alert-success">✅ Data berhasil disimpan.</div>';
     setTimeout(() => { closeModal('modalFormKerjasama'); loadKerjasama(); }, 1200);
-    
   } catch (err) {
     alertBox.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
   } finally {
@@ -491,11 +510,7 @@ export function openImportKerjasama() {
 
 export function downloadTemplateKjs() {
   const header = KJS_COLUMNS.map(c => KJS_LABELS[c]).join(',');
-  const contoh = [
-    'Universitas Malaya','Fakultas Syariah','Malaysia',
-    '2023-08-01','2028-08-01','MoU',
-    'https://drive.google.com/file/d/xxx/view'
-  ];
+  const contoh = ['Universitas Malaya','Fakultas Syariah','Malaysia','2023-08-01','2028-08-01','MoU','https://drive.google.com/file/d/xxx/view'];
   const csv = header + '\n' + contoh.map(v => v.includes(',') ? `"${v}"` : v).join(',') + '\n';
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -544,17 +559,12 @@ function parseCSVKjs(text) {
 
 function validateKjs() {
   validKjs = []; errorKjs = [];
-  
   parsedKjs.forEach((row) => {
     const errors = [];
     if (!row.kampus) errors.push('Kampus kosong');
-    
     ['tanggal_mulai','tanggal_berakhir'].forEach(f => {
-      if (row[f] && !/^\d{4}-\d{2}-\d{2}$/.test(row[f])) {
-        errors.push(`${f} harus YYYY-MM-DD`);
-      }
+      if (row[f] && !/^\d{4}-\d{2}-\d{2}$/.test(row[f])) errors.push(`${f} harus YYYY-MM-DD`);
     });
-    
     if (errors.length > 0) errorKjs.push({ row, errors, lineNumber: row._lineNumber });
     else validKjs.push(row);
   });
@@ -566,8 +576,7 @@ function validateKjs() {
   if (errorKjs.length > 0) {
     document.getElementById('errorSectionKjs').style.display = 'block';
     document.getElementById('errorListKjs').innerHTML = errorKjs.slice(0, 20)
-      .map(e => `<div>❌ Baris ${e.lineNumber} (${e.row.kampus || '—'}): ${e.errors.join(', ')}</div>`)
-      .join('');
+      .map(e => `<div>❌ Baris ${e.lineNumber} (${e.row.kampus || '—'}): ${e.errors.join(', ')}</div>`).join('');
   } else {
     document.getElementById('errorSectionKjs').style.display = 'none';
   }
@@ -576,11 +585,7 @@ function validateKjs() {
     <table><thead><tr><th>Baris</th><th>Kampus</th><th>Negara</th><th>Mulai</th><th>Status</th></tr></thead>
     <tbody>${parsedKjs.slice(0, 10).map(r => {
       const isErr = errorKjs.some(e => e.row._lineNumber === r._lineNumber);
-      return `<tr>
-        <td>${r._lineNumber}</td><td>${r.kampus || '—'}</td>
-        <td>${r.negara || '—'}</td><td>${r.tanggal_mulai || '—'}</td>
-        <td>${isErr ? '<span class="tag tag-error">Error</span>' : '<span class="tag tag-active">OK</span>'}</td>
-      </tr>`;
+      return `<tr><td>${r._lineNumber}</td><td>${r.kampus || '—'}</td><td>${r.negara || '—'}</td><td>${r.tanggal_mulai || '—'}</td><td>${isErr ? '<span class="tag tag-error">Error</span>' : '<span class="tag tag-active">OK</span>'}</td></tr>`;
     }).join('')}</tbody></table>`;
   
   document.getElementById('previewSectionKjs').style.display = 'block';
@@ -592,7 +597,6 @@ export async function prosesImportKjs() {
   
   const btn = document.getElementById('btnImportKjs');
   const alertBox = document.getElementById('importKjsAlert');
-  
   if (!confirm(`Import ${validKjs.length} data kerjasama?`)) return;
   
   btn.disabled = true;
@@ -603,7 +607,6 @@ export async function prosesImportKjs() {
   for (let i = 0; i < validKjs.length; i++) {
     const row = validKjs[i];
     btn.textContent = `Import ${i + 1}/${validKjs.length}...`;
-    
     try {
       const { error } = await supabase.from('kerjasama').insert({
         kampus: row.kampus,
@@ -614,7 +617,6 @@ export async function prosesImportKjs() {
         jenis: row.jenis || null,
         link_dokumen: row.link_dokumen || null
       });
-      
       if (error) throw error;
       sukses++;
     } catch (err) {
@@ -627,9 +629,7 @@ export async function prosesImportKjs() {
   btn.disabled = false;
   
   let html = `<div class="alert alert-success"><strong>✅ Selesai!</strong><br>Berhasil: <strong>${sukses}</strong><br>Gagal: <strong>${gagal}</strong></div>`;
-  if (gagalDetail.length > 0) {
-    html += `<div class="error-list">${gagalDetail.map(d => `<div>❌ ${d}</div>`).join('')}</div>`;
-  }
+  if (gagalDetail.length > 0) html += `<div class="error-list">${gagalDetail.map(d => `<div>❌ ${d}</div>`).join('')}</div>`;
   alertBox.innerHTML = html;
   
   loadKerjasama();
@@ -644,6 +644,8 @@ export function setupKerjasamaDragDrop() {
 // EXPOSE KE WINDOW
 // ============================================================
 window.loadKerjasama = loadKerjasama;
+window.previewDokumen = previewDokumen;
+window.closePreviewDokumen = closePreviewDokumen;
 window.openTambahKerjasama = openTambahKerjasama;
 window.editKerjasama = editKerjasama;
 window.simpanKerjasama = simpanKerjasama;
