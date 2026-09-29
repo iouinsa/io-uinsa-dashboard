@@ -14,7 +14,7 @@ import {
   loadKerjasama, openTambahKerjasama, editKerjasama,
   simpanKerjasama, hapusKerjasama, openImportKerjasama,
   downloadTemplateKjs, handleFileSelectKjs, prosesImportKjs,
-  setupKerjasamaDragDrop
+  setupKerjasamaDragDrop, previewDokumen, closePreviewDokumen
 } from './kerjasama.js';
 import { loadTempatTinggal } from './tempat-tinggal.js';
 import {
