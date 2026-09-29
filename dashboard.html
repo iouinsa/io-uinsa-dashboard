@@ -45,15 +45,12 @@
         <div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Ringkasan data International Office UINSA</p></div>
       </div>
       
-      <!-- Kartu Ringkasan -->
       <div class="summary-grid" id="summaryDashboard">
         <div class="summary-card-dash"><div class="value">—</div></div>
       </div>
       
-      <!-- Reminder -->
       <div class="reminder-grid" id="reminderDashboard"></div>
       
-      <!-- Grafik Baris 1 -->
       <div class="chart-grid">
         <div class="chart-card">
           <h3>🌍 Mahasiswa per Negara (Top 10)</h3>
@@ -65,7 +62,6 @@
         </div>
       </div>
       
-      <!-- Grafik Baris 2 -->
       <div class="chart-grid">
         <div class="chart-card">
           <h3>📋 Status Mahasiswa</h3>
@@ -77,7 +73,6 @@
         </div>
       </div>
       
-      <!-- Grafik Baris 3 -->
       <div class="chart-grid">
         <div class="chart-card">
           <h3>🤝 Kerjasama per Negara (Top 10)</h3>
@@ -89,7 +84,6 @@
         </div>
       </div>
       
-      <!-- Grafik Baris 4 -->
       <div class="chart-grid">
         <div class="chart-card">
           <h3>📈 Tren Mahasiswa Baru per Tahun</h3>
@@ -107,6 +101,7 @@
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
         <div class="page-header-actions">
+          <button class="btn btn-outline" onclick="cetakLaporanMahasiswa()">🖨️ Cetak Laporan</button>
           <button class="btn btn-outline" onclick="openImportCSV()">📥 Import CSV</button>
           <button class="btn btn-primary" onclick="openTambahMahasiswa()">+ Tambah Mahasiswa</button>
         </div>
@@ -141,6 +136,7 @@
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
         <div class="page-header-actions">
+          <button class="btn btn-outline" onclick="cetakLaporanKerjasama()">🖨️ Cetak Laporan</button>
           <button class="btn btn-outline" onclick="openImportKerjasama()">📥 Import CSV</button>
           <button class="btn btn-primary" onclick="openTambahKerjasama()">+ Tambah Kerjasama</button>
         </div>
@@ -172,7 +168,12 @@
     
     <!-- TEMPAT TINGGAL -->
     <div class="page-view" id="page-tempat_tinggal">
-      <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & jenis tempat tinggal</p></div></div>
+      <div class="page-header">
+        <div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & jenis tempat tinggal</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline" onclick="cetakLaporanTempatTinggal()">🖨️ Cetak Laporan</button>
+        </div>
+      </div>
       
       <div class="card">
         <div class="card-header"><h3>🗺️ Peta Sebaran Mahasiswa</h3><span id="totalAlamat" class="count-label"></span></div>
