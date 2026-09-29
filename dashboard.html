@@ -43,6 +43,7 @@
       <div class="welcome-box">Pilih menu di sidebar untuk mulai menjelajah.</div>
     </div>
     
+    <!-- MAHASISWA -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -62,7 +63,13 @@
       </div>
       
       <div class="card">
-        <div class="card-header"><h3>Daftar Mahasiswa</h3><span id="totalMahasiswa" class="count-label"></span></div>
+        <div class="card-header">
+          <h3>Daftar Mahasiswa</h3>
+          <div class="card-header-right">
+            <input type="text" class="search-input" id="searchMahasiswa" placeholder="🔍 Cari NIM, nama, fakultas..." oninput="searchMahasiswa(this.value)">
+            <span id="totalMahasiswa" class="count-label"></span>
+          </div>
+        </div>
         <table>
           <thead><tr><th style="width:60px;">Foto</th><th>NIM</th><th>Nama</th><th>Negara</th><th>Fakultas</th><th>Prodi</th><th>Angkatan</th><th>Status</th></tr></thead>
           <tbody id="tbodyMahasiswa"><tr class="loading-row"><td colspan="8">Memuat data...</td></tr></tbody>
@@ -70,6 +77,7 @@
       </div>
     </div>
     
+    <!-- KERJASAMA -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -89,7 +97,13 @@
       </div>
       
       <div class="card">
-        <div class="card-header"><h3>Daftar Kerjasama</h3><span id="totalKerjasama" class="count-label"></span></div>
+        <div class="card-header">
+          <h3>Daftar Kerjasama</h3>
+          <div class="card-header-right">
+            <input type="text" class="search-input" id="searchKerjasama" placeholder="🔍 Cari kampus, negara, jenis..." oninput="searchKerjasama(this.value)">
+            <span id="totalKerjasama" class="count-label"></span>
+          </div>
+        </div>
         <table>
           <thead><tr><th>Kampus</th><th>Negara</th><th>Jenis</th><th>Mulai</th><th>Berakhir</th><th>Status</th><th style="width:100px;">Dokumen</th><th style="width:120px;">Aksi</th></tr></thead>
           <tbody id="tbodyKerjasama"><tr class="loading-row"><td colspan="8">Memuat data...</td></tr></tbody>
@@ -97,6 +111,7 @@
       </div>
     </div>
     
+    <!-- TEMPAT TINGGAL -->
     <div class="page-view" id="page-tempat_tinggal">
       <div class="page-header"><div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & kamar mahad</p></div></div>
       <div class="card">
@@ -108,7 +123,13 @@
         <div class="kamar-grid" id="kamarGrid"></div>
       </div>
       <div class="card">
-        <div class="card-header"><h3>🏘️ Kos / Apartemen / Lainnya</h3><span id="totalNonMahad" class="count-label"></span></div>
+        <div class="card-header">
+          <h3>🏘️ Kos / Apartemen / Lainnya</h3>
+          <div class="card-header-right">
+            <input type="text" class="search-input" id="searchNonMahad" placeholder="🔍 Cari nama, alamat, pemilik..." oninput="searchNonMahad(this.value)">
+            <span id="totalNonMahad" class="count-label"></span>
+          </div>
+        </div>
         <table>
           <thead><tr><th>Nama</th><th>Jenis</th><th>Alamat</th><th>Pemilik</th><th>Status</th></tr></thead>
           <tbody id="tbodyNonMahad"><tr><td colspan="5" class="empty-row">Belum ada data.</td></tr></tbody>
@@ -116,13 +137,20 @@
       </div>
     </div>
     
+    <!-- PENERIMA -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
         <button class="btn btn-primary" onclick="openTambahPenerima()">+ Tambah Penerima</button>
       </div>
       <div class="card">
-        <div class="card-header"><h3>Daftar Penerima</h3><span id="totalPenerima" class="count-label"></span></div>
+        <div class="card-header">
+          <h3>Daftar Penerima</h3>
+          <div class="card-header-right">
+            <input type="text" class="search-input" id="searchPenerima" placeholder="🔍 Cari nama, email, jabatan..." oninput="searchPenerima(this.value)">
+            <span id="totalPenerima" class="count-label"></span>
+          </div>
+        </div>
         <table>
           <thead><tr><th>Nama</th><th>Jabatan</th><th>Email</th><th>Kategori</th><th>Status</th><th style="width:160px;">Aksi</th></tr></thead>
           <tbody id="tbodyPenerima"><tr class="loading-row"><td colspan="6">Memuat data...</td></tr></tbody>
@@ -180,15 +208,15 @@
         <div class="form-section"><h4>Identitas Mahasiswa</h4>
           <div class="form-row">
             <div class="form-group"><label>NIM <span class="req">*</span></label><input type="text" name="nim" required></div>
-            <div class="form-group"><label>Nama Lengkap <span class="req">*</span></label><input type="text" name="nama" required></div>
+            <div class="form-group"><label>Nama Lengkap</label><input type="text" name="nama"></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Jenis Kelamin</label><select name="jenis_kelamin"><option value="">— Pilih —</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
             <div class="form-group"><label>Jenjang</label><select name="jenjang"><option value="">— Pilih —</option><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option></select></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Fakultas <span class="req">*</span></label><input type="text" name="fakultas" required></div>
-            <div class="form-group"><label>Prodi <span class="req">*</span></label><input type="text" name="prodi" required></div>
+            <div class="form-group"><label>Fakultas</label><input type="text" name="fakultas"></div>
+            <div class="form-group"><label>Prodi</label><input type="text" name="prodi"></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Tahun Masuk</label><input type="number" name="tahun_masuk" placeholder="2024"></div>
