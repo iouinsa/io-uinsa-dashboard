@@ -11,8 +11,6 @@ import {
 // ============================================================
 // KOORDINAT NEGARA (hardcoded — untuk peta)
 // ============================================================
-// Format: nama_negara: [lat, lng]
-// Nama harus huruf kecil semua, cocok dengan kolom `negara` di DB.
 const KOORDINAT_NEGARA = {
   'malaysia': [4.2105, 101.9758],
   'singapura': [1.3521, 103.8198],
@@ -29,11 +27,13 @@ const KOORDINAT_NEGARA = {
   'cambodia': [12.5657, 104.9910],
   'laos': [19.8563, 102.4955],
   'timor leste': [-8.8742, 125.7275],
-  
+
   'mesir': [26.8206, 30.8025],
   'egypt': [26.8206, 30.8025],
+  'arab republic of egypt': [26.8206, 30.8025],
   'arab saudi': [23.8859, 45.0792],
   'saudi arabia': [23.8859, 45.0792],
+  'makkah': [21.3891, 39.8579],
   'uni emirat arab': [23.4241, 53.8478],
   'uae': [23.4241, 53.8478],
   'qatar': [25.3548, 51.1839],
@@ -55,11 +55,12 @@ const KOORDINAT_NEGARA = {
   'tunisia': [33.8869, 9.5375],
   'libya': [26.3351, 17.2283],
   'sudan': [12.8628, 30.2176],
+  'somalia': [5.1521, 46.1996],
   'yaman': [15.5527, 48.5164],
   'yemen': [15.5527, 48.5164],
   'palestina': [31.9522, 35.2332],
   'palestine': [31.9522, 35.2332],
-  
+
   'inggris': [55.3781, -3.4360],
   'uk': [55.3781, -3.4360],
   'united kingdom': [55.3781, -3.4360],
@@ -103,7 +104,7 @@ const KOORDINAT_NEGARA = {
   'hungary': [47.1625, 19.5033],
   'rumania': [45.9432, 24.9668],
   'romania': [45.9432, 24.9668],
-  
+
   'amerika serikat': [37.0902, -95.7129],
   'usa': [37.0902, -95.7129],
   'united states': [37.0902, -95.7129],
@@ -119,7 +120,7 @@ const KOORDINAT_NEGARA = {
   'kolombia': [4.5709, -74.2973],
   'colombia': [4.5709, -74.2973],
   'venezuela': [6.4238, -66.5897],
-  
+
   'china': [35.8617, 104.1954],
   'tiongkok': [35.8617, 104.1954],
   'jepang': [36.2048, 138.2529],
@@ -137,15 +138,16 @@ const KOORDINAT_NEGARA = {
   'afghanistan': [33.9391, 67.7100],
   'uzbekistan': [41.3775, 64.5853],
   'kazakhstan': [48.0196, 66.9237],
+  'kazakhtan': [48.0196, 66.9237],
   'taiwan': [23.6978, 120.9605],
   'hong kong': [22.3193, 114.1694],
   'maldives': [3.2028, 73.2207],
-  
+
   'australia': [-25.2744, 133.7751],
   'selandia baru': [-40.9006, 174.8860],
   'new zealand': [-40.9006, 174.8860],
   'fiji': [-17.7134, 178.0650],
-  
+
   'afrika selatan': [-30.5595, 22.9375],
   'south africa': [-30.5595, 22.9375],
   'nigeria': [9.0820, 8.6753],
@@ -154,8 +156,7 @@ const KOORDINAT_NEGARA = {
   'ghana': [7.9465, -1.0232],
   'senegal': [14.4974, -14.4524],
   'tanzania': [-6.3690, 34.8888],
-  'uganda': [1.3733, 32.2903],
-  'tunisia': [33.8869, 9.5375]
+  'uganda': [1.3733, 32.2903]
 };
 
 // ============================================================
@@ -175,7 +176,6 @@ export async function loadKerjasama() {
     return;
   }
   
-  // Render peta & statistik
   renderStatistikKerjasama(data || []);
   renderPetaKerjasama(data || []);
   
@@ -205,12 +205,12 @@ export async function loadKerjasama() {
 }
 
 // ============================================================
-// RENDER STATISTIK
+// RENDER STATISTIK (tanpa IA)
 // ============================================================
 function renderStatistikKerjasama(data) {
   const total = data.length;
   let onGoing = 0, berakhir = 0;
-  let mou = 0, moa = 0, ia = 0, loi = 0;
+  let mou = 0, moa = 0, loi = 0;
   
   data.forEach(k => {
     const status = hitungStatusKerjasama(k.tanggal_berakhir);
@@ -220,7 +220,6 @@ function renderStatistikKerjasama(data) {
     const jenis = (k.jenis || '').toUpperCase();
     if (jenis === 'MOU') mou++;
     else if (jenis === 'MOA') moa++;
-    else if (jenis === 'IA') ia++;
     else if (jenis === 'LOI') loi++;
   });
   
@@ -248,10 +247,6 @@ function renderStatistikKerjasama(data) {
       <div class="stat-num">${moa}</div>
       <div class="stat-label">Dokumen MoA</div>
     </div>
-    <div class="stat-box stat-ia">
-      <div class="stat-num">${ia}</div>
-      <div class="stat-label">Dokumen IA</div>
-    </div>
     <div class="stat-box stat-loi">
       <div class="stat-num">${loi}</div>
       <div class="stat-label">Dokumen LoI</div>
@@ -260,7 +255,7 @@ function renderStatistikKerjasama(data) {
 }
 
 // ============================================================
-// RENDER PETA SEBARAN
+// RENDER PETA SEBARAN (tanpa keterangan negara)
 // ============================================================
 let petaKerjasama = null;
 let layerGaris = null;
@@ -270,7 +265,6 @@ function renderPetaKerjasama(data) {
   const mapEl = document.getElementById('mapKerjasama');
   if (!mapEl) return;
   
-  // Inisialisasi peta sekali saja
   if (!petaKerjasama) {
     petaKerjasama = L.map('mapKerjasama', {
       center: [-2, 80],
@@ -286,7 +280,6 @@ function renderPetaKerjasama(data) {
       maxZoom: 19
     }).addTo(petaKerjasama);
     
-    // Marker UINSA
     L.marker([-7.3214, 112.7344], {
       icon: L.divIcon({
         className: 'uinsa-marker',
@@ -300,11 +293,9 @@ function renderPetaKerjasama(data) {
     layerMarkers = L.layerGroup().addTo(petaKerjasama);
   }
   
-  // Bersihkan layer lama
   layerGaris.clearLayers();
   layerMarkers.clearLayers();
   
-  // Kelompokkan per negara
   const negaraMap = {};
   data.forEach(k => {
     const negara = (k.negara || '').trim().toLowerCase();
@@ -326,18 +317,11 @@ function renderPetaKerjasama(data) {
   });
   
   const UINSA_COORD = [-7.3214, 112.7344];
-  const keteranganList = [];
   
-  // Untuk tiap negara, pasang marker + garis
   for (const [key, info] of Object.entries(negaraMap)) {
     const coords = KOORDINAT_NEGARA[key];
+    if (!coords) continue;
     
-    if (!coords) {
-      keteranganList.push({ nama: info.nama, jumlah: info.mitra.length, onGoing: info.onGoing, berakhir: info.berakhir, noCoord: true });
-      continue;
-    }
-    
-    // Garis melengkung dari UINSA ke negara
     const arc = getArcPoints(UINSA_COORD, coords);
     L.polyline(arc, {
       color: '#0a5c4a',
@@ -346,7 +330,6 @@ function renderPetaKerjasama(data) {
       dashArray: '4, 6'
     }).addTo(layerGaris);
     
-    // Marker negara
     const marker = L.circleMarker(coords, {
       radius: 7,
       fillColor: info.onGoing > 0 ? '#0a5c4a' : '#c0392b',
@@ -373,42 +356,25 @@ function renderPetaKerjasama(data) {
     
     marker.bindPopup(popup);
     marker.bindTooltip(info.nama, { direction: 'top', offset: [0, -8] });
-    
-    keteranganList.push({
-      nama: info.nama,
-      jumlah: info.mitra.length,
-      onGoing: info.onGoing,
-      berakhir: info.berakhir,
-      noCoord: false
-    });
   }
-  
-
 }
 
 // ============================================================
-// HITUNG TITIK LENGKUNG (Arc) ANTARA 2 KOORDINAT
+// HITUNG TITIK LENGKUNG (Arc)
 // ============================================================
 function getArcPoints(start, end, numPoints = 40) {
   const points = [];
   const [lat1, lng1] = start;
   const [lat2, lng2] = end;
   
-  // Titik tengah + offset ke atas untuk efek melengkung
   const midLat = (lat1 + lat2) / 2;
   const midLng = (lng1 + lng2) / 2;
-  
-  // Jarak antar titik
   const dist = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
-  
-  // Offset lengkungan (makin jauh, makin melengkung)
   const offset = dist * 0.25;
   
-  // Titik kontrol (control point) — di atas titik tengah
   const ctrlLat = midLat + offset;
   const ctrlLng = midLng;
   
-  // Quadratic Bezier Curve
   for (let i = 0; i <= numPoints; i++) {
     const t = i / numPoints;
     const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
@@ -451,7 +417,7 @@ export async function editKerjasama(id) {
 }
 
 // ============================================================
-// SIMPAN (INSERT / UPDATE)
+// SIMPAN
 // ============================================================
 export async function simpanKerjasama() {
   const form = document.getElementById('formKerjasama');
@@ -502,7 +468,7 @@ export function hapusKerjasama(id, nama) {
 }
 
 // ============================================================
-// IMPORT CSV — STATE
+// IMPORT CSV
 // ============================================================
 let parsedKjs = [], validKjs = [], errorKjs = [];
 
