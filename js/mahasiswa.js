@@ -10,14 +10,14 @@ import {
 
 let currentMhsId = null;
 let parsedData = [], validData = [], errorData = [];
-let filterStatus = 'semua'; // 'semua' | 'Aktif' | 'Alumni' | 'Cuti' | 'Keluar'
+let filterStatus = 'semua';
 
 // ============================================================
 // HELPER: Kelas tag untuk status
 // ============================================================
 function statusClass(status) {
   if (status === 'Aktif') return 'tag-active';
-  if (status === 'Alumni') return 'tag-mou'; // biru
+  if (status === 'Alumni') return 'tag-mou';
   if (status === 'Cuti') return 'tag-warning';
   if (status === 'Keluar') return 'tag-error';
   return 'tag-muted';
@@ -67,7 +67,7 @@ export async function loadMahasiswa() {
     return `<tr class="clickable" onclick="window.openDetailMahasiswa(${m.id})">
       <td>${fotoHtml}</td>
       <td><strong>${m.nim}</strong></td>
-      <td>${m.nama}</td>
+      <td>${m.nama || '—'}</td>
       <td>${m.warga_negara || '—'}</td>
       <td>${m.fakultas || '—'}</td>
       <td>${m.prodi || '—'}</td>
@@ -85,7 +85,6 @@ export async function loadMahasiswa() {
 export function setFilterStatus(status) {
   filterStatus = status;
   
-  // Update tombol filter — semua tombol filter-status
   document.querySelectorAll('.filter-status-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
@@ -156,7 +155,7 @@ export async function openDetailMahasiswa(id) {
     <div class="detail-header">
       ${fotoHtml}
       <div class="detail-header-info">
-        <h2>${m.nama}</h2>
+        <h2>${m.nama || 'Tanpa Nama'}</h2>
         <p>${m.nim} · ${m.fakultas || '—'} · ${m.prodi || '—'}</p>
         <div style="margin-top: 8px;"><span class="tag ${stCls}">${st}</span></div>
       </div>
@@ -171,7 +170,7 @@ export async function openDetailMahasiswa(id) {
         <div class="detail-item"><label>Fakultas</label><span>${m.fakultas || '—'}</span></div>
         <div class="detail-item"><label>Prodi</label><span>${m.prodi || '—'}</span></div>
         <div class="detail-item"><label>Tahun Masuk</label><span>${m.tahun_masuk || '—'}</span></div>
-        <div class="detail-item"><label>Semester</label><span>${hitungSemester(m.tahun_masuk)}</span></div>
+        <div class="detail-item"><label>Semester</label><span>${m.tahun_masuk ? hitungSemester(m.tahun_masuk) : '—'}</span></div>
         <div class="detail-item"><label>Warga Negara</label><span>${m.warga_negara || '—'}</span></div>
         <div class="detail-item"><label>Email Kampus</label><span>${m.email_kampus || '—'}</span></div>
         <div class="detail-item"><label>Status</label><span class="tag ${stCls}">${st}</span></div>
@@ -269,7 +268,6 @@ export function openTambahMahasiswa() {
   document.getElementById('id_mahasiswa').value = '';
   document.getElementById('modalAlert').innerHTML = '';
   
-  // Set default status = Aktif
   const statusEl = document.getElementById('formMahasiswa').elements['status'];
   if (statusEl) statusEl.value = 'Aktif';
   
@@ -327,7 +325,7 @@ export async function openEditMahasiswa() {
 }
 
 // ============================================================
-// SIMPAN
+// SIMPAN (INSERT / UPDATE) — HANYA NIM WAJIB
 // ============================================================
 export async function simpanMahasiswa() {
   const form = document.getElementById('formMahasiswa');
@@ -335,7 +333,12 @@ export async function simpanMahasiswa() {
   const alertBox = document.getElementById('modalAlert');
   const editId = document.getElementById('id_mahasiswa').value;
   
-  if (!form.checkValidity()) { form.reportValidity(); return; }
+  // Cek hanya NIM yang wajib
+  const nimVal = form.elements['nim'].value.trim();
+  if (!nimVal) {
+    alertBox.innerHTML = '<div class="alert alert-error">❌ NIM wajib diisi.</div>';
+    return;
+  }
   
   const fd = new FormData(form);
   const data = {};
@@ -348,12 +351,17 @@ export async function simpanMahasiswa() {
   try {
     if (editId) {
       const { error: err1 } = await supabase.from('mahasiswa').update({
-        nim: data.nim, nama: data.nama,
-        jenis_kelamin: data.jenis_kelamin, jenjang: data.jenjang,
-        fakultas: data.fakultas, prodi: data.prodi,
+        nim: data.nim, 
+        nama: data.nama,
+        jenis_kelamin: data.jenis_kelamin, 
+        jenjang: data.jenjang,
+        fakultas: data.fakultas, 
+        prodi: data.prodi,
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
-        warga_negara: data.warga_negara, email_kampus: data.email_kampus,
-        keterangan: data.keterangan, link_foto: data.link_foto,
+        warga_negara: data.warga_negara, 
+        email_kampus: data.email_kampus,
+        keterangan: data.keterangan, 
+        link_foto: data.link_foto,
         status: data.status || 'Aktif'
       }).eq('id', editId);
       
@@ -388,12 +396,17 @@ export async function simpanMahasiswa() {
       
     } else {
       const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
-        nim: data.nim, nama: data.nama,
-        jenis_kelamin: data.jenis_kelamin, jenjang: data.jenjang,
-        fakultas: data.fakultas, prodi: data.prodi,
+        nim: data.nim, 
+        nama: data.nama,
+        jenis_kelamin: data.jenis_kelamin, 
+        jenjang: data.jenjang,
+        fakultas: data.fakultas, 
+        prodi: data.prodi,
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
-        warga_negara: data.warga_negara, email_kampus: data.email_kampus,
-        keterangan: data.keterangan, link_foto: data.link_foto,
+        warga_negara: data.warga_negara, 
+        email_kampus: data.email_kampus,
+        keterangan: data.keterangan, 
+        link_foto: data.link_foto,
         status: data.status || 'Aktif'
       }).select('id').single();
       
@@ -539,6 +552,9 @@ function parseCSVMhs(text) {
   validateDataMhs();
 }
 
+// ============================================================
+// VALIDASI — HANYA NIM WAJIB
+// ============================================================
 function validateDataMhs() {
   validData = []; errorData = [];
   const nimCount = {};
@@ -548,18 +564,24 @@ function validateDataMhs() {
   
   parsedData.forEach((row) => {
     const errors = [];
+    
+    // HANYA NIM yang wajib
     if (!row.nim) errors.push('NIM kosong');
-    if (!row.nama) errors.push('Nama kosong');
-    if (!row.fakultas) errors.push('Fakultas kosong');
-    if (!row.prodi) errors.push('Prodi kosong');
     if (row.nim && nimCount[row.nim] > 1) errors.push('NIM duplikat');
     
-    ['masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','tanggal_lahir'].forEach(f => {
-      if (row[f] && !/^\d{4}-\d{2}-\d{2}$/.test(row[f])) errors.push(`${f} harus YYYY-MM-DD`);
-    });
+    // Kolom lain: hanya cek format KALAU ada isinya
+    if (row.jenis_kelamin && !['L','P'].includes(row.jenis_kelamin)) {
+      errors.push('JK harus L/P');
+    }
+    if (row.status && !validStatus.includes(row.status)) {
+      errors.push('Status harus Aktif/Alumni/Cuti/Keluar');
+    }
     
-    if (row.jenis_kelamin && !['L','P'].includes(row.jenis_kelamin)) errors.push('JK harus L/P');
-    if (row.status && !validStatus.includes(row.status)) errors.push('Status harus Aktif/Alumni/Cuti/Keluar');
+    ['masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','tanggal_lahir'].forEach(f => {
+      if (row[f] && !/^\d{4}-\d{2}-\d{2}$/.test(row[f])) {
+        errors.push(`${f} harus YYYY-MM-DD`);
+      }
+    });
     
     if (errors.length > 0) errorData.push({ row, errors, lineNumber: row._lineNumber });
     else validData.push(row);
@@ -612,12 +634,17 @@ export async function prosesImportMhs() {
     
     try {
       const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
-        nim: row.nim, nama: row.nama,
-        jenis_kelamin: row.jenis_kelamin || null, jenjang: row.jenjang || null,
-        fakultas: row.fakultas, prodi: row.prodi,
+        nim: row.nim,
+        nama: row.nama || null,
+        jenis_kelamin: row.jenis_kelamin || null,
+        jenjang: row.jenjang || null,
+        fakultas: row.fakultas || null,
+        prodi: row.prodi || null,
         tahun_masuk: row.tahun_masuk ? parseInt(row.tahun_masuk) : null,
-        warga_negara: row.warga_negara || null, email_kampus: row.email_kampus || null,
-        keterangan: row.keterangan || null, link_foto: row.link_foto || null,
+        warga_negara: row.warga_negara || null,
+        email_kampus: row.email_kampus || null,
+        keterangan: row.keterangan || null,
+        link_foto: row.link_foto || null,
         status: row.status || 'Aktif'
       }).select('id').single();
       
@@ -638,10 +665,13 @@ export async function prosesImportMhs() {
       
       await supabase.from('mahasiswa_kontak').insert({
         mahasiswa_id: mhsId,
-        tempat_lahir: row.tempat_lahir || null, tanggal_lahir: row.tanggal_lahir || null,
-        alamat_sekarang: row.alamat_sekarang || null, alamat_asal: row.alamat_asal || null,
+        tempat_lahir: row.tempat_lahir || null,
+        tanggal_lahir: row.tanggal_lahir || null,
+        alamat_sekarang: row.alamat_sekarang || null,
+        alamat_asal: row.alamat_asal || null,
         telepon: row.telepon || null, hp: row.hp || null,
-        no_paketdata: row.no_paketdata || null, email_pribadi: row.email_pribadi || null
+        no_paketdata: row.no_paketdata || null,
+        email_pribadi: row.email_pribadi || null
       });
       
       sukses++;
