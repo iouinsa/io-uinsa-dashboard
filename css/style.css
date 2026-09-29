@@ -272,6 +272,10 @@ tr.clickable:hover td { background: #f0f9f6; }
   padding: 20px;
 }
 
+/* Modal preview dokumen — harus di atas semua modal */
+#modalPreviewDokumen {
+  z-index: 1100;
+}
 .modal-overlay.show { display: flex; }
 
 .modal {
