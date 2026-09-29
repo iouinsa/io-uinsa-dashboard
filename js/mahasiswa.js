@@ -1,5 +1,5 @@
 // ============================================================
-// MAHASISWA — CRUD + IMPORT CSV + PREVIEW DOKUMEN
+// MAHASISWA — CRUD + IMPORT CSV + PREVIEW DOKUMEN + STATUS
 // ============================================================
 
 import { supabase } from './config.js';
@@ -10,26 +10,48 @@ import {
 
 let currentMhsId = null;
 let parsedData = [], validData = [], errorData = [];
+let filterStatus = 'semua'; // 'semua' | 'Aktif' | 'Alumni' | 'Cuti' | 'Keluar'
+
+// ============================================================
+// HELPER: Kelas tag untuk status
+// ============================================================
+function statusClass(status) {
+  if (status === 'Aktif') return 'tag-active';
+  if (status === 'Alumni') return 'tag-mou'; // biru
+  if (status === 'Cuti') return 'tag-warning';
+  if (status === 'Keluar') return 'tag-error';
+  return 'tag-muted';
+}
 
 // ============================================================
 // LOAD DAFTAR MAHASISWA
 // ============================================================
 export async function loadMahasiswa() {
   const tbody = document.getElementById('tbodyMahasiswa');
-  tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Memuat data...</td></tr>';
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Memuat data...</td></tr>';
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('mahasiswa')
-    .select('id, nim, nama, warga_negara, fakultas, prodi, tahun_masuk, link_foto')
+    .select('id, nim, nama, warga_negara, fakultas, prodi, tahun_masuk, link_foto, status')
     .order('nim');
   
+  if (filterStatus !== 'semua') {
+    query = query.eq('status', filterStatus);
+  }
+  
+  const { data, error } = await query;
+  
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
     return;
   }
   
   if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Belum ada data.</td></tr>';
+    const msg = filterStatus === 'semua' 
+      ? 'Belum ada data.' 
+      : `Tidak ada mahasiswa dengan status <strong>${filterStatus}</strong>.`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-row">${msg}</td></tr>`;
+    document.getElementById('totalMahasiswa').textContent = '0 mahasiswa';
     return;
   }
   
@@ -39,6 +61,9 @@ export async function loadMahasiswa() {
       ? `<img src="${convertDriveLink(m.link_foto)}" class="foto-thumb" onerror="this.outerHTML='<div class=\\'foto-thumb-empty\\'>${initial}</div>'">`
       : `<div class="foto-thumb-empty">${initial}</div>`;
     
+    const st = m.status || 'Aktif';
+    const stCls = statusClass(st);
+    
     return `<tr class="clickable" onclick="window.openDetailMahasiswa(${m.id})">
       <td>${fotoHtml}</td>
       <td><strong>${m.nim}</strong></td>
@@ -47,10 +72,25 @@ export async function loadMahasiswa() {
       <td>${m.fakultas || '—'}</td>
       <td>${m.prodi || '—'}</td>
       <td>${m.tahun_masuk || '—'}</td>
+      <td><span class="tag ${stCls}">${st}</span></td>
     </tr>`;
   }).join('');
   
   document.getElementById('totalMahasiswa').textContent = `${data.length} mahasiswa`;
+}
+
+// ============================================================
+// FILTER STATUS
+// ============================================================
+export function setFilterStatus(status) {
+  filterStatus = status;
+  
+  // Update tombol filter — semua tombol filter-status
+  document.querySelectorAll('.filter-status-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+  
+  loadMahasiswa();
 }
 
 // ============================================================
@@ -77,17 +117,17 @@ export async function openDetailMahasiswa(id) {
   const d = dokRes.data || {};
   const k = kontakRes.data || {};
   const initial = (m.nama || '?').charAt(0).toUpperCase();
+  const st = m.status || 'Aktif';
+  const stCls = statusClass(st);
   
   const fotoHtml = m.link_foto
     ? `<img src="${convertDriveLink(m.link_foto)}" class="detail-foto" onerror="this.outerHTML='<div class=\\'detail-foto-empty\\'>${initial}</div>'">`
     : `<div class="detail-foto-empty">${initial}</div>`;
   
-  // Kartu dokumen — klik buka popup preview
   function dokCard(title, noDok, tgl, link) {
     let previewContent;
     
     if (link) {
-      // Ada link — tampilkan gambar (kalau bisa) atau ikon dokumen
       previewContent = `
         <img src="${convertDriveLink(link)}" 
              onclick="window.previewDokumen('${escapeAttr(link)}', '${escapeAttr(title)}')"
@@ -118,6 +158,7 @@ export async function openDetailMahasiswa(id) {
       <div class="detail-header-info">
         <h2>${m.nama}</h2>
         <p>${m.nim} · ${m.fakultas || '—'} · ${m.prodi || '—'}</p>
+        <div style="margin-top: 8px;"><span class="tag ${stCls}">${st}</span></div>
       </div>
     </div>
     
@@ -133,6 +174,7 @@ export async function openDetailMahasiswa(id) {
         <div class="detail-item"><label>Semester</label><span>${hitungSemester(m.tahun_masuk)}</span></div>
         <div class="detail-item"><label>Warga Negara</label><span>${m.warga_negara || '—'}</span></div>
         <div class="detail-item"><label>Email Kampus</label><span>${m.email_kampus || '—'}</span></div>
+        <div class="detail-item"><label>Status</label><span class="tag ${stCls}">${st}</span></div>
         <div class="detail-item full"><label>Keterangan</label><span>${m.keterangan || '—'}</span></div>
       </div>
     </div>
@@ -162,77 +204,60 @@ export async function openDetailMahasiswa(id) {
 }
 
 // ============================================================
-// PREVIEW DOKUMEN (POPUP PDF)
+// PREVIEW DOKUMEN
 // ============================================================
-// Buka link Drive di modal dengan iframe preview.
-// Kalau file tidak bisa di-embed (misal restricted), tampilkan
-// fallback tombol "Buka di Drive".
 export function previewDokumen(driveLink, judul) {
   const modal = document.getElementById('modalPreviewDokumen');
   const iframe = document.getElementById('previewIframe');
   const fallback = document.getElementById('previewFallback');
   const title = document.getElementById('previewTitle');
   const openBtn = document.getElementById('previewOpenBtn');
+  const openBtnFooter = document.getElementById('previewOpenBtnFooter');
+  
+  if (!modal) { window.open(driveLink, '_blank'); return; }
   
   title.textContent = judul || 'Preview Dokumen';
-  openBtn.href = driveLink;
+  if (openBtn) openBtn.href = driveLink;
+  if (openBtnFooter) openBtnFooter.href = driveLink;
   
-  // Konversi link Drive ke format embed
   const embedUrl = convertToEmbedUrl(driveLink);
   
   if (!embedUrl) {
-    // Tidak bisa di-embed → langsung tampilkan fallback
     iframe.style.display = 'none';
     fallback.classList.add('show');
     modal.classList.add('show');
     return;
   }
   
-  // Reset
   iframe.style.display = 'block';
   fallback.classList.remove('show');
-  
-  // Set iframe src
   iframe.src = embedUrl;
   
-  // Timer fallback: kalau iframe tidak load dalam 3 detik, tampilkan fallback
   const loadTimer = setTimeout(() => {
     iframe.style.display = 'none';
     fallback.classList.add('show');
-  }, 3000);
+  }, 4000);
   
-  iframe.onload = () => {
-    clearTimeout(loadTimer);
-  };
+  iframe.onload = () => clearTimeout(loadTimer);
   
   modal.classList.add('show');
 }
 
-// Konversi link Drive biasa → format embed
-function convertToEmbedUrl(url) {
-  if (!url) return null;
-  
-  // Format: https://drive.google.com/file/d/FILE_ID/view
-  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (m1) return `https://drive.google.com/file/d/${m1[1]}/preview`;
-  
-  // Format: https://drive.google.com/open?id=FILE_ID
-  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
-  
-  // Format: sudah /preview
-  if (url.includes('/preview')) return url;
-  
-  // Format lain: kembalikan apa adanya
-  return url;
-}
-
-// Close modal preview — juga stop iframe biar tidak terus load
 export function closePreviewDokumen() {
   const modal = document.getElementById('modalPreviewDokumen');
   const iframe = document.getElementById('previewIframe');
-  iframe.src = 'about:blank';
-  modal.classList.remove('show');
+  if (iframe) iframe.src = 'about:blank';
+  if (modal) modal.classList.remove('show');
+}
+
+function convertToEmbedUrl(url) {
+  if (!url) return null;
+  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return `https://drive.google.com/file/d/${m1[1]}/preview`;
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+  if (url.includes('/preview')) return url;
+  return url;
 }
 
 // ============================================================
@@ -243,6 +268,11 @@ export function openTambahMahasiswa() {
   document.getElementById('formMahasiswa').reset();
   document.getElementById('id_mahasiswa').value = '';
   document.getElementById('modalAlert').innerHTML = '';
+  
+  // Set default status = Aktif
+  const statusEl = document.getElementById('formMahasiswa').elements['status'];
+  if (statusEl) statusEl.value = 'Aktif';
+  
   showModal('modalFormMahasiswa');
 }
 
@@ -279,6 +309,7 @@ export async function openEditMahasiswa() {
   setVal('tahun_masuk', m.tahun_masuk); setVal('warga_negara', m.warga_negara);
   setVal('email_kampus', m.email_kampus); setVal('link_foto', m.link_foto);
   setVal('keterangan', m.keterangan);
+  setVal('status', m.status || 'Aktif');
   setVal('no_paspor', d.no_paspor); setVal('no_itas', d.no_itas);
   setVal('no_stm', d.no_stm); setVal('no_sktt', d.no_sktt);
   setVal('masa_berlaku_paspor', d.masa_berlaku_paspor);
@@ -322,7 +353,8 @@ export async function simpanMahasiswa() {
         fakultas: data.fakultas, prodi: data.prodi,
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
         warga_negara: data.warga_negara, email_kampus: data.email_kampus,
-        keterangan: data.keterangan, link_foto: data.link_foto
+        keterangan: data.keterangan, link_foto: data.link_foto,
+        status: data.status || 'Aktif'
       }).eq('id', editId);
       
       if (err1) throw { step: 'mahasiswa', error: err1 };
@@ -361,7 +393,8 @@ export async function simpanMahasiswa() {
         fakultas: data.fakultas, prodi: data.prodi,
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
         warga_negara: data.warga_negara, email_kampus: data.email_kampus,
-        keterangan: data.keterangan, link_foto: data.link_foto
+        keterangan: data.keterangan, link_foto: data.link_foto,
+        status: data.status || 'Aktif'
       }).select('id').single();
       
       if (err1) throw { step: 'mahasiswa', error: err1 };
@@ -429,13 +462,14 @@ export function openImportCSV() {
   showModal('modalImportCSV');
 }
 
-const CSV_COLUMNS = ['nim','nama','jenis_kelamin','jenjang','fakultas','prodi','tahun_masuk','warga_negara','email_kampus','keterangan','link_foto','no_paspor','no_itas','no_stm','no_sktt','masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','link_paspor','link_itas','link_stm','link_sktt','tempat_lahir','tanggal_lahir','alamat_sekarang','alamat_asal','telepon','hp','no_paketdata','email_pribadi'];
+const CSV_COLUMNS = ['nim','nama','jenis_kelamin','jenjang','fakultas','prodi','tahun_masuk','warga_negara','email_kampus','keterangan','link_foto','status','no_paspor','no_itas','no_stm','no_sktt','masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','link_paspor','link_itas','link_stm','link_sktt','tempat_lahir','tanggal_lahir','alamat_sekarang','alamat_asal','telepon','hp','no_paketdata','email_pribadi'];
 
 const COLUMN_LABELS = {
   nim:'NIM', nama:'Nama', jenis_kelamin:'Jenis Kelamin', jenjang:'Jenjang',
   fakultas:'Fakultas', prodi:'Prodi', tahun_masuk:'Tahun Masuk',
   warga_negara:'Warga Negara', email_kampus:'Email Kampus', keterangan:'Keterangan',
-  link_foto:'Link Foto', no_paspor:'No. Paspor', no_itas:'No. ITAS',
+  link_foto:'Link Foto', status:'Status',
+  no_paspor:'No. Paspor', no_itas:'No. ITAS',
   no_stm:'No. STM', no_sktt:'No. SKTT',
   masa_berlaku_paspor:'Masa Berlaku Paspor', masa_berlaku_itas:'Masa Berlaku ITAS',
   masa_berlaku_skj_stm:'Masa Berlaku SKJ/STM', masa_berlaku_sktt:'Masa Berlaku SKTT',
@@ -449,7 +483,7 @@ export function downloadTemplateMhs() {
   const header = CSV_COLUMNS.map(c => COLUMN_LABELS[c]).join(',');
   const contoh = [
     '2024001','Ahmad Faizal','L','S1','Syariah','HKI','2024','Malaysia','ahmad@uinsa.ac.id','',
-    'https://drive.google.com/file/d/CONTOH_FOTO/view',
+    'https://drive.google.com/file/d/CONTOH_FOTO/view','Aktif',
     'A1234567','ITAS001','STM001','SKTT001',
     '2028-05-10','2026-08-01','2025-12-31','2026-08-01',
     'https://drive.google.com/file/d/PASPOR/view',
@@ -510,6 +544,8 @@ function validateDataMhs() {
   const nimCount = {};
   parsedData.forEach(r => { if (r.nim) nimCount[r.nim] = (nimCount[r.nim] || 0) + 1; });
   
+  const validStatus = ['Aktif', 'Alumni', 'Cuti', 'Keluar'];
+  
   parsedData.forEach((row) => {
     const errors = [];
     if (!row.nim) errors.push('NIM kosong');
@@ -523,6 +559,7 @@ function validateDataMhs() {
     });
     
     if (row.jenis_kelamin && !['L','P'].includes(row.jenis_kelamin)) errors.push('JK harus L/P');
+    if (row.status && !validStatus.includes(row.status)) errors.push('Status harus Aktif/Alumni/Cuti/Keluar');
     
     if (errors.length > 0) errorData.push({ row, errors, lineNumber: row._lineNumber });
     else validData.push(row);
@@ -580,7 +617,8 @@ export async function prosesImportMhs() {
         fakultas: row.fakultas, prodi: row.prodi,
         tahun_masuk: row.tahun_masuk ? parseInt(row.tahun_masuk) : null,
         warga_negara: row.warga_negara || null, email_kampus: row.email_kampus || null,
-        keterangan: row.keterangan || null, link_foto: row.link_foto || null
+        keterangan: row.keterangan || null, link_foto: row.link_foto || null,
+        status: row.status || 'Aktif'
       }).select('id').single();
       
       if (err1) throw err1;
@@ -645,3 +683,4 @@ window.openImportCSV = openImportCSV;
 window.downloadTemplateMhs = downloadTemplateMhs;
 window.handleFileSelect = handleFileSelect;
 window.prosesImportMhs = prosesImportMhs;
+window.setFilterStatus = setFilterStatus;
