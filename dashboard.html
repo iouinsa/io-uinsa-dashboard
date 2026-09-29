@@ -123,6 +123,29 @@
   </main>
 </div>
 
+<!-- MODAL: PREVIEW DOKUMEN (PDF) -->
+<div class="modal-overlay" id="modalPreviewDokumen">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h3 id="previewTitle">Preview Dokumen</h3>
+      <button class="modal-close" onclick="closePreviewDokumen()">&times;</button>
+    </div>
+    <div class="modal-body pdf-modal-body">
+      <iframe id="previewIframe" src="about:blank" allow="autoplay"></iframe>
+      <div class="pdf-fallback" id="previewFallback">
+        <div class="icon">📄</div>
+        <h3>Preview tidak tersedia</h3>
+        <p>Dokumen ini tidak bisa ditampilkan langsung di dashboard.<br>Klik tombol di bawah untuk membukanya di Google Drive.</p>
+        <a id="previewOpenBtn" href="#" target="_blank" class="btn btn-primary" style="text-decoration:none; display:inline-block;">🔗 Buka di Google Drive</a>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a id="previewOpenBtnFooter" href="#" target="_blank" class="btn btn-outline" style="text-decoration:none; display:inline-block;">🔗 Buka di Drive</a>
+      <button class="btn btn-primary" onclick="closePreviewDokumen()">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: DETAIL MAHASISWA -->
 <div class="modal-overlay" id="modalDetailMahasiswa">
   <div class="modal modal-lg">
