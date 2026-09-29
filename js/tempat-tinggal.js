@@ -10,10 +10,14 @@ let map = null;
 let mapMarkers = [];
 let allTempatTinggal = [];
 let searchTempatTinggalQuery = '';
-let daftarKamar = []; // dari tabel kamar_mahad
+let daftarKamar = [];
 
 const UINSA_LAT = -7.3214;
 const UINSA_LNG = 112.7344;
+
+// Pusat fallback (kalau semua alamat gagal)
+const FALLBACK_LAT = -7.2575; // Surabaya
+const FALLBACK_LNG = 112.7521;
 
 // ============================================================
 // LOAD TEMPAT TINGGAL
@@ -61,7 +65,7 @@ async function loadDaftarKamar() {
 }
 
 // ============================================================
-// LOAD & RENDER KAMAR MAHAD (grid 10 kotak)
+// LOAD & RENDER KAMAR MAHAD (grid kotak)
 // ============================================================
 async function loadKamarMahad() {
   const grid = document.getElementById('kamarGrid');
@@ -69,7 +73,6 @@ async function loadKamarMahad() {
   
   grid.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280; grid-column: 1/-1;">Memuat data kamar...</div>';
   
-  // Ambil semua mahasiswa yang tinggal di Mahad
   const { data: mhsData, error } = await supabase
     .from('mahasiswa')
     .select('id, nama, nim, no_kamar, jenis_tinggal')
@@ -81,7 +84,6 @@ async function loadKamarMahad() {
     return;
   }
   
-  // Kelompokkan per kamar
   const perKamar = {};
   (mhsData || []).forEach(m => {
     const k = m.no_kamar;
@@ -90,7 +92,6 @@ async function loadKamarMahad() {
     perKamar[k].push(m);
   });
   
-  // Render tiap kamar
   if (daftarKamar.length === 0) {
     grid.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280; grid-column: 1/-1;">Belum ada data kamar di database.</div>';
     return;
@@ -106,7 +107,6 @@ async function loadKamarMahad() {
     const bg = isFull ? '#fadbd4' : isEmpty ? '#f4f6f8' : '#fef3d4';
     const color = isFull ? '#a03a2a' : isEmpty ? '#6b7280' : '#8a6015';
     
-    // Nama penghuni (max 3, sisanya "+N lainnya")
     let namaList = '';
     if (penghuni.length > 0) {
       const tampil = penghuni.slice(0, 3).map(p => p.nama || p.nim).join(', ');
@@ -122,7 +122,6 @@ async function loadKamarMahad() {
     </div>`;
   }).join('');
   
-  // Hitung total
   const totalKapasitas = daftarKamar.reduce((s, k) => s + (k.kapasitas || 4), 0);
   const totalTerisi = Object.values(perKamar).reduce((s, arr) => s + arr.length, 0);
   
@@ -131,7 +130,7 @@ async function loadKamarMahad() {
 }
 
 // ============================================================
-// PETA — MARKER DARI ALAMAT MAHASISWA
+// PETA — MARKER DARI ALAMAT MAHASISWA (dengan fallback)
 // ============================================================
 async function loadPetaMahasiswa() {
   mapMarkers.forEach(m => map.removeLayer(m));
@@ -144,6 +143,7 @@ async function loadPetaMahasiswa() {
   
   if (error || !data) return;
   
+  // Kelompokkan per alamat unik
   const alamatMap = {};
   data.forEach(d => {
     const alamat = (d.alamat_sekarang || '').trim();
@@ -153,51 +153,175 @@ async function loadPetaMahasiswa() {
   });
   
   const alamatList = Object.keys(alamatMap);
-  document.getElementById('totalAlamat').textContent = `${alamatList.length} lokasi unik`;
+  const totalEl = document.getElementById('totalAlamat');
+  
+  if (totalEl) totalEl.textContent = `${alamatList.length} lokasi · memuat peta...`;
+  
+  // Hitung berapa yang berhasil & gagal
+  let berhasil = 0;
+  let gagal = 0;
   
   for (const alamat of alamatList) {
     let coords = getCachedCoords(alamat);
+    let isFallback = false;
     
     if (!coords) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat + ', Indonesia')}&limit=1`,
-          { headers: { 'User-Agent': 'IO-UINSA-Dashboard/1.0' } }
-        );
-        const json = await res.json();
-        if (json[0]) {
-          coords = { lat: parseFloat(json[0].lat), lng: parseFloat(json[0].lon) };
-          setCachedCoords(alamat, coords);
-        }
-        await new Promise(r => setTimeout(r, 1100));
-      } catch (e) {
-        continue;
+      // Coba geocoding bertingkat
+      coords = await geocodeWithFallback(alamat);
+      
+      if (coords) {
+        setCachedCoords(alamat, coords);
+      } else {
+        // Fallback: taruh di pusat Surabaya
+        coords = { lat: FALLBACK_LAT, lng: FALLBACK_LNG };
+        isFallback = true;
+        gagal++;
       }
+      
+      // Delay untuk hormati rate limit Nominatim
+      await new Promise(r => setTimeout(r, 1100));
     }
     
-    if (!coords) continue;
+    if (!isFallback) berhasil++;
     
     const mhs = alamatMap[alamat];
+    
+    // Marker normal (hijau) atau fallback (abu-abu)
+    const markerColor = isFallback ? '#9ca3af' : '#0a5c4a';
+    
     const popup = `
       <div style="font-size:13px; max-width: 250px;">
-        <strong>${alamat}</strong><br>
-        <em>${mhs.length} mahasiswa</em><br><br>
+        <strong>${alamat}</strong>
+        ${isFallback ? '<br><em style="color:#e67e22;">⚠ Titik perkiraan (alamat tidak spesifik)</em>' : ''}
+        <br><em>${mhs.length} mahasiswa</em><br><br>
         ${mhs.map(m => `• ${m.nama} (${m.nim})`).join('<br>')}
       </div>
     `;
     
-    const marker = L.marker([coords.lat, coords.lng]).addTo(map).bindPopup(popup);
+    const marker = L.circleMarker([coords.lat, coords.lng], {
+      radius: 8,
+      fillColor: markerColor,
+      color: 'white',
+      weight: 2,
+      fillOpacity: 0.9
+    }).addTo(map).bindPopup(popup);
+    
+    // Tooltip nama alamat singkat
+    marker.bindTooltip(alamat.length > 40 ? alamat.substring(0, 40) + '...' : alamat, {
+      direction: 'top',
+      offset: [0, -8]
+    });
+    
     mapMarkers.push(marker);
+  }
+  
+  // Update status
+  if (totalEl) {
+    if (gagal > 0) {
+      totalEl.textContent = `${alamatList.length} lokasi · ${berhasil} akurat · ${gagal} perkiraan`;
+      totalEl.style.color = '#e67e22';
+    } else {
+      totalEl.textContent = `${alamatList.length} lokasi unik`;
+      totalEl.style.color = '';
+    }
   }
 }
 
+// ============================================================
+// GEOCODING BERTINGKAT (fallback 3 level)
+// ============================================================
+async function geocodeWithFallback(alamat) {
+  // Level 1: alamat lengkap
+  let coords = await tryGeocode(alamat);
+  if (coords) return coords;
+  
+  // Level 2: buang RT/RW/No rumah/GG
+  const simpler = alamat
+    .replace(/RT\.?\s*[\d\/]+/gi, '')
+    .replace(/RW\.?\s*[\d\/]+/gi, '')
+    .replace(/NO\.?\s*\d+[a-z]?/gi, '')
+    .replace(/GG\.?\s*\w+/gi, '')
+    .replace(/GANG\s+\w+/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/,\s*,/g, ',')
+    .replace(/^,|,$/g, '')
+    .trim();
+  
+  if (simpler !== alamat && simpler.length > 5) {
+    coords = await tryGeocode(simpler);
+    if (coords) return coords;
+  }
+  
+  // Level 3: ambil nama jalan utama saja
+  const jalanOnly = alamat
+    .split(',')[0]
+    .replace(/RT\.?\s*[\d\/]+/gi, '')
+    .replace(/RW\.?\s*[\d\/]+/gi, '')
+    .replace(/NO\.?\s*\d+[a-z]?/gi, '')
+    .replace(/GG\.?\s*\w+/gi, '')
+    .replace(/GANG\s+\w+/gi, '')
+    .replace(/\d+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  if (jalanOnly && jalanOnly.length > 3 && jalanOnly !== alamat) {
+    coords = await tryGeocode(jalanOnly);
+    if (coords) return coords;
+  }
+  
+  // Level 4: coba nama kecamatan/kota yang ada di alamat
+  const parts = alamat.split(',').map(p => p.trim()).filter(p => p.length > 2);
+  if (parts.length > 1) {
+    // Ambil 2 bagian terakhir (biasanya kecamatan, kota)
+    const lastTwo = parts.slice(-2).join(', ');
+    coords = await tryGeocode(lastTwo);
+    if (coords) return coords;
+  }
+  
+  return null;
+}
+
+// ============================================================
+// TRY GEOCODE — Request ke Nominatim
+// ============================================================
+async function tryGeocode(alamat) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat + ', Indonesia')}&limit=1`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'IO-UINSA-Dashboard/1.0' }
+    });
+    const json = await res.json();
+    
+    if (json && json[0]) {
+      return {
+        lat: parseFloat(json[0].lat),
+        lng: parseFloat(json[0].lon)
+      };
+    }
+  } catch (e) {
+    console.warn('Geocode error:', alamat, e);
+  }
+  return null;
+}
+
+// ============================================================
+// CACHE KOORDINAT DI LOCALSTORAGE
+// ============================================================
 function getCachedCoords(alamat) {
-  const c = localStorage.getItem('geocode_' + alamat);
-  return c ? JSON.parse(c) : null;
+  try {
+    const c = localStorage.getItem('geocode_' + alamat);
+    return c ? JSON.parse(c) : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 function setCachedCoords(alamat, coords) {
-  localStorage.setItem('geocode_' + alamat, JSON.stringify(coords));
+  try {
+    localStorage.setItem('geocode_' + alamat, JSON.stringify(coords));
+  } catch (e) {
+    // Ignore — localStorage penuh
+  }
 }
 
 // ============================================================
@@ -218,7 +342,6 @@ async function loadTempatTinggalMahasiswa() {
     return;
   }
   
-  // Ambil alamat
   const { data: kontakData } = await supabase
     .from('mahasiswa_kontak')
     .select('mahasiswa_id, alamat_sekarang');
@@ -238,9 +361,7 @@ async function loadTempatTinggalMahasiswa() {
     no_kamar: m.no_kamar || null
   }));
   
-  // Setelah data mahasiswa siap, render kamar mahad
   await loadKamarMahad();
-  
   renderTempatTinggal();
 }
 
@@ -317,7 +438,6 @@ export function editTempatTinggal(id) {
   document.getElementById('id_mahasiswa_tt').value = mhs.id;
   document.getElementById('nama_mahasiswa_tt').value = `${mhs.nama} (${mhs.nim})`;
   
-  // Isi dropdown kamar
   const kamarSelect = document.getElementById('no_kamar_tt');
   kamarSelect.innerHTML = '<option value="">— Pilih Kamar —</option>' + 
     daftarKamar.map(k => `<option value="${k.no_kamar}">${k.no_kamar}</option>`).join('');
