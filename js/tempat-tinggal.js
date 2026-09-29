@@ -1,5 +1,5 @@
 // ============================================================
-// TEMPAT TINGGAL — PETA + DAFTAR MAHASISWA + JENIS TINGGAL
+// TEMPAT TINGGAL — PETA + KAMAR MAHAD + DAFTAR MAHASISWA
 // ============================================================
 
 import { supabase } from './config.js';
@@ -10,7 +10,7 @@ let map = null;
 let mapMarkers = [];
 let allTempatTinggal = [];
 let searchTempatTinggalQuery = '';
-let daftarKamar = [];
+let daftarKamar = []; // dari tabel kamar_mahad
 
 const UINSA_LAT = -7.3214;
 const UINSA_LNG = 112.7344;
@@ -49,15 +49,85 @@ function initMap() {
 }
 
 // ============================================================
-// LOAD DAFTAR KAMAR (untuk dropdown)
+// LOAD DAFTAR KAMAR (dari tabel kamar_mahad)
 // ============================================================
 async function loadDaftarKamar() {
   const { data } = await supabase
     .from('kamar_mahad')
-    .select('no_kamar')
+    .select('id, no_kamar, kapasitas')
     .order('no_kamar');
   
-  daftarKamar = (data || []).map(k => k.no_kamar);
+  daftarKamar = data || [];
+}
+
+// ============================================================
+// LOAD & RENDER KAMAR MAHAD (grid 10 kotak)
+// ============================================================
+async function loadKamarMahad() {
+  const grid = document.getElementById('kamarGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280; grid-column: 1/-1;">Memuat data kamar...</div>';
+  
+  // Ambil semua mahasiswa yang tinggal di Mahad
+  const { data: mhsData, error } = await supabase
+    .from('mahasiswa')
+    .select('id, nama, nim, no_kamar, jenis_tinggal')
+    .eq('jenis_tinggal', 'Mahad')
+    .not('no_kamar', 'is', null);
+  
+  if (error) {
+    grid.innerHTML = `<div style="padding:20px; text-align:center; color:#c0392b; grid-column: 1/-1;">Error: ${error.message}</div>`;
+    return;
+  }
+  
+  // Kelompokkan per kamar
+  const perKamar = {};
+  (mhsData || []).forEach(m => {
+    const k = m.no_kamar;
+    if (!k) return;
+    if (!perKamar[k]) perKamar[k] = [];
+    perKamar[k].push(m);
+  });
+  
+  // Render tiap kamar
+  if (daftarKamar.length === 0) {
+    grid.innerHTML = '<div style="padding:20px; text-align:center; color:#6b7280; grid-column: 1/-1;">Belum ada data kamar di database.</div>';
+    return;
+  }
+  
+  grid.innerHTML = daftarKamar.map(k => {
+    const penghuni = perKamar[k.no_kamar] || [];
+    const terisi = penghuni.length;
+    const kapasitas = k.kapasitas || 4;
+    const isFull = terisi >= kapasitas;
+    const isEmpty = terisi === 0;
+    
+    const bg = isFull ? '#fadbd4' : isEmpty ? '#f4f6f8' : '#fef3d4';
+    const color = isFull ? '#a03a2a' : isEmpty ? '#6b7280' : '#8a6015';
+    
+    // Nama penghuni (max 3, sisanya "+N lainnya")
+    let namaList = '';
+    if (penghuni.length > 0) {
+      const tampil = penghuni.slice(0, 3).map(p => p.nama || p.nim).join(', ');
+      const sisa = penghuni.length > 3 ? ` +${penghuni.length - 3} lain` : '';
+      namaList = `<div style="font-size:10px; color:#6b7280; margin-top:6px; line-height:1.3;">${tampil}${sisa}</div>`;
+    }
+    
+    return `<div class="kamar-box" style="background:${bg}; border-color:${color}40;">
+      <div style="font-weight:700; font-size:15px; color:${color};">${k.no_kamar}</div>
+      <div style="font-size:24px; font-weight:700; color:${color}; margin:4px 0;">${terisi}/${kapasitas}</div>
+      <div style="font-size:11px; color:${color}; font-weight:600;">${isEmpty ? 'Kosong' : isFull ? 'Penuh' : 'Terisi'}</div>
+      ${namaList}
+    </div>`;
+  }).join('');
+  
+  // Hitung total
+  const totalKapasitas = daftarKamar.reduce((s, k) => s + (k.kapasitas || 4), 0);
+  const totalTerisi = Object.values(perKamar).reduce((s, arr) => s + arr.length, 0);
+  
+  const el = document.getElementById('totalKamar');
+  if (el) el.textContent = `${daftarKamar.length} kamar · ${totalTerisi}/${totalKapasitas} terisi`;
 }
 
 // ============================================================
@@ -131,13 +201,13 @@ function setCachedCoords(alamat, coords) {
 }
 
 // ============================================================
-// LOAD TEMPAT TINGGAL MAHASISWA
+// LOAD TEMPAT TINGGAL MAHASISWA (tabel)
 // ============================================================
 async function loadTempatTinggalMahasiswa() {
   const tbody = document.getElementById('tbodyTempatTinggal');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Memuat data...</td></tr>';
   
-    const { data: mhsData, error } = await supabase
+  const { data: mhsData, error } = await supabase
     .from('mahasiswa')
     .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar')
     .in('status', ['Aktif', 'Cuti'])
@@ -148,7 +218,7 @@ async function loadTempatTinggalMahasiswa() {
     return;
   }
   
-  // Ambil alamat dari mahasiswa_kontak
+  // Ambil alamat
   const { data: kontakData } = await supabase
     .from('mahasiswa_kontak')
     .select('mahasiswa_id, alamat_sekarang');
@@ -167,6 +237,9 @@ async function loadTempatTinggalMahasiswa() {
     jenis_tinggal: m.jenis_tinggal || 'Lainnya',
     no_kamar: m.no_kamar || null
   }));
+  
+  // Setelah data mahasiswa siap, render kamar mahad
+  await loadKamarMahad();
   
   renderTempatTinggal();
 }
@@ -247,13 +320,11 @@ export function editTempatTinggal(id) {
   // Isi dropdown kamar
   const kamarSelect = document.getElementById('no_kamar_tt');
   kamarSelect.innerHTML = '<option value="">— Pilih Kamar —</option>' + 
-    daftarKamar.map(k => `<option value="${k}">${k}</option>`).join('');
+    daftarKamar.map(k => `<option value="${k.no_kamar}">${k.no_kamar}</option>`).join('');
   
-  // Set jenis tinggal & no kamar
   document.getElementById('jenis_tinggal_tt').value = mhs.jenis_tinggal || 'Lainnya';
   kamarSelect.value = mhs.no_kamar || '';
   
-  // Tampilkan/sembunyikan field kamar
   toggleKamarField();
   
   document.getElementById('modalAlertTempatTinggal').innerHTML = '';
