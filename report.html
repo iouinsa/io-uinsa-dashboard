@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan — International Office UINSA</title>
+<link rel="stylesheet" href="css/report.css" />
+</head>
+<body>
+
+<!-- TOOLBAR (hanya tampil di layar, hilang saat print) -->
+<div class="toolbar">
+  <h1>📄 Laporan Resmi</h1>
+  <div class="toolbar-actions">
+    <button onclick="window.close()">✕ Tutup</button>
+    <button class="btn-primary-toolbar" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+  </div>
+</div>
+
+<!-- HALAMAN LAPORAN -->
+<div class="page">
+  
+  <!-- KOP SURAT -->
+  <div class="kop">
+    <img src="assets/logo-uinsa.png" alt="Logo UINSA" class="kop-logo" 
+         onerror="this.outerHTML='<div class=\'kop-logo-placeholder\'>LOGO<br>UINSA</div>'">
+    <div class="kop-text">
+      <div class="kementerian">KEMENTERIAN AGAMA REPUBLIK INDONESIA</div>
+      <div class="universitas">UNIVERSITAS ISLAM NEGERI</div>
+      <div class="uinsa">SUNAN AMPEL SURABAYA</div>
+      <div class="alamat">
+        Jl. Ahmad Yani 117 Surabaya 60237 Telp. 031-8410298 Fax. 031-8413300<br>
+        Website: <a href="https://www.uinsa.ac.id">www.uinsa.ac.id</a>, Email: humas@uinsby.ac.id
+      </div>
+    </div>
+  </div>
+  
+  <!-- JUDUL -->
+  <div class="judul-laporan">
+    <h2 id="judulLaporan">LAPORAN DATA</h2>
+    <div class="subjudul">International Office — UIN Sunan Ampel Surabaya</div>
+  </div>
+  
+  <!-- INFO FILTER -->
+  <div class="info-filter" id="infoFilter">
+    <strong>Memuat data...</strong>
+  </div>
+  
+  <!-- KONTEN (tabel laporan) -->
+  <div id="kontenLaporan">
+    <p style="text-align:center; padding:40px; font-style:italic; color:#666;">Memuat data...</p>
+  </div>
+  
+  <!-- TANDA TANGAN -->
+  <div class="ttd-section">
+    <div class="ttd-box">
+      <div class="kota-tanggal">
+        Surabaya, <span id="tanggalCetak">—</span>
+      </div>
+      <div class="nama-jabatan">
+        Kepala International Office<br>
+        UIN Sunan Ampel Surabaya
+      </div>
+      <div class="nama-ttd">
+        Dr. Nabiela Naily, S.Si, M.H.I., M.A.
+      </div>
+      <div class="nip">
+        NIP. ......................................
+      </div>
+    </div>
+  </div>
+  
+  <!-- FOOTER -->
+  <div class="footer-laporan">
+    Dokumen ini dicetak dari Dashboard International Office UINSA · Dicetak pada <span id="footerTanggal"></span>
+  </div>
+  
+</div>
+
+<script type="module" src="js/report.js"></script>
+<script>
+  // Set tanggal footer
+  document.addEventListener('DOMContentLoaded', () => {
+    const tgl = new Intl.DateTimeFormat('id-ID', { 
+      day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(new Date());
+    document.getElementById('footerTanggal').textContent = tgl;
+  });
+</script>
+
+</body>
+</html>
