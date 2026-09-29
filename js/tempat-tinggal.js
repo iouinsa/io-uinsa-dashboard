@@ -138,8 +138,7 @@ async function loadPetaMahasiswa() {
   
   const { data, error } = await supabase
     .from('mahasiswa_kontak')
-    .select('alamat_sekarang, mahasiswa:mahasiswa_id (nama, nim, fakultas)')
-    .not('alamat_sekarang', 'is', null);
+    .select('alamat_sekarang, mahasiswa:mahasiswa_id (nama, nim, fakultas, jenis_tinggal, no_kamar)');
   
   if (error || !data) return;
   
