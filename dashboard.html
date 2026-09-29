@@ -39,18 +39,14 @@
   
   <main class="main">
     
-    <!-- DASHBOARD -->
     <div class="page-view active" id="page-dashboard">
       <div class="page-header">
         <div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Ringkasan data International Office UINSA</p></div>
       </div>
-      
       <div class="summary-grid" id="summaryDashboard">
         <div class="summary-card-dash"><div class="value">—</div></div>
       </div>
-      
       <div class="reminder-grid" id="reminderDashboard"></div>
-      
       <div class="chart-grid">
         <div class="chart-card">
           <h3>🌍 Mahasiswa per Negara (Top 10)</h3>
@@ -61,7 +57,6 @@
           <div class="chart-container"><canvas id="chartFakultas"></canvas></div>
         </div>
       </div>
-      
       <div class="chart-grid">
         <div class="chart-card">
           <h3>📋 Status Mahasiswa</h3>
@@ -72,7 +67,6 @@
           <div class="chart-container"><canvas id="chartJenjang"></canvas></div>
         </div>
       </div>
-      
       <div class="chart-grid">
         <div class="chart-card">
           <h3>🤝 Kerjasama per Negara (Top 10)</h3>
@@ -83,7 +77,6 @@
           <div class="chart-container"><canvas id="chartJenisKerjasama"></canvas></div>
         </div>
       </div>
-      
       <div class="chart-grid">
         <div class="chart-card">
           <h3>📈 Tren Mahasiswa Baru per Tahun</h3>
@@ -96,7 +89,6 @@
       </div>
     </div>
     
-    <!-- MAHASISWA -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -131,7 +123,6 @@
       </div>
     </div>
     
-    <!-- KERJASAMA -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -166,7 +157,6 @@
       </div>
     </div>
     
-    <!-- TEMPAT TINGGAL -->
     <div class="page-view" id="page-tempat_tinggal">
       <div class="page-header">
         <div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & jenis tempat tinggal</p></div>
@@ -191,12 +181,7 @@
         <table>
           <thead>
             <tr>
-              <th>Nama</th>
-              <th>NIM</th>
-              <th>Fakultas</th>
-              <th>Alamat Sekarang</th>
-              <th>Jenis Tinggal</th>
-              <th style="width:80px;">Aksi</th>
+              <th>Nama</th><th>NIM</th><th>Fakultas</th><th>Alamat Sekarang</th><th>Jenis Tinggal</th><th style="width:80px;">Aksi</th>
             </tr>
           </thead>
           <tbody id="tbodyTempatTinggal">
@@ -206,10 +191,9 @@
       </div>
     </div>
     
-    <!-- PENERIMA -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
-        <div><h2>Penerima Email</h2><p>Daftar orang yang akan menerima reminder otomatis</p></div>
+        <div><h2>Penerima Email</h2><p>Daftar penerima reminder & akun login dashboard</p></div>
         <button class="btn btn-primary" onclick="openTambahPenerima()">+ Tambah Penerima</button>
       </div>
       <div class="card">
@@ -221,8 +205,18 @@
           </div>
         </div>
         <table>
-          <thead><tr><th>Nama</th><th>Jabatan</th><th>Email</th><th>Kategori</th><th>Status</th><th style="width:160px;">Aksi</th></tr></thead>
-          <tbody id="tbodyPenerima"><tr class="loading-row"><td colspan="6">Memuat data...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Jabatan</th>
+              <th>Email</th>
+              <th>Kategori</th>
+              <th>Status</th>
+              <th>Akun Login</th>
+              <th style="width:280px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPenerima"><tr class="loading-row"><td colspan="7">Memuat data...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -241,12 +235,7 @@
       <div id="modalAlertTempatTinggal"></div>
       <form id="formEditTempatTinggal">
         <input type="hidden" name="id_mahasiswa" id="id_mahasiswa_tt">
-        <div class="form-row">
-          <div class="form-group full">
-            <label>Mahasiswa</label>
-            <input type="text" id="nama_mahasiswa_tt" disabled style="background:#f4f6f8; cursor:not-allowed;">
-          </div>
-        </div>
+        <div class="form-row"><div class="form-group full"><label>Mahasiswa</label><input type="text" id="nama_mahasiswa_tt" disabled style="background:#f4f6f8; cursor:not-allowed;"></div></div>
         <div class="form-row">
           <div class="form-group full">
             <label>Jenis Tinggal <span class="req">*</span></label>
@@ -263,9 +252,7 @@
         <div class="form-row" id="row_no_kamar" style="display:none;">
           <div class="form-group full">
             <label>No. Kamar <span class="req">*</span></label>
-            <select name="no_kamar" id="no_kamar_tt">
-              <option value="">— Pilih Kamar —</option>
-            </select>
+            <select name="no_kamar" id="no_kamar_tt"><option value="">— Pilih Kamar —</option></select>
           </div>
         </div>
       </form>
@@ -273,6 +260,58 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalEditTempatTinggal')">Batal</button>
       <button class="btn btn-primary" id="btnSimpanTempatTinggal" onclick="simpanTempatTinggal()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: BUAT AKUN -->
+<div class="modal-overlay" id="modalBuatAkun">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Buat Akun Login</h3>
+      <button class="modal-close" onclick="closeModal('modalBuatAkun')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalAlertBuatAkun"></div>
+      <form id="formBuatAkun">
+        <input type="hidden" id="buatAkunPenerimaId">
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Nama</label>
+            <input type="text" id="buatAkunNama" disabled style="background:#f4f6f8;">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Email</label>
+            <input type="email" id="buatAkunEmail" disabled style="background:#f4f6f8;">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Role <span class="req">*</span></label>
+            <select id="buatAkunRole" required>
+              <option value="viewer">Viewer — hanya bisa lihat</option>
+              <option value="admin">Admin — bisa kelola semua data</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Password <span class="req">*</span></label>
+            <input type="text" id="buatAkunPassword" value="iouinsa" required minlength="6" style="font-family:monospace;">
+            <small style="color:#6b7280; font-size:11px; margin-top:2px;">Minimal 6 karakter. Default: iouinsa</small>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalBuatAkun')">Batal</button>
+      <button class="btn btn-primary" id="btnProsesBuatAkun" onclick="prosesBuatAkun()">Buat Akun</button>
     </div>
   </div>
 </div>
@@ -537,11 +576,11 @@
 <!-- MODAL: KONFIRMASI -->
 <div class="modal-overlay" id="modalKonfirmasi">
   <div class="modal modal-sm">
-    <div class="modal-header"><h3>Konfirmasi Hapus</h3><button class="modal-close" onclick="closeModal('modalKonfirmasi')">&times;</button></div>
-    <div class="modal-body"><p id="konfirmasiText">Yakin ingin menghapus data ini?</p></div>
+    <div class="modal-header"><h3>Konfirmasi</h3><button class="modal-close" onclick="closeModal('modalKonfirmasi')">&times;</button></div>
+    <div class="modal-body"><p id="konfirmasiText" style="white-space:pre-line;">Yakin ingin menghapus data ini?</p></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalKonfirmasi')">Batal</button>
-      <button class="btn btn-danger" id="btnKonfirmasiHapus">Ya, Hapus</button>
+      <button class="btn btn-danger" id="btnKonfirmasiHapus">Ya, Lanjutkan</button>
     </div>
   </div>
 </div>
