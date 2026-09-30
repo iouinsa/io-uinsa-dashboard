@@ -412,11 +412,14 @@ export async function simpanMahasiswa() {
         link_stm: data.link_stm, link_sktt: data.link_sktt
       };
       
+      // Reset lat/lng supaya di-geocode ulang kalau alamat berubah
       const kontakPayload = {
         tempat_lahir: data.tempat_lahir, tanggal_lahir: data.tanggal_lahir,
         alamat_sekarang: data.alamat_sekarang, alamat_asal: data.alamat_asal,
         telepon: data.telepon, hp: data.hp,
-        no_paketdata: data.no_paketdata, email_pribadi: data.email_pribadi
+        no_paketdata: data.no_paketdata, email_pribadi: data.email_pribadi,
+        latitude: null,
+        longitude: null
       };
       
       if (exDok) await supabase.from('mahasiswa_dokumen').update(dokPayload).eq('mahasiswa_id', editId);
@@ -458,7 +461,9 @@ export async function simpanMahasiswa() {
         tempat_lahir: data.tempat_lahir, tanggal_lahir: data.tanggal_lahir,
         alamat_sekarang: data.alamat_sekarang, alamat_asal: data.alamat_asal,
         telepon: data.telepon, hp: data.hp,
-        no_paketdata: data.no_paketdata, email_pribadi: data.email_pribadi
+        no_paketdata: data.no_paketdata, email_pribadi: data.email_pribadi,
+        latitude: null,
+        longitude: null
       });
       
       if (err3) throw { step: 'kontak', error: err3 };
@@ -493,7 +498,6 @@ export function hapusMahasiswa() {
 // ============================================================
 export async function exportCSVMahasiswa() {
   try {
-    // Ambil SEMUA data mahasiswa (join dokumen & kontak)
     const { data: mhsData, error: err1 } = await supabase
       .from('mahasiswa')
       .select('*')
@@ -504,14 +508,12 @@ export async function exportCSVMahasiswa() {
     const { data: dokData } = await supabase.from('mahasiswa_dokumen').select('*');
     const { data: kontakData } = await supabase.from('mahasiswa_kontak').select('*');
     
-    // Buat map untuk lookup
     const dokMap = {};
     (dokData || []).forEach(d => { dokMap[d.mahasiswa_id] = d; });
     
     const kontakMap = {};
     (kontakData || []).forEach(k => { kontakMap[k.mahasiswa_id] = k; });
     
-    // Filter sesuai yang tampil (filter + search)
     let filtered = mhsData || [];
     
     if (filterStatus !== 'semua') {
@@ -534,7 +536,6 @@ export async function exportCSVMahasiswa() {
       return;
     }
     
-    // Header CSV (sama persis dengan template import)
     const header = [
       'NIM', 'Nama', 'Jenis Kelamin', 'Jenjang', 'Fakultas', 'Prodi',
       'Tahun Masuk', 'Warga Negara', 'Email Kampus', 'Keterangan', 'Link Foto', 'Status',
@@ -545,7 +546,6 @@ export async function exportCSVMahasiswa() {
       'Telepon', 'HP', 'No. Paket Data', 'Email Pribadi'
     ];
     
-    // Baris data
     const rows = filtered.map(m => {
       const d = dokMap[m.id] || {};
       const k = kontakMap[m.id] || {};
@@ -586,7 +586,6 @@ export async function exportCSVMahasiswa() {
       ];
     });
     
-    // Buat CSV — escape nilai yang ada koma/kutip
     function escapeCSV(val) {
       const str = String(val);
       if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -599,7 +598,6 @@ export async function exportCSVMahasiswa() {
       header.map(escapeCSV).join(',') + '\n' +
       rows.map(row => row.map(escapeCSV).join(',')).join('\n') + '\n';
     
-    // Download
     const tanggal = new Date().toISOString().split('T')[0];
     const namaFile = `mahasiswa_export_${tanggal}.csv`;
     
@@ -609,12 +607,10 @@ export async function exportCSVMahasiswa() {
     link.download = namaFile;
     link.click();
     
-    // Info
     let infoText = `✅ Export berhasil: ${filtered.length} mahasiswa`;
     if (filterStatus !== 'semua') infoText += ` (status: ${filterStatus})`;
     if (searchQuery.trim()) infoText += ` (pencarian: "${searchQuery}")`;
     
-    // Tampilkan notifikasi ringan
     const notif = document.createElement('div');
     notif.style.cssText = `
       position: fixed; top: 80px; right: 20px; z-index: 9999;
@@ -860,6 +856,12 @@ export async function prosesImportMhs() {
         if (row.no_paketdata) kontakPayload.no_paketdata = row.no_paketdata;
         if (row.email_pribadi) kontakPayload.email_pribadi = row.email_pribadi;
         
+        // Reset lat/lng kalau alamat diisi
+        if (row.alamat_sekarang) {
+          kontakPayload.latitude = null;
+          kontakPayload.longitude = null;
+        }
+        
         if (Object.keys(kontakPayload).length > 0) {
           const { data: exKontak } = await supabase.from('mahasiswa_kontak').select('id').eq('mahasiswa_id', existing.id).maybeSingle();
           if (exKontak) await supabase.from('mahasiswa_kontak').update(kontakPayload).eq('mahasiswa_id', existing.id);
@@ -907,7 +909,9 @@ export async function prosesImportMhs() {
           alamat_asal: row.alamat_asal || null,
           telepon: row.telepon || null, hp: row.hp || null,
           no_paketdata: row.no_paketdata || null,
-          email_pribadi: row.email_pribadi || null
+          email_pribadi: row.email_pribadi || null,
+          latitude: null,
+          longitude: null
         });
         
         baru++;
