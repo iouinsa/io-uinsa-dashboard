@@ -55,7 +55,6 @@ async function loadLaporanMahasiswa() {
     return;
   }
   
-  // Filter search (client-side)
   let filtered = data || [];
   if (filterSearch.trim()) {
     const q = filterSearch.toLowerCase().trim();
@@ -81,12 +80,13 @@ async function loadLaporanMahasiswa() {
     ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}` 
     : '<strong>Filter yang diterapkan:</strong> Semua data';
   
-  // Hitung statistik
+  // Hitung statistik per status (5 status)
   const total = filtered.length;
   const aktif = filtered.filter(m => m.status === 'Aktif').length;
-  const alumni = filtered.filter(m => m.status === 'Alumni').length;
   const cuti = filtered.filter(m => m.status === 'Cuti').length;
-  const keluar = filtered.filter(m => m.status === 'Keluar').length;
+  const alumni = filtered.filter(m => m.status === 'Alumni').length;
+  const dropOut = filtered.filter(m => m.status === 'Drop Out').length;
+  const mengundurkanDiri = filtered.filter(m => m.status === 'Mengundurkan Diri').length;
   
   // Tabel
   let html = `
@@ -102,7 +102,7 @@ async function loadLaporanMahasiswa() {
           <th>Prodi</th>
           <th style="width:60px;">Angkatan</th>
           <th>Negara</th>
-          <th style="width:60px;">Status</th>
+          <th style="width:70px;">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -135,9 +135,10 @@ async function loadLaporanMahasiswa() {
     <div class="ringkasan">
       <strong>Total: ${total} mahasiswa</strong>
       · Aktif: ${aktif}
-      · Alumni: ${alumni}
       · Cuti: ${cuti}
-      · Keluar: ${keluar}
+      · Alumni: ${alumni}
+      · Drop Out: ${dropOut}
+      · Mengundurkan Diri: ${mengundurkanDiri}
     </div>
   `;
   
@@ -160,7 +161,6 @@ async function loadLaporanKerjasama() {
     return;
   }
   
-  // Filter search
   let filtered = data || [];
   if (filterSearch.trim()) {
     const q = filterSearch.toLowerCase().trim();
@@ -172,12 +172,10 @@ async function loadLaporanKerjasama() {
     );
   }
   
-  // Info filter
   document.getElementById('infoFilter').innerHTML = filterSearch.trim()
     ? `<strong>Filter yang diterapkan:</strong> Pencarian: <strong>${filterSearch}</strong>`
     : '<strong>Filter yang diterapkan:</strong> Semua data';
   
-  // Statistik
   const total = filtered.length;
   let aktif = 0, akanBerakhir = 0, berakhir = 0;
   let mou = 0, moa = 0, loi = 0;
@@ -194,7 +192,6 @@ async function loadLaporanKerjasama() {
     else if (j === 'LOI') loi++;
   });
   
-  // Tabel
   let html = `
     <table class="tabel-laporan">
       <thead>
@@ -268,7 +265,6 @@ async function loadLaporanTempatTinggal() {
     return;
   }
   
-  // Ambil alamat
   const { data: kontakData } = await supabase
     .from('mahasiswa_kontak')
     .select('mahasiswa_id, alamat_sekarang');
@@ -276,7 +272,6 @@ async function loadLaporanTempatTinggal() {
   const alamatMap = {};
   (kontakData || []).forEach(k => { alamatMap[k.mahasiswa_id] = k.alamat_sekarang || ''; });
   
-  // Gabung
   let filtered = (mhsData || []).map(m => ({
     nim: m.nim,
     nama: m.nama || '(Tanpa Nama)',
@@ -286,12 +281,10 @@ async function loadLaporanTempatTinggal() {
     no_kamar: m.no_kamar || null
   }));
   
-  // Filter jenis tinggal
   if (filterJenisTinggal !== 'semua') {
     filtered = filtered.filter(t => t.jenis_tinggal === filterJenisTinggal);
   }
   
-  // Filter search
   if (filterSearch.trim()) {
     const q = filterSearch.toLowerCase().trim();
     filtered = filtered.filter(t => 
@@ -302,7 +295,6 @@ async function loadLaporanTempatTinggal() {
     );
   }
   
-  // Info filter
   let infoFilter = '';
   if (filterJenisTinggal !== 'semua') {
     infoFilter += `Jenis Tinggal: <strong>${filterJenisTinggal}</strong>`;
@@ -315,11 +307,9 @@ async function loadLaporanTempatTinggal() {
     ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}` 
     : '<strong>Filter yang diterapkan:</strong> Semua data (Mahasiswa Aktif & Cuti)';
   
-  // Statistik per jenis
   const counts = {};
   filtered.forEach(t => { counts[t.jenis_tinggal] = (counts[t.jenis_tinggal] || 0) + 1; });
   
-  // Tabel
   let html = `
     <table class="tabel-laporan">
       <thead>
