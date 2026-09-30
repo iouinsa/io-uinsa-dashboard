@@ -347,3 +347,24 @@ body {
     padding: 3px 4px;
   }
 }
+
+/* ============================================================
+   TABEL LAPORAN — Center Alignment
+   ============================================================ */
+
+/* Header tabel: semua di tengah */
+.tabel-laporan thead th {
+  text-align: center;
+}
+
+/* Body tabel: semua di tengah */
+.tabel-laporan tbody td {
+  text-align: center;
+}
+
+/* Kolom-kolom yang biasanya panjang → tetap rata kiri biar rapi */
+.tabel-laporan tbody td:nth-child(3),  /* Nama */
+.tabel-laporan tbody td:nth-child(5),  /* Fakultas */
+.tabel-laporan tbody td:nth-child(6) { /* Prodi */
+  text-align: left;
+}
