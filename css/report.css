@@ -249,13 +249,17 @@ body {
 
 .ttd-box .kota-tanggal {
   font-size: 11pt;
-  margin-bottom: 60px;
+  margin-bottom: 0;
 }
 
 .ttd-box .nama-jabatan {
   font-size: 11pt;
-  margin-bottom: 60px;
+  margin-bottom: 0;
   line-height: 1.4;
+}
+
+.ttd-box .ruang-ttd {
+  height: 70px;
 }
 
 .ttd-box .nama-ttd {
