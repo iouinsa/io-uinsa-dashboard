@@ -21,7 +21,8 @@ function statusClass(status) {
   if (status === 'Aktif') return 'tag-active';
   if (status === 'Alumni') return 'tag-mou';
   if (status === 'Cuti') return 'tag-warning';
-  if (status === 'Keluar') return 'tag-error';
+  if (status === 'Drop Out') return 'tag-error';
+  if (status === 'Mengundurkan Diri') return 'tag-error';
   return 'tag-muted';
 }
 
@@ -582,7 +583,7 @@ function validateDataMhs() {
   const nimCount = {};
   parsedData.forEach(r => { if (r.nim) nimCount[r.nim] = (nimCount[r.nim] || 0) + 1; });
   
-  const validStatus = ['Aktif', 'Alumni', 'Cuti', 'Keluar'];
+  const validStatus = ['Aktif', 'Alumni', 'Cuti', 'Drop Out', 'Mengundurkan Diri'];
   
   parsedData.forEach((row) => {
     const errors = [];
@@ -594,7 +595,7 @@ function validateDataMhs() {
       errors.push('JK harus L/P');
     }
     if (row.status && !validStatus.includes(row.status)) {
-      errors.push('Status harus Aktif/Alumni/Cuti/Keluar');
+      errors.push('Status harus Aktif/Alumni/Cuti/Drop Out/Mengundurkan Diri');
     }
     
     ['masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','tanggal_lahir'].forEach(f => {
@@ -636,7 +637,7 @@ function validateDataMhs() {
 }
 
 // ============================================================
-// PROSES IMPORT (UPSERT — NIM sebagai kunci)
+// PROSES IMPORT (UPSERT)
 // ============================================================
 export async function prosesImportMhs() {
   if (validData.length === 0) return;
@@ -656,7 +657,6 @@ export async function prosesImportMhs() {
     btn.textContent = `Import ${i + 1}/${validData.length}...`;
     
     try {
-      // Cek NIM sudah ada atau belum
       const { data: existing } = await supabase
         .from('mahasiswa')
         .select('id')
@@ -664,7 +664,6 @@ export async function prosesImportMhs() {
         .maybeSingle();
       
       if (existing) {
-        // ===== UPDATE — hanya kolom yang ada isinya =====
         const updatePayload = {};
         
         if (row.nama) updatePayload.nama = row.nama;
@@ -679,7 +678,6 @@ export async function prosesImportMhs() {
         if (row.link_foto) updatePayload.link_foto = row.link_foto;
         if (row.status) updatePayload.status = row.status;
         
-        // Update tabel mahasiswa (kalau ada yang berubah)
         if (Object.keys(updatePayload).length > 0) {
           const { error: err1 } = await supabase
             .from('mahasiswa')
@@ -688,7 +686,6 @@ export async function prosesImportMhs() {
           if (err1) throw err1;
         }
         
-        // Update / insert dokumen
         const dokPayload = {};
         if (row.no_paspor) dokPayload.no_paspor = row.no_paspor;
         if (row.no_itas) dokPayload.no_itas = row.no_itas;
@@ -705,14 +702,10 @@ export async function prosesImportMhs() {
         
         if (Object.keys(dokPayload).length > 0) {
           const { data: exDok } = await supabase.from('mahasiswa_dokumen').select('id').eq('mahasiswa_id', existing.id).maybeSingle();
-          if (exDok) {
-            await supabase.from('mahasiswa_dokumen').update(dokPayload).eq('mahasiswa_id', existing.id);
-          } else {
-            await supabase.from('mahasiswa_dokumen').insert({ mahasiswa_id: existing.id, ...dokPayload });
-          }
+          if (exDok) await supabase.from('mahasiswa_dokumen').update(dokPayload).eq('mahasiswa_id', existing.id);
+          else await supabase.from('mahasiswa_dokumen').insert({ mahasiswa_id: existing.id, ...dokPayload });
         }
         
-        // Update / insert kontak
         const kontakPayload = {};
         if (row.tempat_lahir) kontakPayload.tempat_lahir = row.tempat_lahir;
         if (row.tanggal_lahir) kontakPayload.tanggal_lahir = row.tanggal_lahir;
@@ -725,17 +718,13 @@ export async function prosesImportMhs() {
         
         if (Object.keys(kontakPayload).length > 0) {
           const { data: exKontak } = await supabase.from('mahasiswa_kontak').select('id').eq('mahasiswa_id', existing.id).maybeSingle();
-          if (exKontak) {
-            await supabase.from('mahasiswa_kontak').update(kontakPayload).eq('mahasiswa_id', existing.id);
-          } else {
-            await supabase.from('mahasiswa_kontak').insert({ mahasiswa_id: existing.id, ...kontakPayload });
-          }
+          if (exKontak) await supabase.from('mahasiswa_kontak').update(kontakPayload).eq('mahasiswa_id', existing.id);
+          else await supabase.from('mahasiswa_kontak').insert({ mahasiswa_id: existing.id, ...kontakPayload });
         }
         
         update++;
         
       } else {
-        // ===== INSERT BARU =====
         const { data: mhsResult, error: err1 } = await supabase.from('mahasiswa').insert({
           nim: row.nim,
           nama: row.nama || null,
