@@ -1,5 +1,6 @@
 // ============================================================
 // TEMPAT TINGGAL — PETA + KAMAR MAHAD + DAFTAR MAHASISWA
+// CACHE: lat/lng disimpan di database → buka kedua kali = INSTAN
 // ============================================================
 
 import { supabase } from './config.js';
@@ -17,6 +18,9 @@ const UINSA_LNG = 112.7344;
 const FALLBACK_LAT = -7.2575;
 const FALLBACK_LNG = 112.7521;
 
+// Batch size untuk geocode paralel
+const GEOCODE_BATCH_SIZE = 3;
+
 // ============================================================
 // LOAD TEMPAT TINGGAL
 // ============================================================
@@ -28,7 +32,7 @@ export async function loadTempatTinggal() {
 }
 
 // ============================================================
-// INISIALISASI PETA (tanpa marker — marker dibuat di loadPetaMahasiswa)
+// INISIALISASI PETA
 // ============================================================
 function initMap() {
   if (map) return;
@@ -54,7 +58,7 @@ async function loadDaftarKamar() {
 }
 
 // ============================================================
-// LOAD & RENDER KAMAR MAHAD (grid)
+// LOAD & RENDER KAMAR MAHAD
 // ============================================================
 async function loadKamarMahad() {
   const grid = document.getElementById('kamarGrid');
@@ -119,99 +123,203 @@ async function loadKamarMahad() {
 }
 
 // ============================================================
-// PETA — MARKER DARI ALAMAT MAHASISWA + MARKER UINSA
+// PETA — MARKER (pakai cache DB, batch paralel)
 // ============================================================
 async function loadPetaMahasiswa() {
   mapMarkers.forEach(m => map.removeLayer(m));
   mapMarkers = [];
   
+  const totalEl = document.getElementById('totalAlamat');
+  
+  // Ambil data — termasuk lat/lng yang sudah tersimpan
   const { data, error } = await supabase
     .from('mahasiswa_kontak')
-    .select('alamat_sekarang, mahasiswa:mahasiswa_id (nama, nim, fakultas, jenis_tinggal, no_kamar)');
+    .select('id, mahasiswa_id, alamat_sekarang, latitude, longitude, mahasiswa:mahasiswa_id (nama, nim, fakultas, jenis_tinggal, no_kamar)');
   
   if (error || !data) return;
   
   // Kelompokkan
-  const alamatMap = {};
+  const alamatMap = {}; // alamat → { coords, mahasiswa[], kontak_ids[], needGeocode }
   const mahadList = [];
   
   data.forEach(d => {
     if (!d.mahasiswa) return;
-    
     const mhs = d.mahasiswa;
     
-    // Mahasiswa mahad → masuk list mahad
+    // Mahasiswa mahad
     if (mhs.jenis_tinggal === 'Mahad') {
       mahadList.push(mhs);
       return;
     }
     
-    // Bukan mahad → butuh alamat
+    // Mahasiswa non-mahad
     const alamat = (d.alamat_sekarang || '').trim();
     if (!alamat) return;
     
-    if (!alamatMap[alamat]) alamatMap[alamat] = [];
-    alamatMap[alamat].push(mhs);
+    if (!alamatMap[alamat]) {
+      alamatMap[alamat] = {
+        coords: null,
+        mahasiswa: [],
+        kontakIds: [],
+        needGeocode: false
+      };
+    }
+    
+    alamatMap[alamat].mahasiswa.push(mhs);
+    alamatMap[alamat].kontakIds.push(d.id);
+    
+    // Kalau ada lat/lng → pakai cache DB
+    if (d.latitude && d.longitude) {
+      alamatMap[alamat].coords = { 
+        lat: parseFloat(d.latitude), 
+        lng: parseFloat(d.longitude) 
+      };
+    } else {
+      alamatMap[alamat].needGeocode = true;
+    }
   });
   
   const alamatList = Object.keys(alamatMap);
-  const totalEl = document.getElementById('totalAlamat');
+  const perluGeocode = alamatList.filter(a => alamatMap[a].needGeocode && !alamatMap[a].coords);
+  const sudahAdaCoords = alamatList.filter(a => alamatMap[a].coords);
   
-  if (totalEl) totalEl.textContent = `${alamatList.length} lokasi · memuat peta...`;
+  // Kalau semua sudah ada coords → langsung tampil (INSTAN)
+  if (perluGeocode.length === 0) {
+    if (totalEl) totalEl.textContent = `${alamatList.length} lokasi unik`;
+    
+    // Langsung pasang semua marker
+    alamatList.forEach(alamat => {
+      addMarkerAlamat(alamat, alamatMap[alamat]);
+    });
+    
+    // Marker UINSA
+    addMarkerUinsa(mahadList);
+    return;
+  }
   
+  // Ada yang perlu geocode → pasang dulu yang sudah ada coords
+  if (totalEl) totalEl.textContent = `⏳ Memuat ${alamatList.length} lokasi...`;
+  
+  // Pasang marker yang sudah ada koordinat
+  sudahAdaCoords.forEach(alamat => {
+    addMarkerAlamat(alamat, alamatMap[alamat]);
+  });
+  
+  // Kalau belum ada marker sama sekali, pasang marker UINSA dulu
+  if (sudahAdaCoords.length === 0) {
+    addMarkerUinsa(mahadList);
+  }
+  
+  // Geocode yang belum ada — batch paralel
   let berhasil = 0;
   let gagal = 0;
+  let processed = sudahAdaCoords.length;
   
-  // ===== Proses tiap alamat unik =====
-  for (const alamat of alamatList) {
-    let coords = getCachedCoords(alamat);
-    let isFallback = false;
+  for (let i = 0; i < perluGeocode.length; i += GEOCODE_BATCH_SIZE) {
+    const batch = perluGeocode.slice(i, i + GEOCODE_BATCH_SIZE);
     
-    if (!coords) {
-      coords = await geocodeWithFallback(alamat);
+    // Update progress
+    if (totalEl) {
+      totalEl.textContent = `⏳ Memproses ${processed}/${alamatList.length} lokasi...`;
+    }
+    
+    // Proses batch paralel
+    const results = await Promise.all(batch.map(async (alamat) => {
+      const coords = await geocodeWithFallback(alamat);
+      return { alamat, coords };
+    }));
+    
+    // Proses hasil batch
+    for (const { alamat, coords } of results) {
+      processed++;
+      
+      let finalCoords, isFallback = false;
       
       if (coords) {
-        setCachedCoords(alamat, coords);
+        finalCoords = coords;
+        berhasil++;
       } else {
-        coords = { lat: FALLBACK_LAT, lng: FALLBACK_LNG };
+        finalCoords = { lat: FALLBACK_LAT, lng: FALLBACK_LNG };
         isFallback = true;
         gagal++;
       }
       
-      await new Promise(r => setTimeout(r, 1100));
+      alamatMap[alamat].coords = finalCoords;
+      alamatMap[alamat].isFallback = isFallback;
+      
+      // Tampilkan marker langsung
+      addMarkerAlamat(alamat, alamatMap[alamat]);
+      
+      // Simpan ke database (background, jangan tunggu)
+      if (!isFallback) {
+        saveCoordsToDB(alamatMap[alamat].kontakIds, finalCoords);
+      }
     }
     
-    if (!isFallback) berhasil++;
-    
-    const mhs = alamatMap[alamat];
-    const markerColor = isFallback ? '#9ca3af' : '#2563eb';
-    
-    const popup = `
-      <div style="font-size:13px; max-width: 250px;">
-        <strong>${alamat}</strong>
-        ${isFallback ? '<br><em style="color:#e67e22;">⚠ Titik perkiraan</em>' : ''}
-        <br><em>${mhs.length} mahasiswa</em><br><br>
-        ${mhs.map(m => `• ${m.nama || '-'} (${m.nim})`).join('<br>')}
-      </div>
-    `;
-    
-    const marker = L.circleMarker([coords.lat, coords.lng], {
-      radius: 8,
-      fillColor: markerColor,
-      color: 'white',
-      weight: 2,
-      fillOpacity: 0.9
-    }).addTo(map).bindPopup(popup);
-    
-    marker.bindTooltip(alamat.length > 40 ? alamat.substring(0, 40) + '...' : alamat, {
-      direction: 'top',
-      offset: [0, -8]
-    });
-    
-    mapMarkers.push(marker);
+    // Delay antar batch
+    if (i + GEOCODE_BATCH_SIZE < perluGeocode.length) {
+      await new Promise(r => setTimeout(r, 1100));
+    }
   }
   
-  // ===== Marker UINSA (SELALU tampil, popup = info kampus + daftar mahasiswa mahad) =====
+  // Marker UINSA (kalau belum dipasang)
+  if (sudahAdaCoords.length > 0) {
+    addMarkerUinsa(mahadList);
+  }
+  
+  // Status akhir
+  if (totalEl) {
+    let statusText = `${alamatList.length} lokasi`;
+    if (mahadList.length > 0) statusText += ` · ${mahadList.length} di mahad`;
+    if (gagal > 0) {
+      statusText += ` · ${gagal} perkiraan`;
+      totalEl.style.color = '#e67e22';
+    } else {
+      totalEl.style.color = '';
+    }
+    totalEl.textContent = statusText;
+  }
+}
+
+// ============================================================
+// TAMBAH MARKER ALAMAT
+// ============================================================
+function addMarkerAlamat(alamat, data) {
+  if (!data.coords) return;
+  
+  const mhs = data.mahasiswa;
+  const isFallback = data.isFallback || false;
+  const markerColor = isFallback ? '#9ca3af' : '#2563eb';
+  
+  const popup = `
+    <div style="font-size:13px; max-width: 250px;">
+      <strong>${alamat}</strong>
+      ${isFallback ? '<br><em style="color:#e67e22;">⚠ Titik perkiraan</em>' : ''}
+      <br><em>${mhs.length} mahasiswa</em><br><br>
+      ${mhs.map(m => `• ${m.nama || '-'} (${m.nim})`).join('<br>')}
+    </div>
+  `;
+  
+  const marker = L.circleMarker([data.coords.lat, data.coords.lng], {
+    radius: 8,
+    fillColor: markerColor,
+    color: 'white',
+    weight: 2,
+    fillOpacity: 0.9
+  }).addTo(map).bindPopup(popup);
+  
+  marker.bindTooltip(alamat.length > 40 ? alamat.substring(0, 40) + '...' : alamat, {
+    direction: 'top',
+    offset: [0, -8]
+  });
+  
+  mapMarkers.push(marker);
+}
+
+// ============================================================
+// TAMBAH MARKER UINSA (dengan daftar mahasiswa mahad)
+// ============================================================
+function addMarkerUinsa(mahadList) {
   const popupUinsa = `
     <div style="font-size:13px; max-width: 320px;">
       <strong style="font-size:14px;">🏛 UIN Sunan Ampel Surabaya</strong><br>
@@ -239,18 +347,24 @@ async function loadPetaMahasiswa() {
   }).addTo(map).bindPopup(popupUinsa);
   
   mapMarkers.push(markerUinsa);
+}
+
+// ============================================================
+// SIMPAN COORDS KE DATABASE (background)
+// ============================================================
+async function saveCoordsToDB(kontakIds, coords) {
+  if (!kontakIds || kontakIds.length === 0) return;
   
-  // Update status
-  if (totalEl) {
-    let statusText = `${alamatList.length} lokasi`;
-    if (mahadList.length > 0) statusText += ` · ${mahadList.length} di mahad`;
-    if (gagal > 0) {
-      statusText += ` · ${gagal} perkiraan`;
-      totalEl.style.color = '#e67e22';
-    } else {
-      totalEl.style.color = '';
-    }
-    totalEl.textContent = statusText;
+  try {
+    await supabase
+      .from('mahasiswa_kontak')
+      .update({
+        latitude: coords.lat,
+        longitude: coords.lng
+      })
+      .in('id', kontakIds);
+  } catch (e) {
+    console.warn('Gagal simpan coords:', e);
   }
 }
 
@@ -258,11 +372,11 @@ async function loadPetaMahasiswa() {
 // GEOCODING BERTINGKAT
 // ============================================================
 async function geocodeWithFallback(alamat) {
-  // Level 1: alamat lengkap
+  // Level 1
   let coords = await tryGeocode(alamat);
   if (coords) return coords;
   
-  // Level 2: buang RT/RW/No/GG
+  // Level 2
   const simpler = alamat
     .replace(/RT\.?\s*[\d\/]+/gi, '')
     .replace(/RW\.?\s*[\d\/]+/gi, '')
@@ -279,7 +393,7 @@ async function geocodeWithFallback(alamat) {
     if (coords) return coords;
   }
   
-  // Level 3: nama jalan saja
+  // Level 3
   const jalanOnly = alamat
     .split(',')[0]
     .replace(/RT\.?\s*[\d\/]+/gi, '')
@@ -296,7 +410,7 @@ async function geocodeWithFallback(alamat) {
     if (coords) return coords;
   }
   
-  // Level 4: 2 bagian terakhir
+  // Level 4
   const parts = alamat.split(',').map(p => p.trim()).filter(p => p.length > 2);
   if (parts.length > 1) {
     const lastTwo = parts.slice(-2).join(', ');
@@ -307,9 +421,6 @@ async function geocodeWithFallback(alamat) {
   return null;
 }
 
-// ============================================================
-// TRY GEOCODE — dengan auto-tambah "Surabaya"
-// ============================================================
 async function tryGeocode(alamat) {
   try {
     const alamatLower = alamat.toLowerCase();
@@ -347,24 +458,6 @@ async function tryGeocode(alamat) {
     console.warn('Geocode error:', alamat, e);
   }
   return null;
-}
-
-// ============================================================
-// CACHE
-// ============================================================
-function getCachedCoords(alamat) {
-  try {
-    const c = localStorage.getItem('geocode_' + alamat);
-    return c ? JSON.parse(c) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function setCachedCoords(alamat, coords) {
-  try {
-    localStorage.setItem('geocode_' + alamat, JSON.stringify(coords));
-  } catch (e) {}
 }
 
 // ============================================================
