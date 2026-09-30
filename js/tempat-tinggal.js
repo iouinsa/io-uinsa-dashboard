@@ -18,8 +18,18 @@ const UINSA_LNG = 112.7344;
 const FALLBACK_LAT = -7.2575;
 const FALLBACK_LNG = 112.7521;
 
-// Batch size untuk geocode paralel
 const GEOCODE_BATCH_SIZE = 3;
+
+// ============================================================
+// HELPER: Sort kamar berdasarkan angka
+// ============================================================
+function sortKamar(arr) {
+  return arr.slice().sort((a, b) => {
+    const numA = parseInt((a.no_kamar || '').replace(/\D/g, '')) || 0;
+    const numB = parseInt((b.no_kamar || '').replace(/\D/g, '')) || 0;
+    return numA - numB;
+  });
+}
 
 // ============================================================
 // LOAD TEMPAT TINGGAL
@@ -51,10 +61,10 @@ function initMap() {
 async function loadDaftarKamar() {
   const { data } = await supabase
     .from('kamar_mahad')
-    .select('id, no_kamar, kapasitas')
-    .order('no_kamar');
+    .select('id, no_kamar, kapasitas');
   
-  daftarKamar = data || [];
+  // Sort berdasarkan angka
+  daftarKamar = sortKamar(data || []);
 }
 
 // ============================================================
@@ -68,7 +78,7 @@ async function loadKamarMahad() {
   
   const { data: mhsData, error } = await supabase
     .from('mahasiswa')
-    .select('id, nama, nim, no_kamar, jenis_tinggal')
+    .select('id, nama, nim, no_kamar, jenis_tinggal, jenis_kelamin')
     .eq('jenis_tinggal', 'Mahad')
     .not('no_kamar', 'is', null);
   
@@ -123,7 +133,7 @@ async function loadKamarMahad() {
 }
 
 // ============================================================
-// PETA — MARKER (pakai cache DB, batch paralel)
+// PETA — MARKER
 // ============================================================
 async function loadPetaMahasiswa() {
   mapMarkers.forEach(m => map.removeLayer(m));
@@ -131,28 +141,24 @@ async function loadPetaMahasiswa() {
   
   const totalEl = document.getElementById('totalAlamat');
   
-  // Ambil data — termasuk lat/lng yang sudah tersimpan
   const { data, error } = await supabase
     .from('mahasiswa_kontak')
     .select('id, mahasiswa_id, alamat_sekarang, latitude, longitude, mahasiswa:mahasiswa_id (nama, nim, fakultas, jenis_tinggal, no_kamar)');
   
   if (error || !data) return;
   
-  // Kelompokkan
-  const alamatMap = {}; // alamat → { coords, mahasiswa[], kontak_ids[], needGeocode }
+  const alamatMap = {};
   const mahadList = [];
   
   data.forEach(d => {
     if (!d.mahasiswa) return;
     const mhs = d.mahasiswa;
     
-    // Mahasiswa mahad
     if (mhs.jenis_tinggal === 'Mahad') {
       mahadList.push(mhs);
       return;
     }
     
-    // Mahasiswa non-mahad
     const alamat = (d.alamat_sekarang || '').trim();
     if (!alamat) return;
     
@@ -168,7 +174,6 @@ async function loadPetaMahasiswa() {
     alamatMap[alamat].mahasiswa.push(mhs);
     alamatMap[alamat].kontakIds.push(d.id);
     
-    // Kalau ada lat/lng → pakai cache DB
     if (d.latitude && d.longitude) {
       alamatMap[alamat].coords = { 
         lat: parseFloat(d.latitude), 
@@ -183,34 +188,27 @@ async function loadPetaMahasiswa() {
   const perluGeocode = alamatList.filter(a => alamatMap[a].needGeocode && !alamatMap[a].coords);
   const sudahAdaCoords = alamatList.filter(a => alamatMap[a].coords);
   
-  // Kalau semua sudah ada coords → langsung tampil (INSTAN)
   if (perluGeocode.length === 0) {
     if (totalEl) totalEl.textContent = `${alamatList.length} lokasi unik`;
     
-    // Langsung pasang semua marker
     alamatList.forEach(alamat => {
       addMarkerAlamat(alamat, alamatMap[alamat]);
     });
     
-    // Marker UINSA
     addMarkerUinsa(mahadList);
     return;
   }
   
-  // Ada yang perlu geocode → pasang dulu yang sudah ada coords
   if (totalEl) totalEl.textContent = `⏳ Memuat ${alamatList.length} lokasi...`;
   
-  // Pasang marker yang sudah ada koordinat
   sudahAdaCoords.forEach(alamat => {
     addMarkerAlamat(alamat, alamatMap[alamat]);
   });
   
-  // Kalau belum ada marker sama sekali, pasang marker UINSA dulu
   if (sudahAdaCoords.length === 0) {
     addMarkerUinsa(mahadList);
   }
   
-  // Geocode yang belum ada — batch paralel
   let berhasil = 0;
   let gagal = 0;
   let processed = sudahAdaCoords.length;
@@ -218,18 +216,15 @@ async function loadPetaMahasiswa() {
   for (let i = 0; i < perluGeocode.length; i += GEOCODE_BATCH_SIZE) {
     const batch = perluGeocode.slice(i, i + GEOCODE_BATCH_SIZE);
     
-    // Update progress
     if (totalEl) {
       totalEl.textContent = `⏳ Memproses ${processed}/${alamatList.length} lokasi...`;
     }
     
-    // Proses batch paralel
     const results = await Promise.all(batch.map(async (alamat) => {
       const coords = await geocodeWithFallback(alamat);
       return { alamat, coords };
     }));
     
-    // Proses hasil batch
     for (const { alamat, coords } of results) {
       processed++;
       
@@ -247,27 +242,22 @@ async function loadPetaMahasiswa() {
       alamatMap[alamat].coords = finalCoords;
       alamatMap[alamat].isFallback = isFallback;
       
-      // Tampilkan marker langsung
       addMarkerAlamat(alamat, alamatMap[alamat]);
       
-      // Simpan ke database (background, jangan tunggu)
       if (!isFallback) {
         saveCoordsToDB(alamatMap[alamat].kontakIds, finalCoords);
       }
     }
     
-    // Delay antar batch
     if (i + GEOCODE_BATCH_SIZE < perluGeocode.length) {
       await new Promise(r => setTimeout(r, 1100));
     }
   }
   
-  // Marker UINSA (kalau belum dipasang)
   if (sudahAdaCoords.length > 0) {
     addMarkerUinsa(mahadList);
   }
   
-  // Status akhir
   if (totalEl) {
     let statusText = `${alamatList.length} lokasi`;
     if (mahadList.length > 0) statusText += ` · ${mahadList.length} di mahad`;
@@ -281,9 +271,6 @@ async function loadPetaMahasiswa() {
   }
 }
 
-// ============================================================
-// TAMBAH MARKER ALAMAT
-// ============================================================
 function addMarkerAlamat(alamat, data) {
   if (!data.coords) return;
   
@@ -316,9 +303,6 @@ function addMarkerAlamat(alamat, data) {
   mapMarkers.push(marker);
 }
 
-// ============================================================
-// TAMBAH MARKER UINSA (dengan daftar mahasiswa mahad)
-// ============================================================
 function addMarkerUinsa(mahadList) {
   const popupUinsa = `
     <div style="font-size:13px; max-width: 320px;">
@@ -349,9 +333,6 @@ function addMarkerUinsa(mahadList) {
   mapMarkers.push(markerUinsa);
 }
 
-// ============================================================
-// SIMPAN COORDS KE DATABASE (background)
-// ============================================================
 async function saveCoordsToDB(kontakIds, coords) {
   if (!kontakIds || kontakIds.length === 0) return;
   
@@ -369,14 +350,12 @@ async function saveCoordsToDB(kontakIds, coords) {
 }
 
 // ============================================================
-// GEOCODING BERTINGKAT
+// GEOCODING
 // ============================================================
 async function geocodeWithFallback(alamat) {
-  // Level 1
   let coords = await tryGeocode(alamat);
   if (coords) return coords;
   
-  // Level 2
   const simpler = alamat
     .replace(/RT\.?\s*[\d\/]+/gi, '')
     .replace(/RW\.?\s*[\d\/]+/gi, '')
@@ -393,7 +372,6 @@ async function geocodeWithFallback(alamat) {
     if (coords) return coords;
   }
   
-  // Level 3
   const jalanOnly = alamat
     .split(',')[0]
     .replace(/RT\.?\s*[\d\/]+/gi, '')
@@ -410,7 +388,6 @@ async function geocodeWithFallback(alamat) {
     if (coords) return coords;
   }
   
-  // Level 4
   const parts = alamat.split(',').map(p => p.trim()).filter(p => p.length > 2);
   if (parts.length > 1) {
     const lastTwo = parts.slice(-2).join(', ');
@@ -469,7 +446,7 @@ async function loadTempatTinggalMahasiswa() {
   
   const { data: mhsData, error } = await supabase
     .from('mahasiswa')
-    .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar')
+    .select('id, nim, nama, fakultas, jenis_tinggal, no_kamar, jenis_kelamin')
     .in('status', ['Aktif', 'Cuti'])
     .order('nama');
   
@@ -494,7 +471,8 @@ async function loadTempatTinggalMahasiswa() {
     fakultas: m.fakultas || '—',
     alamat_sekarang: alamatMap[m.id] || '—',
     jenis_tinggal: m.jenis_tinggal || 'Lainnya',
-    no_kamar: m.no_kamar || null
+    no_kamar: m.no_kamar || null,
+    jenis_kelamin: m.jenis_kelamin || null
   }));
   
   await loadKamarMahad();
@@ -581,6 +559,9 @@ export function editTempatTinggal(id) {
   document.getElementById('jenis_tinggal_tt').value = mhs.jenis_tinggal || 'Lainnya';
   kamarSelect.value = mhs.no_kamar || '';
   
+  // Simpan jenis kelamin di hidden field untuk validasi
+  document.getElementById('jenis_kelamin_tt').value = mhs.jenis_kelamin || '';
+  
   toggleKamarField();
   
   document.getElementById('modalAlertTempatTinggal').innerHTML = '';
@@ -592,12 +573,24 @@ export function editTempatTinggal(id) {
 // ============================================================
 export function toggleKamarField() {
   const jenis = document.getElementById('jenis_tinggal_tt').value;
+  const jk = (document.getElementById('jenis_kelamin_tt').value || '').toUpperCase();
   const rowKamar = document.getElementById('row_no_kamar');
   const kamarSelect = document.getElementById('no_kamar_tt');
+  const kamarLabel = document.getElementById('label_no_kamar');
+  
+  // Wajib diisi hanya kalau Mahad + Laki-laki
+  const wajibIsi = (jenis === 'Mahad' && jk === 'L');
   
   if (jenis === 'Mahad') {
     rowKamar.style.display = 'block';
-    kamarSelect.setAttribute('required', 'required');
+    
+    if (wajibIsi) {
+      kamarSelect.setAttribute('required', 'required');
+      if (kamarLabel) kamarLabel.innerHTML = 'No. Kamar <span class="req">*</span>';
+    } else {
+      kamarSelect.removeAttribute('required');
+      if (kamarLabel) kamarLabel.innerHTML = 'No. Kamar <small style="color:#6b7280; font-weight:400;">(opsional untuk mahasiswa perempuan)</small>';
+    }
   } else {
     rowKamar.style.display = 'none';
     kamarSelect.removeAttribute('required');
@@ -615,14 +608,16 @@ export async function simpanTempatTinggal() {
   const id = document.getElementById('id_mahasiswa_tt').value;
   const jenis = document.getElementById('jenis_tinggal_tt').value;
   const noKamar = document.getElementById('no_kamar_tt').value;
+  const jk = (document.getElementById('jenis_kelamin_tt').value || '').toUpperCase();
   
   if (!jenis) {
     alertBox.innerHTML = '<div class="alert alert-error">❌ Jenis tinggal wajib dipilih.</div>';
     return;
   }
   
-  if (jenis === 'Mahad' && !noKamar) {
-    alertBox.innerHTML = '<div class="alert alert-error">❌ No. Kamar wajib diisi kalau tinggal di Mahad.</div>';
+  // Validasi: Mahad + Laki-laki wajib isi no kamar
+  if (jenis === 'Mahad' && jk === 'L' && !noKamar) {
+    alertBox.innerHTML = '<div class="alert alert-error">❌ No. Kamar wajib diisi untuk mahasiswa laki-laki di Mahad.</div>';
     return;
   }
   
@@ -633,7 +628,7 @@ export async function simpanTempatTinggal() {
   try {
     const payload = {
       jenis_tinggal: jenis,
-      no_kamar: jenis === 'Mahad' ? noKamar : null
+      no_kamar: (jenis === 'Mahad' && noKamar) ? noKamar : null
     };
     
     const { error } = await supabase
