@@ -1,5 +1,5 @@
 // ============================================================
-// MAHASISWA — CRUD + IMPORT CSV (UPSERT) + PREVIEW DOKUMEN + STATUS
+// MAHASISWA — CRUD + IMPORT CSV (UPSERT) + EXPORT CSV + PREVIEW
 // ============================================================
 
 import { supabase } from './config.js';
@@ -489,6 +489,150 @@ export function hapusMahasiswa() {
 }
 
 // ============================================================
+// EXPORT CSV
+// ============================================================
+export async function exportCSVMahasiswa() {
+  try {
+    // Ambil SEMUA data mahasiswa (join dokumen & kontak)
+    const { data: mhsData, error: err1 } = await supabase
+      .from('mahasiswa')
+      .select('*')
+      .order('nim');
+    
+    if (err1) throw err1;
+    
+    const { data: dokData } = await supabase.from('mahasiswa_dokumen').select('*');
+    const { data: kontakData } = await supabase.from('mahasiswa_kontak').select('*');
+    
+    // Buat map untuk lookup
+    const dokMap = {};
+    (dokData || []).forEach(d => { dokMap[d.mahasiswa_id] = d; });
+    
+    const kontakMap = {};
+    (kontakData || []).forEach(k => { kontakMap[k.mahasiswa_id] = k; });
+    
+    // Filter sesuai yang tampil (filter + search)
+    let filtered = mhsData || [];
+    
+    if (filterStatus !== 'semua') {
+      filtered = filtered.filter(m => m.status === filterStatus);
+    }
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(m => 
+        (m.nim || '').toLowerCase().includes(q) ||
+        (m.nama || '').toLowerCase().includes(q) ||
+        (m.warga_negara || '').toLowerCase().includes(q) ||
+        (m.fakultas || '').toLowerCase().includes(q) ||
+        (m.prodi || '').toLowerCase().includes(q)
+      );
+    }
+    
+    if (filtered.length === 0) {
+      alert('Tidak ada data untuk di-export.');
+      return;
+    }
+    
+    // Header CSV (sama persis dengan template import)
+    const header = [
+      'NIM', 'Nama', 'Jenis Kelamin', 'Jenjang', 'Fakultas', 'Prodi',
+      'Tahun Masuk', 'Warga Negara', 'Email Kampus', 'Keterangan', 'Link Foto', 'Status',
+      'No. Paspor', 'No. ITAS', 'No. STM', 'No. SKTT',
+      'Masa Berlaku Paspor', 'Masa Berlaku ITAS', 'Masa Berlaku SKJ/STM', 'Masa Berlaku SKTT',
+      'Link Paspor', 'Link ITAS', 'Link STM', 'Link SKTT',
+      'Tempat Lahir', 'Tanggal Lahir', 'Alamat Sekarang', 'Alamat Asal',
+      'Telepon', 'HP', 'No. Paket Data', 'Email Pribadi'
+    ];
+    
+    // Baris data
+    const rows = filtered.map(m => {
+      const d = dokMap[m.id] || {};
+      const k = kontakMap[m.id] || {};
+      
+      return [
+        m.nim || '',
+        m.nama || '',
+        m.jenis_kelamin || '',
+        m.jenjang || '',
+        m.fakultas || '',
+        m.prodi || '',
+        m.tahun_masuk || '',
+        m.warga_negara || '',
+        m.email_kampus || '',
+        m.keterangan || '',
+        m.link_foto || '',
+        m.status || 'Aktif',
+        d.no_paspor || '',
+        d.no_itas || '',
+        d.no_stm || '',
+        d.no_sktt || '',
+        d.masa_berlaku_paspor || '',
+        d.masa_berlaku_itas || '',
+        d.masa_berlaku_skj_stm || '',
+        d.masa_berlaku_sktt || '',
+        d.link_paspor || '',
+        d.link_itas || '',
+        d.link_stm || '',
+        d.link_sktt || '',
+        k.tempat_lahir || '',
+        k.tanggal_lahir || '',
+        k.alamat_sekarang || '',
+        k.alamat_asal || '',
+        k.telepon || '',
+        k.hp || '',
+        k.no_paketdata || '',
+        k.email_pribadi || ''
+      ];
+    });
+    
+    // Buat CSV — escape nilai yang ada koma/kutip
+    function escapeCSV(val) {
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    }
+    
+    const csvContent = 
+      header.map(escapeCSV).join(',') + '\n' +
+      rows.map(row => row.map(escapeCSV).join(',')).join('\n') + '\n';
+    
+    // Download
+    const tanggal = new Date().toISOString().split('T')[0];
+    const namaFile = `mahasiswa_export_${tanggal}.csv`;
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = namaFile;
+    link.click();
+    
+    // Info
+    let infoText = `✅ Export berhasil: ${filtered.length} mahasiswa`;
+    if (filterStatus !== 'semua') infoText += ` (status: ${filterStatus})`;
+    if (searchQuery.trim()) infoText += ` (pencarian: "${searchQuery}")`;
+    
+    // Tampilkan notifikasi ringan
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+      position: fixed; top: 80px; right: 20px; z-index: 9999;
+      background: #0a5c4a; color: white; padding: 12px 20px;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    `;
+    notif.textContent = infoText;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+    
+  } catch (err) {
+    console.error('Export error:', err);
+    alert('❌ Gagal export: ' + err.message);
+  }
+}
+
+// ============================================================
 // IMPORT CSV
 // ============================================================
 export function openImportCSV() {
@@ -810,6 +954,7 @@ window.openTambahMahasiswa = openTambahMahasiswa;
 window.openEditMahasiswa = openEditMahasiswa;
 window.simpanMahasiswa = simpanMahasiswa;
 window.hapusMahasiswa = hapusMahasiswa;
+window.exportCSVMahasiswa = exportCSVMahasiswa;
 window.openImportCSV = openImportCSV;
 window.downloadTemplateMhs = downloadTemplateMhs;
 window.handleFileSelect = handleFileSelect;
