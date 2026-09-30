@@ -110,11 +110,11 @@ async function loadKamarMahad() {
     const bg = isFull ? '#fadbd4' : isEmpty ? '#f4f6f8' : '#fef3d4';
     const color = isFull ? '#a03a2a' : isEmpty ? '#6b7280' : '#8a6015';
     
-    let namaList = '';
+        let namaList = '';
     if (penghuni.length > 0) {
-      const tampil = penghuni.slice(0, 3).map(p => p.nama || p.nim).join(', ');
-      const sisa = penghuni.length > 3 ? ` +${penghuni.length - 3}` : '';
-      namaList = `<div style="font-size:10px; color:#6b7280; margin-top:6px; line-height:1.3;">${tampil}${sisa}</div>`;
+      namaList = `<div style="font-size:10px; color:#6b7280; margin-top:6px; line-height:1.4; text-align:left;">` +
+        penghuni.map((p, idx) => `<div>${idx + 1}. ${p.nama || p.nim}</div>`).join('') +
+        `</div>`;
     }
     
     return `<div class="kamar-box" style="background:${bg}; border-color:${color}40;">
