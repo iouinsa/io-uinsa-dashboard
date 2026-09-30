@@ -20,37 +20,30 @@ const COLORS = {
   ]
 };
 
-// Chart instances (biar bisa destroy dulu sebelum render ulang)
+// Chart instances
 let charts = {};
 
 // ============================================================
 // LOAD DASHBOARD
 // ============================================================
 export async function loadDashboard() {
-  // Ambil semua data yang dibutuhkan
   const [
-    mhsData, kerjasamaData, kamarData, kontakData, dokumenData
+    mhsData, kerjasamaData, kamarData, dokumenData
   ] = await Promise.all([
-    supabase.from('mahasiswa').select('id, nim, nama, warga_negara, fakultas, jenjang, tahun_masuk, status'),
+    supabase.from('mahasiswa').select('id, nim, nama, warga_negara, fakultas, jenjang, tahun_masuk, status, jenis_tinggal'),
     supabase.from('kerjasama').select('id, kampus, negara, jenis, tanggal_berakhir, tanggal_mulai'),
     supabase.from('kamar_mahad').select('id, no_kamar, kapasitas, terisi'),
-    supabase.from('mahasiswa_kontak').select('mahasiswa_id, alamat_sekarang'),
     supabase.from('mahasiswa_dokumen').select('mahasiswa_id, masa_berlaku_itas, masa_berlaku_paspor')
   ]);
   
   const mhs = mhsData.data || [];
   const kjs = kerjasamaData.data || [];
   const kamar = kamarData.data || [];
-  const kontak = kontakData.data || [];
   const dokumen = dokumenData.data || [];
   
-  // Hitung ringkasan
   renderSummary(mhs, kjs, kamar);
-  
-  // Hitung reminder
   renderReminder(mhs, kjs, dokumen);
   
-  // Render grafik
   renderChartNegara(mhs);
   renderChartFakultas(mhs);
   renderChartStatus(mhs);
@@ -112,14 +105,12 @@ function renderReminder(mhs, kjs, dokumen) {
   const limit = new Date(today);
   limit.setDate(limit.getDate() + 90);
   
-  // Visa/ITAS akan berakhir
   const visaAkanBerakhir = dokumen.filter(d => {
     if (!d.masa_berlaku_itas) return false;
     const tgl = new Date(d.masa_berlaku_itas);
     return tgl >= today && tgl <= limit;
   });
   
-  // MoU akan berakhir
   const mouAkanBerakhir = kjs.filter(k => {
     if (!k.tanggal_berakhir) return false;
     const tgl = new Date(k.tanggal_berakhir);
@@ -150,7 +141,7 @@ function renderReminder(mhs, kjs, dokumen) {
 }
 
 // ============================================================
-// HELPER: DESTROY CHART
+// HELPER
 // ============================================================
 function destroyChart(id) {
   if (charts[id]) {
@@ -167,7 +158,7 @@ function showEmpty(canvasId, message = 'Belum ada data') {
 }
 
 // ============================================================
-// GRAFIK 1: Mahasiswa per Negara (Horizontal Bar)
+// GRAFIK 1: Mahasiswa per Negara
 // ============================================================
 function renderChartNegara(mhs) {
   const counts = {};
@@ -178,10 +169,7 @@ function renderChartNegara(mhs) {
   
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
   
-  if (sorted.length === 0) {
-    showEmpty('chartNegara');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartNegara'); return; }
   
   destroyChart('chartNegara');
   const canvas = document.getElementById('chartNegara');
@@ -202,9 +190,7 @@ function renderChartNegara(mhs) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         x: { beginAtZero: true, ticks: { stepSize: 1 } },
         y: { ticks: { font: { size: 11 } } }
@@ -214,7 +200,7 @@ function renderChartNegara(mhs) {
 }
 
 // ============================================================
-// GRAFIK 2: Mahasiswa per Fakultas (Doughnut)
+// GRAFIK 2: Mahasiswa per Fakultas
 // ============================================================
 function renderChartFakultas(mhs) {
   const counts = {};
@@ -225,10 +211,7 @@ function renderChartFakultas(mhs) {
   
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   
-  if (sorted.length === 0) {
-    showEmpty('chartFakultas');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartFakultas'); return; }
   
   destroyChart('chartFakultas');
   const canvas = document.getElementById('chartFakultas');
@@ -259,10 +242,17 @@ function renderChartFakultas(mhs) {
 }
 
 // ============================================================
-// GRAFIK 3: Status Mahasiswa (Doughnut)
+// GRAFIK 3: Status Mahasiswa (Aktif, Cuti, Alumni, Drop Out, Mengundurkan Diri)
 // ============================================================
 function renderChartStatus(mhs) {
-  const counts = { Aktif: 0, Alumni: 0, Cuti: 0, Keluar: 0 };
+  const counts = { 
+    'Aktif': 0, 
+    'Cuti': 0, 
+    'Alumni': 0, 
+    'Drop Out': 0, 
+    'Mengundurkan Diri': 0 
+  };
+  
   mhs.forEach(m => {
     const s = m.status || 'Aktif';
     if (counts[s] !== undefined) counts[s]++;
@@ -271,11 +261,13 @@ function renderChartStatus(mhs) {
   const labels = [];
   const data = [];
   const colors = [];
+  
   const colorMap = {
     'Aktif': '#1e7a4d',
-    'Alumni': '#2563eb',
     'Cuti': '#d4a017',
-    'Keluar': '#a03a2a'
+    'Alumni': '#2563eb',
+    'Drop Out': '#a03a2a',
+    'Mengundurkan Diri': '#dc2626'
   };
   
   Object.entries(counts).forEach(([k, v]) => {
@@ -286,10 +278,7 @@ function renderChartStatus(mhs) {
     }
   });
   
-  if (data.length === 0) {
-    showEmpty('chartStatus');
-    return;
-  }
+  if (data.length === 0) { showEmpty('chartStatus'); return; }
   
   destroyChart('chartStatus');
   const canvas = document.getElementById('chartStatus');
@@ -320,7 +309,7 @@ function renderChartStatus(mhs) {
 }
 
 // ============================================================
-// GRAFIK 4: Mahasiswa per Jenjang (Bar)
+// GRAFIK 4: Mahasiswa per Jenjang
 // ============================================================
 function renderChartJenjang(mhs) {
   const counts = {};
@@ -331,10 +320,7 @@ function renderChartJenjang(mhs) {
   
   const sorted = Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0]));
   
-  if (sorted.length === 0) {
-    showEmpty('chartJenjang');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartJenjang'); return; }
   
   destroyChart('chartJenjang');
   const canvas = document.getElementById('chartJenjang');
@@ -363,7 +349,7 @@ function renderChartJenjang(mhs) {
 }
 
 // ============================================================
-// GRAFIK 5: Kerjasama per Negara (Horizontal Bar)
+// GRAFIK 5: Kerjasama per Negara
 // ============================================================
 function renderChartKerjasamaNegara(kjs) {
   const counts = {};
@@ -374,10 +360,7 @@ function renderChartKerjasamaNegara(kjs) {
   
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
   
-  if (sorted.length === 0) {
-    showEmpty('chartKerjasamaNegara');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartKerjasamaNegara'); return; }
   
   destroyChart('chartKerjasamaNegara');
   const canvas = document.getElementById('chartKerjasamaNegara');
@@ -408,7 +391,7 @@ function renderChartKerjasamaNegara(kjs) {
 }
 
 // ============================================================
-// GRAFIK 6: Jenis Kerjasama (Doughnut)
+// GRAFIK 6: Jenis Kerjasama
 // ============================================================
 function renderChartJenisKerjasama(kjs) {
   const counts = { MoU: 0, MoA: 0, LoI: 0, Lainnya: 0 };
@@ -423,6 +406,7 @@ function renderChartJenisKerjasama(kjs) {
   const labels = [];
   const data = [];
   const colors = [];
+  
   const colorMap = {
     'MoU': '#0a5c4a',
     'MoA': '#d4a017',
@@ -438,10 +422,7 @@ function renderChartJenisKerjasama(kjs) {
     }
   });
   
-  if (data.length === 0) {
-    showEmpty('chartJenisKerjasama');
-    return;
-  }
+  if (data.length === 0) { showEmpty('chartJenisKerjasama'); return; }
   
   destroyChart('chartJenisKerjasama');
   const canvas = document.getElementById('chartJenisKerjasama');
@@ -472,7 +453,7 @@ function renderChartJenisKerjasama(kjs) {
 }
 
 // ============================================================
-// GRAFIK 7: Tren Mahasiswa Baru per Tahun (Line)
+// GRAFIK 7: Tren Mahasiswa Baru per Tahun
 // ============================================================
 function renderChartTrenTahun(mhs) {
   const counts = {};
@@ -485,10 +466,7 @@ function renderChartTrenTahun(mhs) {
   
   const sorted = Object.entries(counts).sort((a, b) => a[0] - b[0]);
   
-  if (sorted.length === 0) {
-    showEmpty('chartTrenTahun');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartTrenTahun'); return; }
   
   destroyChart('chartTrenTahun');
   const canvas = document.getElementById('chartTrenTahun');
@@ -521,7 +499,7 @@ function renderChartTrenTahun(mhs) {
 }
 
 // ============================================================
-// GRAFIK 8: Jenis Tinggal (Doughnut)
+// GRAFIK 8: Jenis Tinggal
 // ============================================================
 function renderChartJenisTinggal(mhs) {
   const counts = {};
@@ -532,10 +510,7 @@ function renderChartJenisTinggal(mhs) {
   
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   
-  if (sorted.length === 0) {
-    showEmpty('chartJenisTinggal');
-    return;
-  }
+  if (sorted.length === 0) { showEmpty('chartJenisTinggal'); return; }
   
   destroyChart('chartJenisTinggal');
   const canvas = document.getElementById('chartJenisTinggal');
