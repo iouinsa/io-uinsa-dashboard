@@ -247,6 +247,7 @@ function renderChartFakultas(mhs) {
 function renderChartStatus(mhs) {
   const counts = { 
     'Aktif': 0, 
+    'Online': 0, 
     'Cuti': 0, 
     'Alumni': 0, 
     'Drop Out': 0, 
@@ -264,6 +265,7 @@ function renderChartStatus(mhs) {
   
   const colorMap = {
     'Aktif': '#1e7a4d',
+    'Online': '#0891b2',      // biru muda — beda dari aktif
     'Cuti': '#d4a017',
     'Alumni': '#2563eb',
     'Drop Out': '#a03a2a',
