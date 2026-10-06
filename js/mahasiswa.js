@@ -19,7 +19,6 @@ let allMahasiswa = [];
 // ============================================================
 function statusClass(status) {
   if (status === 'Aktif') return 'tag-active';
-  if (status === 'Online') return 'tag-mou';       // biru, biar beda dari aktif
   if (status === 'Alumni') return 'tag-mou';
   if (status === 'Cuti') return 'tag-warning';
   if (status === 'Drop Out') return 'tag-error';
@@ -36,7 +35,7 @@ export async function loadMahasiswa() {
   
   let query = supabase
     .from('mahasiswa')
-    .select('id, nim, nama, warga_negara, fakultas, prodi, tahun_masuk, link_foto, status')
+    .select('id, nim, nama, warga_negara, fakultas, prodi, tahun_masuk, link_foto, status, mode_kuliah')
     .order('nim');
   
   if (filterStatus !== 'semua') {
@@ -90,6 +89,11 @@ function renderMahasiswa() {
     const st = m.status || 'Aktif';
     const stCls = statusClass(st);
     
+    // Badge Online kalau mode_kuliah = Online
+    const modeBadge = m.mode_kuliah === 'Online' 
+      ? ' <span class="tag" style="background:#dbeafe;color:#1e40af;font-size:9px;">Online</span>' 
+      : '';
+    
     return `<tr class="clickable" onclick="window.openDetailMahasiswa(${m.id})">
       <td>${fotoHtml}</td>
       <td><strong>${m.nim}</strong></td>
@@ -98,7 +102,7 @@ function renderMahasiswa() {
       <td>${m.fakultas || '—'}</td>
       <td>${m.prodi || '—'}</td>
       <td>${m.tahun_masuk || '—'}</td>
-      <td><span class="tag ${stCls}">${st}</span></td>
+      <td><span class="tag ${stCls}">${st}</span>${modeBadge}</td>
     </tr>`;
   }).join('');
   
@@ -156,6 +160,7 @@ export async function openDetailMahasiswa(id) {
   const initial = (m.nama || '?').charAt(0).toUpperCase();
   const st = m.status || 'Aktif';
   const stCls = statusClass(st);
+  const isOnline = m.mode_kuliah === 'Online';
   
   const fotoHtml = m.link_foto
     ? `<img src="${convertDriveLink(m.link_foto)}" class="detail-foto" onerror="this.outerHTML='<div class=\\'detail-foto-empty\\'>${initial}</div>'">`
@@ -195,7 +200,10 @@ export async function openDetailMahasiswa(id) {
       <div class="detail-header-info">
         <h2>${m.nama || 'Tanpa Nama'}</h2>
         <p>${m.nim} · ${m.fakultas || '—'} · ${m.prodi || '—'}</p>
-        <div style="margin-top: 8px;"><span class="tag ${stCls}">${st}</span></div>
+        <div style="margin-top: 8px;">
+          <span class="tag ${stCls}">${st}</span>
+          ${isOnline ? '<span class="tag" style="background:#dbeafe;color:#1e40af;margin-left:4px;">Online</span>' : ''}
+        </div>
       </div>
     </div>
     
@@ -212,11 +220,13 @@ export async function openDetailMahasiswa(id) {
         <div class="detail-item"><label>Warga Negara</label><span>${m.warga_negara || '—'}</span></div>
         <div class="detail-item"><label>Email Kampus</label><span>${m.email_kampus || '—'}</span></div>
         <div class="detail-item"><label>Status</label><span class="tag ${stCls}">${st}</span></div>
+        <div class="detail-item"><label>Mode Kuliah</label><span>${isOnline ? '<span class="tag" style="background:#dbeafe;color:#1e40af;">Online (PJJ)</span>' : 'Offline — di Indonesia'}</span></div>
         <div class="detail-item full"><label>Keterangan</label><span>${m.keterangan || '—'}</span></div>
       </div>
     </div>
     
     <div class="detail-section"><h4>Dokumen Imigrasi</h4>
+      ${isOnline ? '<div class="alert alert-warning" style="font-size:12px;margin-bottom:12px;">⚠️ Mahasiswa ini kuliah Online (PJJ). Dokumen imigrasi di bawah ini mungkin sudah tidak berlaku — tidak perlu diperpanjang.</div>' : ''}
       <div class="dokumen-grid">
         ${dokCard('Paspor', d.no_paspor, d.masa_berlaku_paspor, d.link_paspor)}
         ${dokCard('ITAS', d.no_itas, d.masa_berlaku_itas, d.link_itas)}
@@ -309,6 +319,9 @@ export function openTambahMahasiswa() {
   const statusEl = document.getElementById('formMahasiswa').elements['status'];
   if (statusEl) statusEl.value = 'Aktif';
   
+  const modeEl = document.getElementById('formMahasiswa').elements['mode_kuliah'];
+  if (modeEl) modeEl.value = 'Offline';
+  
   showModal('modalFormMahasiswa');
 }
 
@@ -346,6 +359,7 @@ export async function openEditMahasiswa() {
   setVal('email_kampus', m.email_kampus); setVal('link_foto', m.link_foto);
   setVal('keterangan', m.keterangan);
   setVal('status', m.status || 'Aktif');
+  setVal('mode_kuliah', m.mode_kuliah || 'Offline');
   setVal('no_paspor', d.no_paspor); setVal('no_itas', d.no_itas);
   setVal('no_stm', d.no_stm); setVal('no_sktt', d.no_sktt);
   setVal('masa_berlaku_paspor', d.masa_berlaku_paspor);
@@ -394,7 +408,8 @@ export async function simpanMahasiswa() {
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
         warga_negara: data.warga_negara, email_kampus: data.email_kampus,
         keterangan: data.keterangan, link_foto: data.link_foto,
-        status: data.status || 'Aktif'
+        status: data.status || 'Aktif',
+        mode_kuliah: data.mode_kuliah || 'Offline'
       }).eq('id', editId);
       
       if (err1) throw { step: 'mahasiswa', error: err1 };
@@ -413,7 +428,6 @@ export async function simpanMahasiswa() {
         link_stm: data.link_stm, link_sktt: data.link_sktt
       };
       
-      // Reset lat/lng supaya di-geocode ulang kalau alamat berubah
       const kontakPayload = {
         tempat_lahir: data.tempat_lahir, tanggal_lahir: data.tanggal_lahir,
         alamat_sekarang: data.alamat_sekarang, alamat_asal: data.alamat_asal,
@@ -437,7 +451,8 @@ export async function simpanMahasiswa() {
         tahun_masuk: data.tahun_masuk ? parseInt(data.tahun_masuk) : null,
         warga_negara: data.warga_negara, email_kampus: data.email_kampus,
         keterangan: data.keterangan, link_foto: data.link_foto,
-        status: data.status || 'Aktif'
+        status: data.status || 'Aktif',
+        mode_kuliah: data.mode_kuliah || 'Offline'
       }).select('id').single();
       
       if (err1) throw { step: 'mahasiswa', error: err1 };
@@ -539,7 +554,7 @@ export async function exportCSVMahasiswa() {
     
     const header = [
       'NIM', 'Nama', 'Jenis Kelamin', 'Jenjang', 'Fakultas', 'Prodi',
-      'Tahun Masuk', 'Warga Negara', 'Email Kampus', 'Keterangan', 'Link Foto', 'Status',
+      'Tahun Masuk', 'Warga Negara', 'Email Kampus', 'Keterangan', 'Link Foto', 'Status', 'Mode Kuliah',
       'No. Paspor', 'No. ITAS', 'No. STM', 'No. SKTT',
       'Masa Berlaku Paspor', 'Masa Berlaku ITAS', 'Masa Berlaku SKJ/STM', 'Masa Berlaku SKTT',
       'Link Paspor', 'Link ITAS', 'Link STM', 'Link SKTT',
@@ -564,6 +579,7 @@ export async function exportCSVMahasiswa() {
         m.keterangan || '',
         m.link_foto || '',
         m.status || 'Aktif',
+        m.mode_kuliah || 'Offline',
         d.no_paspor || '',
         d.no_itas || '',
         d.no_stm || '',
@@ -642,13 +658,13 @@ export function openImportCSV() {
   showModal('modalImportCSV');
 }
 
-const CSV_COLUMNS = ['nim','nama','jenis_kelamin','jenjang','fakultas','prodi','tahun_masuk','warga_negara','email_kampus','keterangan','link_foto','status','no_paspor','no_itas','no_stm','no_sktt','masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','link_paspor','link_itas','link_stm','link_sktt','tempat_lahir','tanggal_lahir','alamat_sekarang','alamat_asal','telepon','hp','no_paketdata','email_pribadi'];
+const CSV_COLUMNS = ['nim','nama','jenis_kelamin','jenjang','fakultas','prodi','tahun_masuk','warga_negara','email_kampus','keterangan','link_foto','status','mode_kuliah','no_paspor','no_itas','no_stm','no_sktt','masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','link_paspor','link_itas','link_stm','link_sktt','tempat_lahir','tanggal_lahir','alamat_sekarang','alamat_asal','telepon','hp','no_paketdata','email_pribadi'];
 
 const COLUMN_LABELS = {
   nim:'NIM', nama:'Nama', jenis_kelamin:'Jenis Kelamin', jenjang:'Jenjang',
   fakultas:'Fakultas', prodi:'Prodi', tahun_masuk:'Tahun Masuk',
   warga_negara:'Warga Negara', email_kampus:'Email Kampus', keterangan:'Keterangan',
-  link_foto:'Link Foto', status:'Status',
+  link_foto:'Link Foto', status:'Status', mode_kuliah:'Mode Kuliah',
   no_paspor:'No. Paspor', no_itas:'No. ITAS',
   no_stm:'No. STM', no_sktt:'No. SKTT',
   masa_berlaku_paspor:'Masa Berlaku Paspor', masa_berlaku_itas:'Masa Berlaku ITAS',
@@ -663,7 +679,7 @@ export function downloadTemplateMhs() {
   const header = CSV_COLUMNS.map(c => COLUMN_LABELS[c]).join(',');
   const contoh = [
     '2024001','Ahmad Faizal','L','S1','Syariah','HKI','2024','Malaysia','ahmad@uinsa.ac.id','',
-    'https://drive.google.com/file/d/CONTOH_FOTO/view','Aktif',
+    'https://drive.google.com/file/d/CONTOH_FOTO/view','Aktif','Offline',
     'A1234567','ITAS001','STM001','SKTT001',
     '2028-05-10','2026-08-01','2025-12-31','2026-08-01',
     'https://drive.google.com/file/d/PASPOR/view',
@@ -724,7 +740,8 @@ function validateDataMhs() {
   const nimCount = {};
   parsedData.forEach(r => { if (r.nim) nimCount[r.nim] = (nimCount[r.nim] || 0) + 1; });
   
-  const validStatus = ['Aktif', 'Online', 'Alumni', 'Cuti', 'Drop Out', 'Mengundurkan Diri'];
+  const validStatus = ['Aktif', 'Alumni', 'Cuti', 'Drop Out', 'Mengundurkan Diri'];
+  const validModeKuliah = ['Offline', 'Online'];
   
   parsedData.forEach((row) => {
     const errors = [];
@@ -736,7 +753,10 @@ function validateDataMhs() {
       errors.push('JK harus L/P');
     }
     if (row.status && !validStatus.includes(row.status)) {
-      errors.push('Status harus Aktif/Online/Alumni/Cuti/Drop Out/Mengundurkan Diri');
+      errors.push('Status harus Aktif/Alumni/Cuti/Drop Out/Mengundurkan Diri');
+    }
+    if (row.mode_kuliah && !validModeKuliah.includes(row.mode_kuliah)) {
+      errors.push('Mode Kuliah harus Offline/Online');
     }
     
     ['masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','tanggal_lahir'].forEach(f => {
@@ -818,6 +838,7 @@ export async function prosesImportMhs() {
         if (row.keterangan) updatePayload.keterangan = row.keterangan;
         if (row.link_foto) updatePayload.link_foto = row.link_foto;
         if (row.status) updatePayload.status = row.status;
+        if (row.mode_kuliah) updatePayload.mode_kuliah = row.mode_kuliah;
         
         if (Object.keys(updatePayload).length > 0) {
           const { error: err1 } = await supabase
@@ -857,7 +878,6 @@ export async function prosesImportMhs() {
         if (row.no_paketdata) kontakPayload.no_paketdata = row.no_paketdata;
         if (row.email_pribadi) kontakPayload.email_pribadi = row.email_pribadi;
         
-        // Reset lat/lng kalau alamat diisi
         if (row.alamat_sekarang) {
           kontakPayload.latitude = null;
           kontakPayload.longitude = null;
@@ -884,7 +904,8 @@ export async function prosesImportMhs() {
           email_kampus: row.email_kampus || null,
           keterangan: row.keterangan || null,
           link_foto: row.link_foto || null,
-          status: row.status || 'Aktif'
+          status: row.status || 'Aktif',
+          mode_kuliah: row.mode_kuliah || 'Offline'
         }).select('id').single();
         
         if (err1) throw err1;
