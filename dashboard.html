@@ -105,6 +105,7 @@
         <span class="filter-label">Filter:</span>
         <button class="filter-status-btn active" data-status="semua" onclick="setFilterStatus('semua')">Semua</button>
         <button class="filter-status-btn" data-status="Aktif" onclick="setFilterStatus('Aktif')">Aktif</button>
+        <button class="filter-status-btn" data-status="Online" onclick="setFilterStatus('Online')">Online</button>
         <button class="filter-status-btn" data-status="Cuti" onclick="setFilterStatus('Cuti')">Cuti</button>
         <button class="filter-status-btn" data-status="Alumni" onclick="setFilterStatus('Alumni')">Alumni</button>
         <button class="filter-status-btn" data-status="Drop Out" onclick="setFilterStatus('Drop Out')">Drop Out</button>
@@ -382,8 +383,9 @@
           <div class="form-row">
             <div class="form-group"><label>Tahun Masuk</label><input type="number" name="tahun_masuk" placeholder="2024"></div>
             <div class="form-group"><label>Status</label>
-              <select name="status">
+          <select name="status">
                 <option value="Aktif">Aktif</option>
+                <option value="Online">Online (Kuliah PJJ)</option>
                 <option value="Cuti">Cuti</option>
                 <option value="Alumni">Alumni</option>
                 <option value="Drop Out">Drop Out</option>
