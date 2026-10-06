@@ -382,15 +382,23 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label>Tahun Masuk</label><input type="number" name="tahun_masuk" placeholder="2024"></div>
-            <div class="form-group"><label>Status</label>
-          <select name="status">
+                        <div class="form-group"><label>Status</label>
+              <select name="status">
                 <option value="Aktif">Aktif</option>
-                <option value="Online">Online (Kuliah PJJ)</option>
                 <option value="Cuti">Cuti</option>
                 <option value="Alumni">Alumni</option>
                 <option value="Drop Out">Drop Out</option>
                 <option value="Mengundurkan Diri">Mengundurkan Diri</option>
               </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full"><label>Mode Kuliah</label>
+              <select name="mode_kuliah">
+                <option value="Offline">Offline — di Indonesia</option>
+                <option value="Online">Online — PJJ dari negara asal</option>
+              </select>
+              <small style="color:#6b7280; font-size:11px; margin-top:2px;">Pilih Online kalau mahasiswa kuliah jarak jauh dari negara asal (tidak perlu perpanjang dokumen imigrasi)</small>
             </div>
           </div>
           <div class="form-row">
