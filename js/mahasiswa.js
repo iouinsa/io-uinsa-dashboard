@@ -724,7 +724,7 @@ function validateDataMhs() {
   const nimCount = {};
   parsedData.forEach(r => { if (r.nim) nimCount[r.nim] = (nimCount[r.nim] || 0) + 1; });
   
-  const validStatus = ['Aktif', 'Alumni', 'Cuti', 'Drop Out', 'Mengundurkan Diri'];
+  const validStatus = ['Aktif', 'Online', 'Alumni', 'Cuti', 'Drop Out', 'Mengundurkan Diri'];
   
   parsedData.forEach((row) => {
     const errors = [];
@@ -736,7 +736,7 @@ function validateDataMhs() {
       errors.push('JK harus L/P');
     }
     if (row.status && !validStatus.includes(row.status)) {
-      errors.push('Status harus Aktif/Alumni/Cuti/Drop Out/Mengundurkan Diri');
+      errors.push('Status harus Aktif/Online/Alumni/Cuti/Drop Out/Mengundurkan Diri');
     }
     
     ['masa_berlaku_paspor','masa_berlaku_itas','masa_berlaku_skj_stm','masa_berlaku_sktt','tanggal_lahir'].forEach(f => {
