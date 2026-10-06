@@ -19,6 +19,7 @@ let allMahasiswa = [];
 // ============================================================
 function statusClass(status) {
   if (status === 'Aktif') return 'tag-active';
+  if (status === 'Online') return 'tag-mou';       // biru, biar beda dari aktif
   if (status === 'Alumni') return 'tag-mou';
   if (status === 'Cuti') return 'tag-warning';
   if (status === 'Drop Out') return 'tag-error';
