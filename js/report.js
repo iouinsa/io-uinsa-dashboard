@@ -82,7 +82,8 @@ async function loadLaporanMahasiswa() {
   
   // Hitung statistik per status (5 status)
   const total = filtered.length;
-  const aktif = filtered.filter(m => m.status === 'Aktif').length;
+    const aktif = filtered.filter(m => m.status === 'Aktif').length;
+  const online = filtered.filter(m => m.status === 'Online').length;
   const cuti = filtered.filter(m => m.status === 'Cuti').length;
   const alumni = filtered.filter(m => m.status === 'Alumni').length;
   const dropOut = filtered.filter(m => m.status === 'Drop Out').length;
@@ -131,10 +132,11 @@ async function loadLaporanMahasiswa() {
   
   html += `</tbody></table>`;
   
-  html += `
+    html += `
     <div class="ringkasan">
       <strong>Total: ${total} mahasiswa</strong>
       · Aktif: ${aktif}
+      · Online: ${online}
       · Cuti: ${cuti}
       · Alumni: ${alumni}
       · Drop Out: ${dropOut}
