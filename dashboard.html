@@ -313,14 +313,49 @@
             </select>
           </div>
         </div>
+        
         <div class="form-row" id="row_no_kamar" style="display:none;">
           <div class="form-group full">
             <label id="label_no_kamar">No. Kamar <span class="req">*</span></label>
             <select name="no_kamar" id="no_kamar_tt"><option value="">— Pilih Kamar —</option></select>
           </div>
         </div>
+        
+        <!-- KOORDINAT -->
+        <div class="form-section" style="margin-top:16px; margin-bottom:16px;">
+          <h4 style="font-size:12px; color:#0a5c4a; padding-bottom:6px; border-bottom:1px solid #e8f3f0; margin-bottom:12px;">📍 Koordinat Peta</h4>
+          
+          <div class="alert alert-info" style="font-size:11px; padding:8px 12px; margin-bottom:12px;">
+            <strong>Cara ambil koordinat:</strong><br>
+            1. Klik tombol <strong>Buka Google Maps</strong> di bawah<br>
+            2. Cari alamat di Google Maps<br>
+            3. <strong>Klik kanan</strong> di lokasi → copy angka koordinat<br>
+            4. Paste ke field Latitude & Longitude
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Latitude</label>
+              <input type="text" name="latitude" id="latitude_tt" placeholder="-7.369555" style="font-family:monospace;">
+            </div>
+            <div class="form-group">
+              <label>Longitude</label>
+              <input type="text" name="longitude" id="longitude_tt" placeholder="112.661244" style="font-family:monospace;">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group full">
+              <button type="button" class="btn btn-outline btn-sm" onclick="bukaGoogleMaps()" style="width:100%;">
+                🗺️ Buka Google Maps (cari alamat)
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <input type="hidden" id="jenis_kelamin_tt" value="">
       </form>
+      
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalEditTempatTinggal')">Batal</button>
