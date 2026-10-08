@@ -10,7 +10,8 @@ import {
   openEditMahasiswa, simpanMahasiswa, hapusMahasiswa,
   openImportCSV, downloadTemplateMhs, handleFileSelect,
   prosesImportMhs, setupMahasiswaDragDrop,
-  previewDokumen, closePreviewDokumen, searchMahasiswa, setFilterStatus
+  previewDokumen, closePreviewDokumen, searchMahasiswa, setFilterStatus,
+  exportCSVMahasiswa
 } from './mahasiswa.js';
 import {
   loadKerjasama, openTambahKerjasama, editKerjasama,
@@ -27,6 +28,7 @@ import {
   simpanPenerima, hapusPenerima, searchPenerima,
   openBuatAkun, prosesBuatAkun, hapusAkunPenerima
 } from './penerima.js';
+import { loadReminder } from './reminder.js';
 
 // ============================================================
 // INIT
@@ -79,45 +81,8 @@ function setupNavigasi() {
       if (page === 'mahasiswa') loadMahasiswa();
       if (page === 'kerjasama') loadKerjasama();
       if (page === 'tempat_tinggal') loadTempatTinggal();
+      if (page === 'reminder') loadReminder();
       if (page === 'penerima') loadPenerima();
     });
   });
 }
-
-// ============================================================
-// CETAK LAPORAN
-// ============================================================
-window.cetakLaporanMahasiswa = function() {
-  const status = document.querySelector('.filter-status-btn.active')?.dataset.status || 'semua';
-  const search = document.getElementById('searchMahasiswa')?.value || '';
-  
-  const params = new URLSearchParams({
-    jenis: 'mahasiswa',
-    status: status,
-    search: search
-  });
-  
-  window.open('report.html?' + params.toString(), '_blank');
-};
-
-window.cetakLaporanKerjasama = function() {
-  const search = document.getElementById('searchKerjasama')?.value || '';
-  
-  const params = new URLSearchParams({
-    jenis: 'kerjasama',
-    search: search
-  });
-  
-  window.open('report.html?' + params.toString(), '_blank');
-};
-
-window.cetakLaporanTempatTinggal = function() {
-  const search = document.getElementById('searchTempatTinggal')?.value || '';
-  
-  const params = new URLSearchParams({
-    jenis: 'tempat_tinggal',
-    search: search
-  });
-  
-  window.open('report.html?' + params.toString(), '_blank');
-};
