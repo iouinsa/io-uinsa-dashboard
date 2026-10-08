@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — International Office UINSA</title>
-  <link rel="icon" type="image/png" href="assets/logo-uinsa.png">
+<link rel="icon" type="image/png" href="assets/logo-uinsa.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="css/style.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -34,6 +34,7 @@
     <div class="nav-item" data-page="mahasiswa"><span class="nav-icon">👥</span> Mahasiswa</div>
     <div class="nav-item" data-page="kerjasama"><span class="nav-icon">🤝</span> Kerjasama</div>
     <div class="nav-item" data-page="tempat_tinggal"><span class="nav-icon">🏠</span> Tempat Tinggal</div>
+    <div class="nav-item" data-page="reminder"><span class="nav-icon">⏰</span> Reminder</div>
     <div class="nav-label">Pengaturan</div>
     <div class="nav-item" data-page="penerima"><span class="nav-icon">📧</span> Penerima Email</div>
   </aside>
@@ -105,7 +106,6 @@
         <span class="filter-label">Filter:</span>
         <button class="filter-status-btn active" data-status="semua" onclick="setFilterStatus('semua')">Semua</button>
         <button class="filter-status-btn" data-status="Aktif" onclick="setFilterStatus('Aktif')">Aktif</button>
-        <button class="filter-status-btn" data-status="Online" onclick="setFilterStatus('Online')">Online</button>
         <button class="filter-status-btn" data-status="Cuti" onclick="setFilterStatus('Cuti')">Cuti</button>
         <button class="filter-status-btn" data-status="Alumni" onclick="setFilterStatus('Alumni')">Alumni</button>
         <button class="filter-status-btn" data-status="Drop Out" onclick="setFilterStatus('Drop Out')">Drop Out</button>
@@ -208,6 +208,53 @@
       </div>
     </div>
     
+    <!-- REMINDER -->
+    <div class="page-view" id="page-reminder">
+      <div class="page-header">
+        <div>
+          <h2>⏰ Reminder Dokumen</h2>
+          <p>Dokumen mahasiswa asing yang akan berakhir ≤ 90 hari — mahasiswa Aktif (Offline) saja</p>
+        </div>
+        <button class="btn btn-outline" onclick="loadReminder()">🔄 Refresh</button>
+      </div>
+      
+      <!-- PASPOR -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🛂 Paspor</h3>
+          <span id="countPaspor" class="count-label"></span>
+        </div>
+        <div id="tabelPaspor"></div>
+      </div>
+      
+      <!-- ITAS -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📄 ITAS</h3>
+          <span id="countItas" class="count-label"></span>
+        </div>
+        <div id="tabelItas"></div>
+      </div>
+      
+      <!-- STM -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📋 SKJ/STM</h3>
+          <span id="countStm" class="count-label"></span>
+        </div>
+        <div id="tabelStm"></div>
+      </div>
+      
+      <!-- SKTT -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📑 SKTT</h3>
+          <span id="countSktt" class="count-label"></span>
+        </div>
+        <div id="tabelSktt"></div>
+      </div>
+    </div>
+    
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar penerima reminder & akun login dashboard</p></div>
@@ -266,7 +313,7 @@
             </select>
           </div>
         </div>
-                       <div class="form-row" id="row_no_kamar" style="display:none;">
+        <div class="form-row" id="row_no_kamar" style="display:none;">
           <div class="form-group full">
             <label id="label_no_kamar">No. Kamar <span class="req">*</span></label>
             <select name="no_kamar" id="no_kamar_tt"><option value="">— Pilih Kamar —</option></select>
@@ -382,7 +429,7 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label>Tahun Masuk</label><input type="number" name="tahun_masuk" placeholder="2024"></div>
-                        <div class="form-group"><label>Status</label>
+            <div class="form-group"><label>Status</label>
               <select name="status">
                 <option value="Aktif">Aktif</option>
                 <option value="Cuti">Cuti</option>
