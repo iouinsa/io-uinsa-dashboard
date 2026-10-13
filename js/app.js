@@ -21,13 +21,17 @@ import {
 } from './kerjasama.js';
 import {
   loadTempatTinggal, searchTempatTinggal, editTempatTinggal,
-  simpanTempatTinggal, toggleKamarField
+  simpanTempatTinggal, toggleKamarField, bukaGoogleMaps
 } from './tempat-tinggal.js';
 import {
   loadPenerima, openTambahPenerima, editPenerima,
   simpanPenerima, hapusPenerima, searchPenerima,
   openBuatAkun, prosesBuatAkun, hapusAkunPenerima
 } from './penerima.js';
+import {
+  loadKegiatan, searchKegiatan, setFilterKegiatan,
+  openTambahKegiatan, editKegiatan, simpanKegiatan, hapusKegiatan
+} from './kegiatan.js';
 import { loadReminder } from './reminder.js';
 
 // ============================================================
@@ -81,6 +85,7 @@ function setupNavigasi() {
       if (page === 'mahasiswa') loadMahasiswa();
       if (page === 'kerjasama') loadKerjasama();
       if (page === 'tempat_tinggal') loadTempatTinggal();
+      if (page === 'kegiatan') loadKegiatan();
       if (page === 'reminder') loadReminder();
       if (page === 'penerima') loadPenerima();
     });
