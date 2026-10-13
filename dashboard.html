@@ -34,6 +34,7 @@
     <div class="nav-item" data-page="mahasiswa"><span class="nav-icon">👥</span> Mahasiswa</div>
     <div class="nav-item" data-page="kerjasama"><span class="nav-icon">🤝</span> Kerjasama</div>
     <div class="nav-item" data-page="tempat_tinggal"><span class="nav-icon">🏠</span> Tempat Tinggal</div>
+    <div class="nav-item" data-page="kegiatan"><span class="nav-icon">📅</span> Kegiatan</div>
     <div class="nav-item" data-page="reminder"><span class="nav-icon">⏰</span> Reminder</div>
     <div class="nav-label">Pengaturan</div>
     <div class="nav-item" data-page="penerima"><span class="nav-icon">📧</span> Penerima Email</div>
@@ -41,6 +42,7 @@
   
   <main class="main">
     
+    <!-- DASHBOARD -->
     <div class="page-view active" id="page-dashboard">
       <div class="page-header">
         <div><h2>Selamat datang, <span id="userName">...</span> 👋</h2><p>Ringkasan data International Office UINSA</p></div>
@@ -91,6 +93,7 @@
       </div>
     </div>
     
+    <!-- MAHASISWA -->
     <div class="page-view" id="page-mahasiswa">
       <div class="page-header">
         <div><h2>Data Mahasiswa</h2><p>Mahasiswa internasional yang terdaftar — klik baris untuk lihat detail</p></div>
@@ -127,6 +130,7 @@
       </div>
     </div>
     
+    <!-- KERJASAMA -->
     <div class="page-view" id="page-kerjasama">
       <div class="page-header">
         <div><h2>Data Kerjasama</h2><p>Mitra universitas dan kerja sama internasional</p></div>
@@ -161,6 +165,7 @@
       </div>
     </div>
     
+    <!-- TEMPAT TINGGAL -->
     <div class="page-view" id="page-tempat_tinggal">
       <div class="page-header">
         <div><h2>Tempat Tinggal Mahasiswa</h2><p>Peta sebaran & jenis tempat tinggal</p></div>
@@ -208,6 +213,50 @@
       </div>
     </div>
     
+    <!-- KEGIATAN -->
+    <div class="page-view" id="page-kegiatan">
+      <div class="page-header">
+        <div>
+          <h2>📅 Kegiatan IO</h2>
+          <p>Agenda kegiatan International Office UINSA</p>
+        </div>
+        <button class="btn btn-primary" onclick="openTambahKegiatan()">+ Tambah Kegiatan</button>
+      </div>
+      
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-status-btn active" data-status="semua" onclick="setFilterKegiatan('semua')">Semua</button>
+        <button class="filter-status-btn" data-status="Aktif" onclick="setFilterKegiatan('Aktif')">Aktif</button>
+        <button class="filter-status-btn" data-status="Selesai" onclick="setFilterKegiatan('Selesai')">Selesai</button>
+        <button class="filter-status-btn" data-status="Dibatalkan" onclick="setFilterKegiatan('Dibatalkan')">Dibatalkan</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3>Daftar Kegiatan</h3>
+          <div class="card-header-right">
+            <input type="text" class="search-input" id="searchKegiatan" placeholder="🔍 Cari judul, kategori..." oninput="searchKegiatan(this.value)">
+            <span id="totalKegiatan" class="count-label"></span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px;">Tanggal</th>
+              <th>Judul Kegiatan</th>
+              <th style="width:120px;">Kategori</th>
+              <th style="width:100px;">Status</th>
+              <th style="width:100px;">Reminder</th>
+              <th style="width:120px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKegiatan">
+            <tr class="loading-row"><td colspan="6">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
     <!-- REMINDER -->
     <div class="page-view" id="page-reminder">
       <div class="page-header">
@@ -216,6 +265,15 @@
           <p>Dokumen mahasiswa asing yang akan berakhir ≤ 90 hari — mahasiswa Aktif (Offline) saja</p>
         </div>
         <button class="btn btn-outline" onclick="loadReminder()">🔄 Refresh</button>
+      </div>
+      
+      <!-- KEGIATAN AKAN DATANG -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📅 Kegiatan Akan Datang (≤ 30 hari)</h3>
+          <span id="countKegiatan" class="count-label"></span>
+        </div>
+        <div id="tabelKegiatanReminder"></div>
       </div>
       
       <!-- PASPOR -->
@@ -255,6 +313,7 @@
       </div>
     </div>
     
+    <!-- PENERIMA -->
     <div class="page-view" id="page-penerima">
       <div class="page-header">
         <div><h2>Penerima Email</h2><p>Daftar penerima reminder & akun login dashboard</p></div>
@@ -288,6 +347,69 @@
   </main>
 </div>
 
+<!-- MODAL: FORM KEGIATAN -->
+<div class="modal-overlay" id="modalFormKegiatan">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="formKegiatanTitle">Tambah Kegiatan</h3>
+      <button class="modal-close" onclick="closeModal('modalFormKegiatan')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalAlertKegiatan"></div>
+      <form id="formKegiatan">
+        <input type="hidden" name="id_kegiatan" id="id_kegiatan">
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Judul Kegiatan <span class="req">*</span></label>
+            <input type="text" name="judul" required placeholder="Mis. Rapat koordinasi beasiswa">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal <span class="req">*</span></label>
+            <input type="date" name="tanggal" required>
+          </div>
+          <div class="form-group">
+            <label>Kategori</label>
+            <select name="kategori">
+              <option value="">— Pilih —</option>
+              <option value="Rapat">Rapat</option>
+              <option value="Kunjungan">Kunjungan</option>
+              <option value="Deadline">Deadline</option>
+              <option value="Acara">Acara</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Deskripsi</label>
+            <textarea name="deskripsi" rows="3" placeholder="Detail kegiatan (opsional)"></textarea>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Status</label>
+            <select name="status">
+              <option value="Aktif">Aktif</option>
+              <option value="Selesai">Selesai</option>
+              <option value="Dibatalkan">Dibatalkan</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalFormKegiatan')">Batal</button>
+      <button class="btn btn-primary" id="btnSimpanKegiatan" onclick="simpanKegiatan()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: EDIT TEMPAT TINGGAL -->
 <div class="modal-overlay" id="modalEditTempatTinggal">
   <div class="modal modal-sm">
@@ -313,7 +435,6 @@
             </select>
           </div>
         </div>
-        
         <div class="form-row" id="row_no_kamar" style="display:none;">
           <div class="form-group full">
             <label id="label_no_kamar">No. Kamar <span class="req">*</span></label>
@@ -355,7 +476,6 @@
         
         <input type="hidden" id="jenis_kelamin_tt" value="">
       </form>
-      
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalEditTempatTinggal')">Batal</button>
