@@ -1,23 +1,157 @@
 // ============================================================
-// REMINDER — Monitoring Dokumen Mahasiswa Asing (≤ 90 hari)
+// REMINDER — Dokumen Mahasiswa Asing + Kegiatan IO
+// Dokumen: ≤ 90 hari | Kegiatan: ≤ 30 hari
 // ============================================================
 
 import { supabase } from './config.js';
 
-const BATAS_HARI = 90;
+const BATAS_HARI_DOKUMEN = 90;
+const BATAS_HARI_KEGIATAN = 30;
 
 // ============================================================
 // LOAD REMINDER
 // ============================================================
 export async function loadReminder() {
-  // Tampilkan loading dulu
+  // Loading
   const loadingHtml = '<div style="padding:20px;text-align:center;color:#6b7280;font-style:italic;">Memuat data...</div>';
+  document.getElementById('tabelKegiatanReminder').innerHTML = loadingHtml;
   document.getElementById('tabelPaspor').innerHTML = loadingHtml;
   document.getElementById('tabelItas').innerHTML = loadingHtml;
   document.getElementById('tabelStm').innerHTML = loadingHtml;
   document.getElementById('tabelSktt').innerHTML = loadingHtml;
   
-  // Ambil data dokumen + mahasiswa
+  // Load paralel
+  await Promise.all([
+    loadKegiatanReminder(),
+    loadDokumenReminder()
+  ]);
+}
+
+// ============================================================
+// KEGIATAN AKAN DATANG (≤ 30 hari)
+// ============================================================
+async function loadKegiatanReminder() {
+  const { data, error } = await supabase
+    .from('kegiatan')
+    .select('*')
+    .eq('status', 'Aktif')
+    .order('tanggal', { ascending: true });
+  
+  if (error) {
+    document.getElementById('tabelKegiatanReminder').innerHTML = 
+      `<div style="padding:20px;text-align:center;color:#c0392b;">Error: ${error.message}</div>`;
+    return;
+  }
+  
+  // Filter ≤ 30 hari
+  const list = [];
+  (data || []).forEach(k => {
+    const sisa = hitungSisaHari(k.tanggal);
+    if (sisa === null) return;
+    if (sisa < 0) return; // lewat
+    if (sisa > BATAS_HARI_KEGIATAN) return;
+    
+    list.push({
+      id: k.id,
+      judul: k.judul,
+      tanggal: k.tanggal,
+      kategori: k.kategori,
+      deskripsi: k.deskripsi,
+      sisaHari: sisa,
+      statusLabel: getStatusLabelKegiatan(sisa)
+    });
+  });
+  
+  // Sort
+  list.sort((a, b) => a.sisaHari - b.sisaHari);
+  
+  // Render
+  renderTabelKegiatan(list);
+}
+
+function renderTabelKegiatan(list) {
+  const container = document.getElementById('tabelKegiatanReminder');
+  const counter = document.getElementById('countKegiatan');
+  
+  if (!container) return;
+  
+  if (counter) {
+    if (list.length === 0) {
+      counter.textContent = 'Aman';
+      counter.style.color = '#16a34a';
+    } else {
+      counter.textContent = `${list.length} kegiatan`;
+      counter.style.color = '';
+    }
+  }
+  
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="padding:32px 20px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:12px;">✅</div>
+        <div style="font-size:16px; font-weight:700; color:#16a34a; margin-bottom:4px;">Aman</div>
+        <div style="font-size:13px; color:#6b7280;">Tidak ada kegiatan dalam 30 hari ke depan</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const rows = list.map((k, i) => {
+    let bgColor = '#ffffff';
+    let statusColor = '#6b7280';
+    
+    if (k.sisaHari <= 1) {
+      bgColor = '#fef2f2';
+      statusColor = '#dc2626';
+    } else if (k.sisaHari <= 7) {
+      bgColor = '#fef3c7';
+      statusColor = '#d97706';
+    } else {
+      bgColor = '#fef9c3';
+      statusColor = '#ca8a04';
+    }
+    
+    return `<tr style="background:${bgColor};">
+      <td style="text-align:center; width:40px;">${i + 1}</td>
+      <td style="text-align:center; width:130px;"><strong>${formatTanggal(k.tanggal)}</strong></td>
+      <td>
+        <div style="font-weight:600;">${k.judul}</div>
+        ${k.deskripsi ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;">${k.deskripsi}</div>` : ''}
+      </td>
+      <td style="text-align:center; width:100px;">${k.kategori || '—'}</td>
+      <td style="text-align:center; width:90px;">${k.sisaHari} hari</td>
+      <td style="text-align:center; width:150px; color:${statusColor}; font-weight:600;">${k.statusLabel}</td>
+    </tr>`;
+  }).join('');
+  
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center; width:40px;">No</th>
+          <th style="text-align:center; width:130px;">Tanggal</th>
+          <th>Judul Kegiatan</th>
+          <th style="text-align:center; width:100px;">Kategori</th>
+          <th style="text-align:center; width:90px;">Sisa Hari</th>
+          <th style="text-align:center; width:150px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function getStatusLabelKegiatan(sisaHari) {
+  if (sisaHari === 0) return 'HARI INI';
+  if (sisaHari === 1) return 'BESOK';
+  if (sisaHari <= 7) return `${sisaHari} hari lagi`;
+  return `${sisaHari} hari lagi`;
+}
+
+// ============================================================
+// DOKUMEN MAHASISWA (≤ 90 hari)
+// ============================================================
+async function loadDokumenReminder() {
   const { data, error } = await supabase
     .from('mahasiswa_dokumen')
     .select(`
@@ -37,7 +171,6 @@ export async function loadReminder() {
     return;
   }
   
-  // Filter & kelompokkan
   const listPaspor = [];
   const listItas = [];
   const listStm = [];
@@ -62,12 +195,11 @@ export async function loadReminder() {
       fakultas: mhs.fakultas || '-'
     };
     
-    // Cek tiap dokumen
     const cekDokumen = (tglStr) => {
       if (!tglStr) return null;
       const sisa = hitungSisaHari(tglStr);
       if (sisa === null) return null;
-      if (sisa > BATAS_HARI) return null;
+      if (sisa > BATAS_HARI_DOKUMEN) return null;
       return {
         ...infoMhs,
         tglExpired: tglStr,
@@ -90,21 +222,19 @@ export async function loadReminder() {
     if (k) listSktt.push(k);
   });
   
-  // Sort per list
   sortList(listPaspor);
   sortList(listItas);
   sortList(listStm);
   sortList(listSktt);
   
-  // Render
-  renderTabel('Paspor', listPaspor);
-  renderTabel('Itas', listItas);
-  renderTabel('Stm', listStm);
-  renderTabel('Sktt', listSktt);
+  renderTabelDokumen('Paspor', listPaspor);
+  renderTabelDokumen('Itas', listItas);
+  renderTabelDokumen('Stm', listStm);
+  renderTabelDokumen('Sktt', listSktt);
 }
 
 // ============================================================
-// SORT — EXPIRED dulu, baru URGENT, PERHATIAN
+// HELPER
 // ============================================================
 function sortList(list) {
   const urutan = { 'EXPIRED': 1, 'URGENT': 2, 'PERHATIAN': 3 };
@@ -116,26 +246,16 @@ function sortList(list) {
   });
 }
 
-// ============================================================
-// HITUNG SISA HARI
-// ============================================================
 function hitungSisaHari(tglStr) {
   if (!tglStr) return null;
-  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
   const target = new Date(tglStr);
   target.setHours(0, 0, 0, 0);
-  
   if (isNaN(target.getTime())) return null;
-  
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
 
-// ============================================================
-// KATEGORI
-// ============================================================
 function getKategori(sisaHari) {
   if (sisaHari < 0) return 'EXPIRED';
   if (sisaHari <= 7) return 'URGENT';
@@ -151,9 +271,6 @@ function getStatusLabel(sisaHari) {
   return `AMAN (${sisaHari} hari lagi)`;
 }
 
-// ============================================================
-// FORMAT TANGGAL → 1 Agustus 2023
-// ============================================================
 function formatTanggal(str) {
   if (!str) return '—';
   const d = new Date(str);
@@ -164,15 +281,14 @@ function formatTanggal(str) {
 }
 
 // ============================================================
-// RENDER TABEL
+// RENDER TABEL DOKUMEN
 // ============================================================
-function renderTabel(key, list) {
+function renderTabelDokumen(key, list) {
   const container = document.getElementById('tabel' + key);
   const counter = document.getElementById('count' + key);
   
   if (!container) return;
   
-  // Update counter
   if (counter) {
     if (list.length === 0) {
       counter.textContent = 'Aman';
@@ -183,7 +299,6 @@ function renderTabel(key, list) {
     }
   }
   
-  // Kalau kosong — tampil "Aman"
   if (list.length === 0) {
     container.innerHTML = `
       <div style="padding:32px 20px; text-align:center;">
@@ -195,7 +310,6 @@ function renderTabel(key, list) {
     return;
   }
   
-  // Ada data — tampilkan tabel
   const rows = list.map((d, i) => {
     let bgColor = '#ffffff';
     let statusColor = '#6b7280';
@@ -235,9 +349,7 @@ function renderTabel(key, list) {
           <th style="text-align:center; width:180px;">Status</th>
         </tr>
       </thead>
-      <tbody>
-        ${rows}
-      </tbody>
+      <tbody>${rows}</tbody>
     </table>
   `;
 }
