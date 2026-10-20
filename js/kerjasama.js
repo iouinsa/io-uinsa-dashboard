@@ -310,7 +310,7 @@ export function searchKerjasama(query) {
 function renderStatistikKerjasama(data) {
   const total = data.length;
   let onGoing = 0, berakhir = 0;
-  let mou = 0, moa = 0, loi = 0;
+    let mou = 0, moa = 0, loi = 0, loc = 0;
   
   data.forEach(k => {
     const status = hitungStatusKerjasama(k.tanggal_berakhir);
@@ -321,6 +321,7 @@ function renderStatistikKerjasama(data) {
     if (jenis === 'MOU') mou++;
     else if (jenis === 'MOA') moa++;
     else if (jenis === 'LOI') loi++;
+    else if (jenis === 'LOC') loc++;
   });
   
   const container = document.getElementById('statistikKerjasama');
