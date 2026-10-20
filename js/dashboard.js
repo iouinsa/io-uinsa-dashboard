@@ -396,12 +396,13 @@ function renderChartKerjasamaNegara(kjs) {
 // GRAFIK 6: Jenis Kerjasama
 // ============================================================
 function renderChartJenisKerjasama(kjs) {
-  const counts = { MoU: 0, MoA: 0, LoI: 0, Lainnya: 0 };
+  const counts = { MoU: 0, MoA: 0, LoI: 0, LoC: 0, Lainnya: 0 };
   kjs.forEach(k => {
     const j = (k.jenis || '').trim();
     if (j === 'MoU') counts.MoU++;
     else if (j === 'MoA') counts.MoA++;
     else if (j === 'LoI') counts.LoI++;
+    else if (j === 'LoC') counts.LoC++;
     else counts.Lainnya++;
   });
   
@@ -413,6 +414,7 @@ function renderChartJenisKerjasama(kjs) {
     'MoU': '#0a5c4a',
     'MoA': '#d4a017',
     'LoI': '#2563eb',
+    'LoC': '#7c3aed',
     'Lainnya': '#6b7280'
   };
   
