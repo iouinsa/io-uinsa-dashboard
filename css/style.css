@@ -27,6 +27,7 @@ body {
   z-index: 100;
 }
 
+.stat-loc .stat-num { color: #7c3aed; } /* ungu */
 .brand { display: flex; align-items: center; gap: 12px; }
 
 .brand-logo {
