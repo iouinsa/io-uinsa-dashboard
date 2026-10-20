@@ -334,6 +334,7 @@ function renderStatistikKerjasama(data) {
     <div class="stat-box stat-mou"><div class="stat-num">${mou}</div><div class="stat-label">Dokumen MoU</div></div>
     <div class="stat-box stat-moa"><div class="stat-num">${moa}</div><div class="stat-label">Dokumen MoA</div></div>
     <div class="stat-box stat-loi"><div class="stat-num">${loi}</div><div class="stat-label">Dokumen LoI</div></div>
+    <div class="stat-box stat-loc"><div class="stat-num">${loc}</div><div class="stat-label">Dokumen LoC</div></div>
   `;
 }
 
