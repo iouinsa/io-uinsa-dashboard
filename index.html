@@ -118,7 +118,6 @@
     .field input { display: block; width: 100%; margin-top: 7px; border: 1px solid #dce5e1; border-radius: 8px; padding: 12px; font: inherit; font-weight: 400; outline: none; }
     .field input:focus { border-color: #72ab97; box-shadow: 0 0 0 3px #e6f3ed; }
     .modal .btn { width: 100%; margin-top: 18px; }
-    .demo-note { margin-top: 13px !important; padding: 10px; border-radius: 8px; background: #f5f8f6; text-align: center; font-size: 10px !important; }
     .toast { position: fixed; z-index: 7; left: 50%; bottom: 23px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 9px; color: white; background: #183d33; box-shadow: var(--shadow); font-size: 12px; transition: all .2s; }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
     @media (max-width: 850px) {
@@ -196,32 +195,13 @@
     .steps { display:grid; gap:11px; margin:20px 0 22px; }
     .step { display:flex; align-items:flex-start; gap:10px; color:#eaf2ee; font-size:11px; line-height:1.5; }
     .step b { flex:0 0 22px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; color:var(--green-dark); background:#e8c95f; font-size:10px; }
-    .setneg-form { padding:23px; border:1px solid #e3eae7; border-radius:14px; background:#fff; box-shadow:0 8px 30px #1b3c300c; }
-    .setneg-form { min-height:220px; display:flex; flex-direction:column; justify-content:center; }
-    .setneg-form h3 { margin:0 0 5px; font-size:17px; letter-spacing:-.03em; }
-    .setneg-form > p { margin:0 0 16px; color:var(--muted); font-size:11px; line-height:1.6; }
-    .embed-preview { min-height:205px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; border:1px dashed #b6cbc2; border-radius:10px; background:linear-gradient(145deg,#f8fbf9,#f2f7f4); }
-    .embed-preview svg { color:var(--green); margin-bottom:11px; }
-    .embed-preview strong { color:#32453e; font-size:12px; }
-    .embed-preview span { max-width:320px; margin-top:6px; color:#77857f; font-size:10px; line-height:1.55; }
-    .embed-preview code { margin-top:10px; color:#557167; background:#e8f1ec; border-radius:5px; padding:5px 7px; font-size:9px; }
-    .form-caption { display:flex; align-items:center; gap:7px; margin-top:11px; color:#7a8882; font-size:10px; }
-    .mobile-menu { display:none; color:#fff; background:transparent; border:0; font-size:22px; cursor:pointer; }
-    .language-toggle { display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; color:#52645e; padding:4px 0; cursor:pointer; font:inherit; font-size:11px; }
-    .language-toggle:hover { color:var(--green); }
-    .setneg-form .btn { margin-top:15px; }
     .image-placeholder { min-height:360px; height:100%; display:grid; place-items:center; overflow:hidden; position:relative; border-radius:14px; border:1px dashed #ccd9d4; background:linear-gradient(135deg,#e8efeb,#f7f9f8 48%,#d9e5df); }
     .image-placeholder::before,.image-placeholder::after { content:""; position:absolute; border:1px solid #ffffffb0; border-radius:50%; width:240px; height:240px; }
     .image-placeholder::after { width:330px; height:330px; }
     .image-placeholder span { position:relative; z-index:1; padding:9px 12px; color:#62736c; background:#ffffffd9; border-radius:6px; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
-    .form-modal-backdrop { display:none; position:fixed; inset:0; z-index:9; align-items:center; justify-content:center; padding:22px; background:#10221dd9; backdrop-filter:blur(5px); }
-    .form-modal-backdrop.open { display:flex; }
-    .form-modal { width:min(1000px,100%); height:min(780px,92vh); display:flex; flex-direction:column; overflow:hidden; background:#fff; border-radius:15px; box-shadow:0 26px 90px #001a1455; }
-    .form-modal-head { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:15px; padding:0 18px; border-bottom:1px solid #e7eeea; }
-    .form-modal-head strong { color:#243b33; font-size:14px; }
-    .form-modal-head span { display:block; margin-top:3px; color:#718079; font-size:10px; font-weight:400; }
-    .form-frame { flex:1; width:100%; border:0; background:#f6f8f7; }
-    .form-loading { padding:10px 18px; color:#75827d; background:#fff; font-size:10px; }
+    .mobile-menu { display:none; color:#fff; background:transparent; border:0; font-size:22px; cursor:pointer; }
+    .language-toggle { display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; color:#52645e; padding:4px 0; cursor:pointer; font:inherit; font-size:11px; }
+    .language-toggle:hover { color:var(--green); }
     @media(max-width:850px) { .navlinks { gap:12px; } .navlinks a + a { padding-left:11px; } }
     @media(max-width:680px) { .navlinks { display:none; } .navlinks.mobile-open { display:flex; position:absolute; z-index:4; top:64px; left:0; right:0; flex-direction:column; align-items:stretch; gap:0; padding:8px 16px; background:var(--green-dark); box-shadow:0 12px 20px #092c2433; } .navlinks.mobile-open a { padding:12px 4px; border:0; border-bottom:1px solid #ffffff24; } .mobile-menu { display:block; margin-left:auto; } .hero { min-height:560px; padding:20px 0; } .hero-grid { grid-template-columns:1fr; gap:22px; padding-top:32px; padding-bottom:36px; } .hero-aside { justify-self:start; max-width:390px; } .setneg { grid-template-columns:1fr; gap:12px; } .setneg-info,.setneg-form { padding:20px; } .hero .btn-quiet { color:var(--green); } }
   </style>
@@ -236,7 +216,7 @@
         <span class="brandcopy"><strong>International Office</strong><span>UIN Sunan Ampel Surabaya</span></span>
       </a>
       <nav class="navlinks" aria-label="Navigasi utama">
-        <a id="navHome" href="#beranda">Beranda</a><a id="navSop" href="#sop">SOP &amp; Layanan</a><a id="navForm" href="#formModal" data-open-form aria-controls="formModal">Form Pengajuan</a><a id="navNews" href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a>
+        <a id="navHome" href="#beranda">Beranda</a><a id="navSop" href="#sop">SOP &amp; Layanan</a><a id="navForm" href="formsetneg.html">Form Pengajuan</a><a id="navNews" href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a>
       </nav>
       <button class="mobile-menu" id="menuToggle" aria-label="Buka menu" aria-expanded="false">☰</button>
       <button class="btn btn-primary" data-open-login><span id="headerLogin">Masuk Pengelola</span> <span aria-hidden="true">↗</span></button>
@@ -251,7 +231,7 @@
           <h1 id="heroTitle">Informasi dan layanan <em>internasional UINSA.</em></h1>
           <p class="lead" id="heroLead">Pusat panduan dan layanan International Office UIN Sunan Ampel Surabaya bagi mahasiswa internasional dan pengelola program.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#formModal" data-open-form aria-controls="formModal"><span id="heroFormCta">Isi Form Pengajuan</span> <span aria-hidden="true">→</span></a>
+            <a class="btn btn-primary" href="formsetneg.html"><span id="heroFormCta">Isi Form Pengajuan</span> <span aria-hidden="true">→</span></a>
             <a class="btn btn-quiet" href="#sop" id="heroSopCta">Lihat SOP Izin SETNEG</a>
           </div>
           <div class="hero-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg> <span id="heroNote">Informasi resmi International Office UINSA</span></div>
@@ -271,7 +251,7 @@
       <div class="wrap">
         <div class="section-head"><div><span class="section-kicker" id="sopKicker">Panduan dan prosedur</span><h2 id="sopTitle">SOP Izin SETNEG</h2><p id="sopIntro">Pelajari alur dan persyaratan sebelum mengirim pengajuan.</p></div></div>
         <div class="setneg" id="sop">
-          <article class="setneg-info"><span class="section-kicker" id="setnegKicker">Layanan International Office</span><h3 id="setnegTitle">Pengajuan Izin SETNEG</h3><p id="setnegIntro">Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.</p><div class="steps"><div class="step"><b>1</b><span id="stepOne">Baca ketentuan dan siapkan dokumen pendukung.</span></div><div class="step"><b>2</b><span id="stepTwo">Isi formulir pengajuan dengan data yang lengkap.</span></div><div class="step"><b>3</b><span id="stepThree">Tunggu konfirmasi dan tindak lanjut dari petugas IO.</span></div></div><a class="btn application-button" href="#formModal" data-open-form aria-controls="formModal" title="Buka formulir pengurusan surat izin SETNEG"><span id="setnegFormCta">Isi Form Pengurusan Surat Izin SETNEG</span> <span>→</span></a></article>
+          <article class="setneg-info"><span class="section-kicker" id="setnegKicker">Layanan International Office</span><h3 id="setnegTitle">Pengajuan Izin SETNEG</h3><p id="setnegIntro">Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.</p><div class="steps"><div class="step"><b>1</b><span id="stepOne">Baca ketentuan dan siapkan dokumen pendukung.</span></div><div class="step"><b>2</b><span id="stepTwo">Isi formulir pengajuan dengan data yang lengkap.</span></div><div class="step"><b>3</b><span id="stepThree">Tunggu konfirmasi dan tindak lanjut dari petugas IO.</span></div></div><a class="btn application-button" href="formsetneg.html" title="Buka formulir pengurusan surat izin SETNEG"><span id="setnegFormCta">Isi Form Pengurusan Surat Izin SETNEG</span> <span>→</span></a></article>
           <div class="image-placeholder" role="img" aria-label="Area gambar SOP Izin SETNEG"><span id="imagePlaceholderText">Area gambar</span></div>
         </div>
       </div>
@@ -287,21 +267,11 @@
       <div class="modal-top"><span class="brandmark">IO</span><button class="close" id="closeModal" aria-label="Tutup">×</button></div>
       <h2 id="loginTitle">Masuk ke Sistem IO</h2><p id="loginIntro">Gunakan akun resmi yang telah terdaftar untuk mengakses ruang pengelola.</p>
       <form id="loginForm"><label class="field"><span id="emailLabel">Email UINSA</span><input id="emailInput" type="email" placeholder="nama@uinsby.ac.id" autocomplete="username" required></label><label class="field"><span id="passwordLabel">Kata sandi</span><input id="passwordInput" type="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required></label><button type="submit" class="btn btn-primary"><span id="loginCta">Masuk</span> <span>→</span></button></form>
-      <!-- Catatan demo dihapus karena sudah terhubung ke Supabase -->
-    </div>
-  </div>
-  <div class="form-modal-backdrop" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formModalTitle">
-    <div class="form-modal">
-      <div class="form-modal-head"><div><strong id="formModalTitle">Formulir Izin SETNEG</strong><span id="formModalSubtitle">Formulir dibuka di dalam halaman ini.</span></div><button class="close" id="closeFormModal" aria-label="Tutup formulir">×</button></div>
-      <iframe class="form-frame" id="gasFormFrame" title="Formulir Pengajuan Izin SETNEG" data-src="https://script.google.com/macros/s/AKfycbyUAgqpRb4KsJvNc5HDyfadSKtj1CT0H9yVtEcHye0u8ZnSoB15FGZiwPYevLPsXUiP/exec" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      <div class="form-loading" id="formLoadingNote">Sedang memuat formulir…</div>
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     const modal = document.getElementById('loginModal');
-    const formModal = document.getElementById('formModal');
-    const gasFrame = document.getElementById('gasFormFrame');
     const toast = document.getElementById('toast');
     const copy = {
       id: {
@@ -316,7 +286,7 @@
         setnegKicker:'Layanan International Office', setnegTitle:'Pengajuan Izin SETNEG',
         setnegIntro:'Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.',
         stepOne:'Baca ketentuan dan siapkan dokumen pendukung.', stepTwo:'Isi formulir pengajuan dengan data yang lengkap.', stepThree:'Tunggu konfirmasi dan tindak lanjut dari petugas IO.',
-        setnegFormCta:'Isi Form Pengurusan Surat Izin SETNEG', formModalTitle:'Formulir Izin SETNEG', formModalSubtitle:'Formulir dibuka di dalam halaman ini.', formLoadingNote:'Sedang memuat formulir…',
+        setnegFormCta:'Isi Form Pengurusan Surat Izin SETNEG',
         newsKicker:'Kabar terbaru', newsTitle:'Ikuti berita dan kegiatan International Office', newsText:'Pengumuman, cerita program, dan agenda terbaru tersedia di laman IO UINSA.', newsCta:'Kunjungi Berita IO',
         footerSop:'SOP & Layanan', footerNews:'Berita IO', footerContact:'Kontak', loginTitle:'Masuk ke Sistem IO',
         loginIntro:'Gunakan akun resmi yang telah terdaftar untuk mengakses ruang pengelola.', emailLabel:'Email UINSA', passwordLabel:'Kata sandi',
@@ -334,7 +304,7 @@
         setnegKicker:'International Office service', setnegTitle:'SETNEG Permit Application',
         setnegIntro:'Use this guide as a starting point. Final requirements and steps follow the official SOP set by UINSA International Office.',
         stepOne:'Review the requirements and prepare supporting documents.', stepTwo:'Complete the application form with accurate information.', stepThree:'Wait for confirmation and follow-up from the IO team.',
-        setnegFormCta:'Complete SETNEG Permit Application', formModalTitle:'SETNEG Permit Application', formModalSubtitle:'The form opens within this page.', formLoadingNote:'Loading form…',
+        setnegFormCta:'Complete SETNEG Permit Application',
         newsKicker:'Latest updates', newsTitle:'Follow International Office news and events', newsText:'Announcements, program stories, and upcoming events are available on the UINSA IO website.', newsCta:'Visit IO News',
         footerSop:'SOP & Services', footerNews:'IO News', footerContact:'Contact', loginTitle:'Sign in to the IO System',
         loginIntro:'Use your registered account to access the staff workspace.', emailLabel:'UINSA email', passwordLabel:'Password',
@@ -354,36 +324,24 @@
       document.getElementById('languageToggle').setAttribute('aria-label', language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia');
       document.getElementById('menuToggle').setAttribute('aria-label', language === 'id' ? 'Buka menu' : 'Open menu');
       document.getElementById('closeModal').setAttribute('aria-label', language === 'id' ? 'Tutup' : 'Close');
-      document.getElementById('closeFormModal').setAttribute('aria-label', language === 'id' ? 'Tutup formulir' : 'Close form');
-      document.querySelector('.image-placeholder').setAttribute('aria-label', language === 'id' ? 'Area gambar SOP Izin SETNEG' : 'Image area for the SETNEG Permit SOP');
-      gasFrame.title = language === 'id' ? 'Formulir Pengajuan Izin SETNEG' : 'SETNEG Permit Application Form';
       document.title = language === 'id' ? 'International Office — UIN Sunan Ampel Surabaya' : 'International Office — UIN Sunan Ampel Surabaya';
       document.getElementById('emailInput').placeholder = language === 'id' ? 'nama@uinsby.ac.id' : 'name@uinsby.ac.id';
       document.getElementById('passwordInput').placeholder = language === 'id' ? 'Masukkan kata sandi' : 'Enter your password';
     }
     document.getElementById('languageToggle').addEventListener('click', () => setLanguage(currentLanguage === 'id' ? 'en' : 'id'));
+    
     const openModal = () => { modal.classList.add('open'); document.body.style.overflow = 'hidden'; modal.querySelector('input').focus(); };
     const closeModal = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
-    const openFormModal = () => {
-      formModal.classList.add('open'); document.body.style.overflow = 'hidden';
-      if (!gasFrame.src || gasFrame.src === 'about:blank') gasFrame.src = gasFrame.dataset.src;
-      document.getElementById('menuToggle').setAttribute('aria-expanded', 'false');
-      document.querySelector('.navlinks').classList.remove('mobile-open');
-    };
-    const closeFormModal = () => { formModal.classList.remove('open'); document.body.style.overflow = ''; };
-    gasFrame.addEventListener('load', () => { document.getElementById('formLoadingNote').style.display = 'none'; });
+    
     document.querySelectorAll('[data-open-login]').forEach(button => button.addEventListener('click', openModal));
-    document.querySelectorAll('[data-open-form]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); openFormModal(); }));
     document.getElementById('menuToggle').addEventListener('click', event => {
       const links = document.querySelector('.navlinks');
       const opened = links.classList.toggle('mobile-open');
       event.currentTarget.setAttribute('aria-expanded', String(opened));
     });
     document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('closeFormModal').addEventListener('click', closeFormModal);
     modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
-    formModal.addEventListener('click', event => { if (event.target === formModal) closeFormModal(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); closeFormModal(); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); } });
 
     // ============================================================
     // LOGIKA LOGIN SUPABASE
