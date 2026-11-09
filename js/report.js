@@ -6,7 +6,7 @@ import { supabase } from './config.js';
 import { formatTanggal, hitungStatusKerjasama, hitungSemester } from './utils.js';
 
 // ============================================================
-// INIT
+// INIT & PARAMETER URL
 // ============================================================
 const params = new URLSearchParams(window.location.search);
 const jenis = params.get('jenis') || 'mahasiswa';
@@ -21,16 +21,18 @@ document.getElementById('tanggalCetak').textContent =
   }).format(new Date());
 
 // ============================================================
-// LOAD DATA SESUAI JENIS
+// ROUTING LAPORAN BERDASARKAN URL
 // ============================================================
 if (jenis === 'mahasiswa') {
   loadLaporanMahasiswa();
 } else if (jenis === 'kerjasama') {
-  // Tampilkan tombol filter
-  document.getElementById('filterKerjasamaBar').style.display = 'flex';
-  loadLaporanKerjasama();
-}
- else if (jenis === 'tempat_tinggal') {
+  // Tampilkan tombol filter kerjasama
+  const filterBar = document.getElementById('filterKerjasamaBar');
+  if (filterBar) filterBar.style.display = 'flex';
+  
+  // Panggil fungsi awal dengan status 'semua'
+  loadLaporanKerjasama('semua');
+} else if (jenis === 'tempat_tinggal') {
   loadLaporanTempatTinggal();
 } else {
   document.getElementById('kontenLaporan').innerHTML = '<p>Jenis laporan tidak dikenali.</p>';
@@ -83,10 +85,9 @@ async function loadLaporanMahasiswa() {
     ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}` 
     : '<strong>Filter yang diterapkan:</strong> Semua data';
   
-  // Hitung statistik per status (5 status)
+  // Hitung statistik per status
   const total = filtered.length;
-    const aktif = filtered.filter(m => m.status === 'Aktif').length;
-  const online = filtered.filter(m => m.status === 'Online').length;
+  const aktif = filtered.filter(m => m.status === 'Aktif').length;
   const cuti = filtered.filter(m => m.status === 'Cuti').length;
   const alumni = filtered.filter(m => m.status === 'Alumni').length;
   const dropOut = filtered.filter(m => m.status === 'Drop Out').length;
@@ -135,11 +136,10 @@ async function loadLaporanMahasiswa() {
   
   html += `</tbody></table>`;
   
-    html += `
+  html += `
     <div class="ringkasan">
       <strong>Total: ${total} mahasiswa</strong>
       · Aktif: ${aktif}
-      · Online: ${online}
       · Cuti: ${cuti}
       · Alumni: ${alumni}
       · Drop Out: ${dropOut}
@@ -151,33 +151,24 @@ async function loadLaporanMahasiswa() {
 }
 
 // ============================================================
-// LAPORAN KERJASAMA
+// LAPORAN KERJASAMA (DENGAN FILTER DINAMIS)
 // ============================================================
-async function loadLaporanKerjasama() {
+async function loadLaporanKerjasama(statusFilter = 'semua') {
   document.getElementById('judulLaporan').textContent = 'LAPORAN KERJA SAMA INTERNASIONAL';
   
   const { data, error } = await supabase
     .from('kerjasama')
     .select('*')
     .order('tanggal_mulai', { ascending: false });
-    let filtered = data || [];
   
-  // Filter Status jika parameter status dikirim
-  if (status && status !== 'semua') {
-    filtered = filtered.filter(k => {
-      const st = hitungStatusKerjasama(k.tanggal_berakhir);
-      if (status === 'aktif') return st === 'Aktif';
-      if (status === 'berakhir') return st === 'Berakhir';
-      if (status === 'akan_berakhir') return st === 'Akan Berakhir';
-      return true;
-    });
-  }
   if (error) {
     document.getElementById('kontenLaporan').innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
     return;
   }
   
   let filtered = data || [];
+  
+  // 1. Filter Pencarian (dari URL)
   if (filterSearch.trim()) {
     const q = filterSearch.toLowerCase().trim();
     filtered = filtered.filter(k => 
@@ -187,9 +178,24 @@ async function loadLaporanKerjasama() {
       (k.unit_fakultas || '').toLowerCase().includes(q)
     );
   }
+
+  // 2. Filter Status (dari tombol yang diklik)
+  if (statusFilter !== 'semua') {
+    filtered = filtered.filter(k => {
+      const st = hitungStatusKerjasama(k.tanggal_berakhir);
+      if (statusFilter === 'aktif') return st === 'Aktif';
+      if (statusFilter === 'berakhir') return st === 'Berakhir';
+      return true;
+    });
+  }
   
-  document.getElementById('infoFilter').innerHTML = filterSearch.trim()
-    ? `<strong>Filter yang diterapkan:</strong> Pencarian: <strong>${filterSearch}</strong>`
+  // Info filter
+  let infoFilter = '';
+  if (statusFilter !== 'semua') {
+    infoFilter = `Status: <strong>${statusFilter === 'aktif' ? 'On Going (Aktif)' : 'Berakhir'}</strong>`;
+  }
+  document.getElementById('infoFilter').innerHTML = infoFilter
+    ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}`
     : '<strong>Filter yang diterapkan:</strong> Semua data';
   
   const total = filtered.length;
@@ -374,10 +380,10 @@ async function loadLaporanTempatTinggal() {
 }
 
 // ============================================================
-// FUNGSI FILTER LAPORAN (TANPA RELOAD)
+// FUNGSI FILTER TOMBOL KERJASAMA (TANPA RELOAD)
 // ============================================================
 window.filterLaporanKjs = function(status) {
-  // Ubah gaya tombol yang aktif
+  // 1. Ubah gaya tombol
   document.querySelectorAll('#filterKerjasamaBar .filter-status-btn').forEach(btn => {
     btn.classList.remove('active');
     btn.style.background = '#fff';
@@ -392,6 +398,6 @@ window.filterLaporanKjs = function(status) {
     }
   });
 
-  // Panggil fungsi load ulang, tapi kita berikan filter statusnya
+  // 2. Panggil ulang fungsinya dengan parameter status
   loadLaporanKerjasama(status);
 };
