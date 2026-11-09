@@ -808,6 +808,22 @@
 </div>
 
 <script type="module" src="js/app.js"></script>
-
+<script>
+  function cetakLaporanKerjasama() {
+    const search = document.getElementById('searchKerjasama')?.value || '';
+    window.open('report.html?jenis=kerjasama&search=' + search, '_blank');
+  }
+  
+  function cetakLaporanMahasiswa() {
+    const search = document.getElementById('searchMahasiswa')?.value || '';
+    window.open('report.html?jenis=mahasiswa&search=' + search, '_blank');
+  }
+  
+  function cetakLaporanTempatTinggal() {
+    const search = document.getElementById('searchTempatTinggal')?.value || '';
+    window.open('report.html?jenis=tempat_tinggal&search=' + search, '_blank');
+  }
+</script>
+  
 </body>
 </html>
