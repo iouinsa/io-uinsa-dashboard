@@ -160,7 +160,18 @@ async function loadLaporanKerjasama() {
     .from('kerjasama')
     .select('*')
     .order('tanggal_mulai', { ascending: false });
+    let filtered = data || [];
   
+  // Filter Status jika parameter status dikirim
+  if (status && status !== 'semua') {
+    filtered = filtered.filter(k => {
+      const st = hitungStatusKerjasama(k.tanggal_berakhir);
+      if (status === 'aktif') return st === 'Aktif';
+      if (status === 'berakhir') return st === 'Berakhir';
+      if (status === 'akan_berakhir') return st === 'Akan Berakhir';
+      return true;
+    });
+  }
   if (error) {
     document.getElementById('kontenLaporan').innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
     return;
