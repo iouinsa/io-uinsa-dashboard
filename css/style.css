@@ -1522,7 +1522,8 @@ tr.clickable:hover td { background: #f0f9f6; }
     }
 
     .brandmark img {
-      height: 38px !important; /* Sesuaikan tinggi gambar di sini */
+      height: 38px !important; 
       width: auto !important;
       display: block;
+      mix-blend-mode: multiply; /* Trik menghilangkan warna putih */
     }
