@@ -1511,7 +1511,7 @@ tr.clickable:hover td { background: #f0f9f6; }
 .tag-warning { background: #fef3d4; color: #8a6015; }
 .tag-mou { background: #dbeafe; color: #1e40af; }
 
-           /* PAKSA HAPUS KOTAK PUTIH & SESUAIKAN GAMBAR */
+    /* Paksa hilangkan kotak putih di belakang logo */
     .brandmark {
       width: auto !important;
       height: auto !important;
@@ -1521,9 +1521,10 @@ tr.clickable:hover td { background: #f0f9f6; }
       border-radius: 0 !important;
     }
 
+    /* Atur ukuran gambar persis 40px */
     .brandmark img {
-      height: 38px !important; 
-      width: auto !important;
+      height: 40px !important;
+      width: 40px !important;
+      object-fit: contain !important;
       display: block;
-      mix-blend-mode: multiply; /* Trik menghilangkan warna putih */
     }
