@@ -179,20 +179,40 @@ async function loadLaporanKerjasama(statusFilter = 'semua') {
     );
   }
 
-  // 2. Filter Status (dari tombol yang diklik)
+  // 2. Filter Status / Jenis (dari tombol yang diklik)
   if (statusFilter !== 'semua') {
     filtered = filtered.filter(k => {
-      const st = hitungStatusKerjasama(k.tanggal_berakhir);
-      if (statusFilter === 'aktif') return st === 'Aktif';
-      if (statusFilter === 'berakhir') return st === 'Berakhir';
-      return true;
+      // Cek apakah filter berupa Status
+      if (['aktif', 'berakhir'].includes(statusFilter)) {
+        const st = hitungStatusKerjasama(k.tanggal_berakhir);
+        if (statusFilter === 'aktif') return st === 'Aktif';
+        if (statusFilter === 'berakhir') return st === 'Berakhir';
+      }
+      
+      // Cek apakah filter berupa Jenis Dokumen (MoU, MoA, LoI, LoC)
+      const jenis = (k.jenis || '').toUpperCase();
+      if (statusFilter === 'mou' && jenis === 'MOU') return true;
+      if (statusFilter === 'moa' && jenis === 'MOA') return true;
+      if (statusFilter === 'loi' && jenis === 'LOI') return true;
+      if (statusFilter === 'loc' && jenis === 'LOC') return true;
+
+      return false;
     });
   }
   
   // Info filter
   let infoFilter = '';
   if (statusFilter !== 'semua') {
-    infoFilter = `Status: <strong>${statusFilter === 'aktif' ? 'On Going (Aktif)' : 'Berakhir'}</strong>`;
+    // Map teks agar tampilannya cantik (misal 'mou' jadi 'MoU')
+    const labelMap = {
+      'aktif': 'On Going (Aktif)',
+      'berakhir': 'Berakhir',
+      'mou': 'Dokumen MoU',
+      'moa': 'Dokumen MoA',
+      'loi': 'Dokumen LoI',
+      'loc': 'Dokumen LoC'
+    };
+    infoFilter = `Filter: <strong>${labelMap[statusFilter] || statusFilter}</strong>`;
   }
   document.getElementById('infoFilter').innerHTML = infoFilter
     ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}`
@@ -200,7 +220,7 @@ async function loadLaporanKerjasama(statusFilter = 'semua') {
   
   const total = filtered.length;
   let aktif = 0, akanBerakhir = 0, berakhir = 0;
-  let mou = 0, moa = 0, loi = 0;
+  let mou = 0, moa = 0, loi = 0, loc = 0;
   
   filtered.forEach(k => {
     const st = hitungStatusKerjasama(k.tanggal_berakhir);
@@ -212,6 +232,7 @@ async function loadLaporanKerjasama(statusFilter = 'semua') {
     if (j === 'MOU') mou++;
     else if (j === 'MOA') moa++;
     else if (j === 'LOI') loi++;
+    else if (j === 'LOC') loc++;
   });
   
   let html = `
@@ -264,6 +285,7 @@ async function loadLaporanKerjasama(statusFilter = 'semua') {
       · MoU: ${mou}
       · MoA: ${moa}
       · LoI: ${loi}
+      · LoC: ${loc}
     </div>
   `;
   
