@@ -4,21 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#075b4b" />
-  <link rel="icon" type="image/png" href="assets/logo-uinsa.png">
+  <link rel="icon" type="image/png" href="assets/io.png">
   <title>International Office — UIN Sunan Ampel Surabaya</title>
   <style>
-    :root {
-      --green: #075b4b;
-      --green-dark: #063f36;
-      --green-soft: #e9f3ef;
-      --gold: #e0a51b;
-      --ink: #1c2c28;
-      --muted: #687873;
-      --line: #e3eae7;
-      --paper: #fff;
-      --canvas: #f7f9f8;
-      --shadow: 0 18px 50px rgba(21, 57, 47, .09);
-    }
+    /* CSS LANDING PAGE (TETAP SAMA SEPERTI SEBELUMNYA) */
+    :root { --green: #075b4b; --green-dark: #063f36; --green-soft: #e9f3ef; --gold: #e0a51b; --ink: #1c2c28; --muted: #687873; --line: #e3eae7; --paper: #fff; --canvas: #f7f9f8; --shadow: 0 18px 50px rgba(21, 57, 47, .09); }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body { margin: 0; background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -26,172 +16,52 @@
     button { font: inherit; }
     .topline { height: 5px; background: linear-gradient(90deg, var(--green), #16866d 72%, var(--gold) 72%); }
     .wrap { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
-    header { background: rgba(255,255,255,.96); border-bottom: 1px solid var(--line); }
+    header { background: var(--green); border-bottom: 1px solid #ffffff25; }
     .nav { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
     .brand { display: flex; align-items: center; gap: 12px; min-width: 245px; }
-    .brandmark { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: white; background: var(--green); font-size: 15px; font-weight: 800; letter-spacing: -.04em; box-shadow: 0 5px 14px #075b4b30; }
-    .brandcopy strong { display: block; font-size: 14px; letter-spacing: -.02em; }
-    .brandcopy span { color: var(--muted); display: block; font-size: 11px; margin-top: 3px; }
-    .navlinks { display: flex; align-items: center; gap: 30px; color: #52645e; font-size: 13px; font-weight: 600; }
-    .navlinks a:hover { color: var(--green); }
+    .brandmark { width: auto; height: auto; background: transparent; display: flex; align-items: center; }
+    .brandmark img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); }
+    .brandcopy strong { display: block; font-size: 14px; letter-spacing: -.02em; color: #fff; }
+    .brandcopy span { color: #c9e0d8; display: block; font-size: 11px; margin-top: 3px; }
+    .navlinks { display: flex; align-items: center; gap: 22px; color: #fff; font-size: 12px; font-weight: 600; }
+    .navlinks a + a { border-left:1px solid #64a08a; padding-left:19px; }
+    .navlinks a:hover { color:#e7c65f; }
     .btn { border: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 700; transition: transform .18s, box-shadow .18s, background .18s; }
     .btn:hover { transform: translateY(-1px); }
     .btn-primary { color: #fff; background: var(--green); box-shadow: 0 7px 18px #075b4b28; }
-    .btn-primary:hover { background: var(--green-dark); box-shadow: 0 10px 22px #075b4b38; }
+    .btn-primary:hover { background: var(--green-dark); }
     .btn-quiet { color: var(--green); background: #fff; border: 1px solid #d7e4df; }
     .btn-quiet:hover { background: var(--green-soft); }
-    .nav .btn { padding: 10px 15px; }
-    .hero { position: relative; overflow: hidden; padding: 72px 0 58px; background: radial-gradient(ellipse at 82% 10%, #e4f1eb 0, transparent 35%), linear-gradient(180deg, #fff 0%, #f7f9f8 100%); }
-    .hero::before { content: ""; width: 380px; height: 380px; border: 1px solid #dceae4; border-radius: 50%; position: absolute; right: -155px; top: 80px; box-shadow: 0 0 0 35px #e9f3ef70, 0 0 0 70px #e9f3ef40; pointer-events: none; }
-    .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: 66px; }
-    .eyebrow { color: var(--green); display: inline-flex; align-items: center; gap: 9px; border: 1px solid #d7e8e0; background: #f4faf7; border-radius: 999px; padding: 7px 11px; font-size: 11px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+    .nav .btn { color:var(--green); background:#fff; box-shadow:none; padding: 10px 15px; }
+    
+    .hero { position: relative; overflow: hidden; padding: 0; min-height:480px; display:flex; align-items:center; background: linear-gradient(90deg, rgba(8, 46, 39, 0.85) 0%, rgba(7, 91, 75, 0.7) 60%, rgba(7, 91, 75, 0.4) 100%), url('https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/wa.jpeg') center/cover no-repeat !important; }
+    .hero::before { display: none !important; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: 35px; padding-top: 65px; padding-bottom: 65px; z-index: 1; }
+    .eyebrow { color: #e4c35b; background:#ffffff12; border: 1px solid #ffffff42; display: inline-flex; align-items: center; gap: 9px; border-radius: 999px; padding: 7px 11px; font-size: 10px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
     .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: #20a078; box-shadow: 0 0 0 4px #20a07820; }
-    h1 { margin: 20px 0 17px; max-width: 590px; font-size: clamp(38px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -.055em; font-weight: 760; }
-    h1 em { color: var(--green); font-style: normal; }
-    .lead { max-width: 535px; color: #63736d; font-size: 16px; line-height: 1.75; margin: 0; }
+    h1 { margin: 20px 0 17px; max-width: 650px; font-size: clamp(38px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -.055em; font-weight: 760; color:#fff; }
+    h1 em { color: #e8c95f; font-style: normal; }
+    .lead { max-width: 535px; color: #e5efeb; font-size: 15px; line-height: 1.75; margin: 0; }
     .hero-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
-    .hero-note { display: flex; align-items: center; gap: 9px; color: #76847f; margin-top: 21px; font-size: 11px; }
-    .hero-note svg { color: var(--green); }
-    .portal-card { position: relative; background: var(--paper); border: 1px solid #e6ece9; border-radius: 17px; padding: 25px; box-shadow: var(--shadow); }
-    .portal-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #edf1ef; }
-    .portal-title { display: flex; align-items: center; gap: 11px; }
-    .portal-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; color: var(--green); background: var(--green-soft); }
-    .portal-title strong { display: block; font-size: 14px; }
-    .portal-title span { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
-    .secure { color: #178366; background: #edf8f2; border-radius: 999px; padding: 6px 9px; font-size: 10px; font-weight: 700; }
-    .portal-body { padding-top: 18px; }
-    .portal-body h2 { margin: 0 0 5px; font-size: 17px; letter-spacing: -.025em; }
-    .portal-body > p { margin: 0 0 17px; color: var(--muted); font-size: 12px; line-height: 1.6; }
-    .quick-link { display: flex; align-items: center; gap: 12px; padding: 12px 11px; border: 1px solid #edf1ef; border-radius: 10px; margin-top: 9px; transition: border .15s, background .15s; }
-    .quick-link:hover { border-color: #c7ddd4; background: #fbfdfc; }
-    .quick-link .ql-icon { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--green); background: #f0f6f3; }
-    .quick-link:nth-of-type(2) .ql-icon { color: #ac7910; background: #fff7e4; }
-    .quick-link:nth-of-type(3) .ql-icon { color: #4775ad; background: #edf4fc; }
-    .quick-link strong { display: block; font-size: 12px; }
-    .quick-link small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
-    .arrow { margin-left: auto; color: #93a19b; font-size: 17px; }
-    .portal-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #edf1ef; color: var(--muted); font-size: 10px; }
-    .portal-foot a { color: var(--green); font-weight: 700; margin-left: auto; }
-    .trust-row { border-top: 1px solid #e9efec; border-bottom: 1px solid #e9efec; background: #fff; }
-    .trust-inner { display: flex; align-items: center; justify-content: space-between; min-height: 75px; gap: 20px; }
-    .trust-label { color: #88958f; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-    .trust-item { display: flex; align-items: center; gap: 9px; color: #43544e; font-size: 12px; font-weight: 650; }
-    .trust-item svg { color: var(--green); }
-    section.content { padding: 68px 0; }
-    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
-    .section-kicker { color: #a37b20; font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
-    .section-head h2 { margin: 8px 0 0; font-size: 29px; letter-spacing: -.045em; }
-    .section-head p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
-    .text-link { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 12px; font-weight: 750; white-space: nowrap; }
-    .sop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .sop-card { min-height: 180px; padding: 20px; border: 1px solid #e6ece9; background: #fff; border-radius: 13px; box-shadow: 0 4px 18px #1b3c3010; transition: transform .18s, box-shadow .18s, border .18s; }
-    .sop-card:hover { transform: translateY(-3px); border-color: #c8ddd4; box-shadow: 0 13px 28px #1b3c3017; }
-    .sop-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: var(--green); background: var(--green-soft); }
-    .sop-card:nth-child(2) .sop-icon { color: #a67610; background: #fff6df; }
-    .sop-card:nth-child(3) .sop-icon { color: #5278a5; background: #edf4fb; }
-    .sop-card h3 { margin: 15px 0 6px; font-size: 14px; letter-spacing: -.02em; }
-    .sop-card p { min-height: 36px; color: var(--muted); font-size: 11px; line-height: 1.55; margin: 0 0 13px; }
-    .sop-card .text-link { font-size: 11px; }
-    .news-band { padding: 25px 0 65px; }
-    .news-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 27px; background: var(--green-dark); border-radius: 15px; color: #fff; position: relative; overflow: hidden; }
-    .news-card::after { content: ""; position: absolute; width: 200px; height: 200px; right: 210px; top: -120px; border: 1px solid #ffffff24; border-radius: 50%; box-shadow: 0 0 0 25px #ffffff0c, 0 0 0 50px #ffffff08; }
-    .news-card .section-kicker { color: #f0c557; }
-    .news-card h2 { margin: 6px 0 5px; font-size: 21px; letter-spacing: -.035em; }
-    .news-card p { margin: 0; color: #d4e4de; font-size: 12px; }
-    .news-card .btn { position: relative; z-index: 1; flex: 0 0 auto; color: var(--green-dark); background: #fff; }
-    footer { background: #fff; border-top: 1px solid var(--line); }
-    .footer-inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 18px; color: #75827d; font-size: 10px; }
-    .footer-brand { display: flex; align-items: center; gap: 9px; }
-    .footer-brand .brandmark { width: 30px; height: 30px; border-radius: 9px; font-size: 11px; }
-    .footer-brand strong { color: #3e4e48; font-size: 11px; }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a:hover { color: var(--green); }
-    .modal-backdrop { display: none; position: fixed; inset: 0; z-index: 5; align-items: center; justify-content: center; padding: 20px; background: #10221dcc; backdrop-filter: blur(5px); }
-    .modal-backdrop.open { display: flex; }
-    .modal { width: min(420px, 100%); background: #fff; border-radius: 16px; padding: 26px; box-shadow: 0 25px 80px #001a1440; animation: pop .18s ease-out; }
-    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
-    .modal-top { display: flex; align-items: start; justify-content: space-between; }
-    .modal h2 { margin: 15px 0 6px; font-size: 22px; letter-spacing: -.04em; }
-    .modal p { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0; }
-    .close { border: 0; background: #f3f6f4; color: #63716b; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 18px; }
-    .field { display: block; margin-top: 16px; color: #45564f; font-size: 11px; font-weight: 700; }
-    .field input { display: block; width: 100%; margin-top: 7px; border: 1px solid #dce5e1; border-radius: 8px; padding: 12px; font: inherit; font-weight: 400; outline: none; }
-    .field input:focus { border-color: #72ab97; box-shadow: 0 0 0 3px #e6f3ed; }
-    .modal .btn { width: 100%; margin-top: 18px; }
-    .toast { position: fixed; z-index: 7; left: 50%; bottom: 23px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 9px; color: white; background: #183d33; box-shadow: var(--shadow); font-size: 12px; transition: all .2s; }
-    .toast.show { transform: translate(-50%, 0); opacity: 1; }
-    @media (max-width: 850px) {
-      .navlinks { gap: 17px; }
-      .hero-grid { gap: 35px; }
-      .hero { padding-top: 55px; }
-      .trust-label { display: none; }
-    }
-    @media (max-width: 680px) {
-      .wrap { width: min(100% - 32px, 520px); }
-      .nav { min-height: 68px; }
-      .brand { min-width: 0; }
-      .navlinks { display: none; }
-      .nav .btn { padding: 9px 12px; font-size: 11px; }
-      .hero { padding: 44px 0 38px; }
-      .hero-grid { grid-template-columns: 1fr; gap: 31px; }
-      h1 { font-size: 43px; }
-      .lead { font-size: 14px; }
-      .portal-card { padding: 19px; }
-      .trust-inner { justify-content: flex-start; flex-wrap: wrap; padding: 18px 0; gap: 14px 22px; }
-      .trust-item { font-size: 11px; }
-      section.content { padding: 48px 0; }
-      .section-head { display: block; }
-      .section-head .text-link { margin-top: 14px; }
-      .section-head h2 { font-size: 25px; }
-      .sop-grid { grid-template-columns: 1fr; gap: 10px; }
-      .sop-card { min-height: auto; padding: 17px; }
-      .sop-card p { min-height: 0; }
-      .news-band { padding: 8px 0 45px; }
-      .news-card { align-items: flex-start; flex-direction: column; padding: 22px; }
-      .news-card h2 { font-size: 19px; }
-      .news-card::after { right: -40px; }
-      .footer-inner { padding: 20px 0; flex-wrap: wrap; }
-      .footer-links { width: 100%; gap: 15px; flex-wrap: wrap; }
-    }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-    /* Reference inspired navigation, image banner, and in-page form area. */
-    .utility { height:32px; background:#fff; border-bottom:1px solid #edf1ef; }
-    .utility-inner { height:100%; display:flex; align-items:center; justify-content:space-between; color:#718079; font-size:10px; }
-    .socials,.utility-right { display:flex; align-items:center; gap:15px; }
-    .socials { color:var(--green); font-size:11px; font-weight:800; }
-    .language { color:#52645e; }
-    header { background:var(--green); border-bottom:1px solid #ffffff25; }
-    .brandmark { color:var(--green); background:#fff; }
-    .brandcopy strong { color:#fff; }
-    .brandcopy span { color:#c9e0d8; }
-    .navlinks { gap:22px; color:#fff; font-size:12px; }
-    .navlinks a + a { border-left:1px solid #64a08a; padding-left:19px; }
-    .navlinks a:hover { color:#e7c65f; }
-    .nav .btn { color:var(--green); background:#fff; box-shadow:none; }
-     .hero { 
-      min-height: 480px; 
-      padding: 0; 
-      display: flex; 
-      align-items: center; 
-      /* Background foto wa.jpeg + filter hijau transparan */
-      background: linear-gradient(90deg, rgba(8, 46, 39, 0.85) 0%, rgba(7, 91, 75, 0.7) 60%, rgba(7, 91, 75, 0.4) 100%), 
-                  url('https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/wa.jpeg') center/cover no-repeat !important; 
-    }    .hero::before { content:" "; position:absolute; inset:0; display:grid; place-items:center; color:#ffffff60; font-size:clamp(20px,3vw,38px); font-weight:800; letter-spacing:.16em; border:1px dashed #ffffff55; width:auto; height:auto; border-radius:0; box-shadow:none; right:0; top:0; }
-    .hero::after { content:" "; position:absolute; right:26px; bottom:17px; color:#ffffffb0; font-size:10px; }
-    body:lang(en) .hero::before { content:"BANNER IMAGE AREA"; }
-    body:lang(en) .hero::after { content:"Replace with a campus or event photo"; }
-    .hero-grid { z-index:1; grid-template-columns:1fr .65fr; gap:35px; padding-top:65px; padding-bottom:65px; }
-    .eyebrow { color:#e4c35b; background:#ffffff12; border-color:#ffffff42; font-size:10px; }
-    h1 { color:#fff; max-width:650px; }
-    h1 em { color:#e8c95f; }
-    .lead { color:#e5efeb; font-size:15px; }
-    .hero-note { color:#d1e2db; }
-    .hero-note svg { color:#e8c95f; }
+    .hero-note { display: flex; align-items: center; gap: 9px; color: #d1e2db; margin-top: 21px; font-size: 11px; }
+    .hero-note svg { color: #e8c95f; }
     .hero .btn-quiet { background:#ffffff; border-color:#fff; }
     .hero-aside { justify-self:end; max-width:280px; padding:23px; color:#fff; border-left:3px solid #e4bd3f; background:#102a25c9; }
     .hero-aside small { color:#e8c95f; text-transform:uppercase; letter-spacing:.1em; font-size:9px; font-weight:800; }
     .hero-aside strong { display:block; margin-top:9px; font-size:19px; line-height:1.35; letter-spacing:-.03em; }
     .hero-aside p { margin:9px 0 0; color:#d6e4de; font-size:11px; line-height:1.65; }
+
+    .trust-row { border-top: 1px solid #e9efec; border-bottom: 1px solid #e9efec; background: #fff; }
+    .trust-inner { display: flex; align-items: center; justify-content: space-between; min-height: 75px; gap: 20px; }
+    .trust-label { color: #88958f; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .trust-item { display: flex; align-items: center; gap: 9px; color: #43544e; font-size: 12px; font-weight: 650; }
+    .trust-item svg { color: var(--green); }
+    
+    section.content { padding: 68px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
+    .section-kicker { color: #a37b20; font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .section-head h2 { margin: 8px 0 0; font-size: 29px; letter-spacing: -.045em; }
+    .section-head p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
     .setneg { display:grid; grid-template-columns:.95fr 1.05fr; gap:22px; align-items:stretch; margin-top:28px; }
     .setneg-info { padding:25px; color:#fff; border-radius:14px; background:linear-gradient(145deg,#075b4b,#063f36); }
     .setneg-info .section-kicker { color:#e8c95f; }
@@ -203,30 +73,113 @@
     .step { display:flex; align-items:flex-start; gap:10px; color:#eaf2ee; font-size:11px; line-height:1.5; }
     .step b { flex:0 0 22px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; color:var(--green-dark); background:#e8c95f; font-size:10px; }
     .image-placeholder { min-height:360px; height:100%; display:grid; place-items:center; overflow:hidden; position:relative; border-radius:14px; border:1px dashed #ccd9d4; background:linear-gradient(135deg,#e8efeb,#f7f9f8 48%,#d9e5df); }
-    .image-placeholder::before,.image-placeholder::after { content:""; position:absolute; border:1px solid #ffffffb0; border-radius:50%; width:240px; height:240px; }
-    .image-placeholder::after { width:330px; height:330px; }
     .image-placeholder span { position:relative; z-index:1; padding:9px 12px; color:#62736c; background:#ffffffd9; border-radius:6px; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
-    .mobile-menu { display:none; color:#fff; background:transparent; border:0; font-size:22px; cursor:pointer; }
-    .language-toggle { display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; color:#52645e; padding:4px 0; cursor:pointer; font:inherit; font-size:11px; }
-    .language-toggle:hover { color:var(--green); }
-    @media(max-width:850px) { .navlinks { gap:12px; } .navlinks a + a { padding-left:11px; } }
-    @media(max-width:680px) { .navlinks { display:none; } .navlinks.mobile-open { display:flex; position:absolute; z-index:4; top:64px; left:0; right:0; flex-direction:column; align-items:stretch; gap:0; padding:8px 16px; background:var(--green-dark); box-shadow:0 12px 20px #092c2433; } .navlinks.mobile-open a { padding:12px 4px; border:0; border-bottom:1px solid #ffffff24; } .mobile-menu { display:block; margin-left:auto; } .hero { min-height:560px; padding:20px 0; } .hero-grid { grid-template-columns:1fr; gap:22px; padding-top:32px; padding-bottom:36px; } .hero-aside { justify-self:start; max-width:390px; } .setneg { grid-template-columns:1fr; gap:12px; } .setneg-info,.setneg-form { padding:20px; } .hero .btn-quiet { color:var(--green); } }
+    
+    .news-band { padding: 25px 0 65px; }
+    .news-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 27px; background: var(--green-dark); border-radius: 15px; color: #fff; position: relative; overflow: hidden; }
+    .news-card .section-kicker { color: #f0c557; }
+    .news-card h2 { margin: 6px 0 5px; font-size: 21px; letter-spacing: -.035em; }
+    .news-card p { margin: 0; color: #d4e4de; font-size: 12px; }
+    .news-card .btn { position: relative; z-index: 1; flex: 0 0 auto; color: var(--green-dark); background: #fff; }
+    
+    footer { background: #fff; border-top: 1px solid var(--line); }
+    .footer-inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 18px; color: #75827d; font-size: 10px; }
+    .footer-brand { display: flex; align-items: center; gap: 9px; }
+    .footer-brand .brandmark img { height: 30px; width: 30px; }
+    .footer-brand strong { color: #3e4e48; font-size: 11px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a:hover { color: var(--green); }
+
+    /* ============================================================
+       MODAL LOGIN SPLIT-SCREEN
+       ============================================================ */
+    .modal-backdrop { display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; padding: 20px; background: #10221dcc; backdrop-filter: blur(8px); }
+    .modal-backdrop.open { display: flex; }
+    
+    .login-split { 
+      width: min(900px, 100%); 
+      height: 550px; 
+      display: flex; 
+      background: #fff; 
+      border-radius: 20px; 
+      overflow: hidden; 
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4); 
+      animation: pop .3s ease-out;
+    }
+    
+    @keyframes pop { from { opacity: 0; transform: translateY(20px) scale(.98); } to { opacity: 1; transform: none; } }
+
+    /* Bagian Kiri (Form) */
+    .login-left { 
+      width: 45%; 
+      padding: 40px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      position: relative;
+    }
+    .login-close { position: absolute; top: 20px; right: 20px; border: 0; background: #f3f6f4; color: #63716b; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+    .login-close:hover { background: #e2e8f0; }
+    
+    .login-left h2 { margin: 0 0 6px; font-size: 24px; letter-spacing: -.04em; color: var(--green-dark); }
+    .login-left p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0 0 24px; }
+    
+    .field { display: block; margin-bottom: 16px; color: #45564f; font-size: 12px; font-weight: 700; }
+    .field input { display: block; width: 100%; margin-top: 6px; border: 1px solid #dce5e1; border-radius: 8px; padding: 12px 14px; font: inherit; font-weight: 400; outline: none; background: #fcfdfc; }
+    .field input:focus { border-color: #72ab97; box-shadow: 0 0 0 3px #e6f3ed; background: #fff; }
+    
+    .login-left .btn { width: 100%; margin-top: 8px; padding: 14px; }
+
+    /* Bagian Kanan (Ilustrasi) */
+    .login-right { 
+      width: 55%; 
+      background: linear-gradient(135deg, var(--green), var(--green-dark)); 
+      position: relative; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 40px;
+    }
+    
+    /* Gambar Ilustrasi */
+    .login-illustration {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+      /* Ganti URL di bawah ini dengan path gambar ilustrasi kamu */
+      content: url('assets/ilustrasi-login.png');
+    }
+
+    .toast { position: fixed; z-index: 1100; left: 50%; bottom: 23px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 9px; color: white; background: #183d33; box-shadow: var(--shadow); font-size: 13px; font-weight: 600; transition: all .2s; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    @media (max-width: 850px) { .navlinks { gap: 17px; } .hero-grid { gap: 35px; } .trust-label { display: none; } }
+    @media (max-width: 680px) {
+      .wrap { width: min(100% - 32px, 520px); }
+      .navlinks, .hero-aside { display: none; }
+      .hero-grid, .setneg { grid-template-columns: 1fr; }
+      .login-split { flex-direction: column; height: auto; max-height: 90vh; overflow-y: auto; }
+      .login-left, .login-right { width: 100%; padding: 30px 20px; }
+      .login-right { min-height: 200px; }
+    }
   </style>
 </head>
 <body>
   <div class="topline"></div>
-  <div class="utility"><div class="wrap utility-inner"> <div class="utility-right"><button class="language-toggle" id="languageToggle" type="button" aria-label="Switch to English"><span id="languageFlag">🇮🇩</span><span id="languageName">Bahasa Indonesia</span><span aria-hidden="true">⌄</span></button><span aria-hidden="true">⌕</span></div></div></div>
   <header>
     <div class="wrap nav">
-      <a class="brand" href="#beranda" aria-label="International Office UINSA, beranda">
-                <span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span>
+      <a class="brand" href="#beranda">
+        <span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span>
         <span class="brandcopy"><strong>International Office</strong><span>UIN Sunan Ampel Surabaya</span></span>
       </a>
-      <nav class="navlinks" aria-label="Navigasi utama">
-        <a id="navHome" href="#beranda">Beranda</a><a id="navSop" href="#sop">SOP &amp; Layanan</a><a id="navForm" href="formsetneg.html">Form Pengajuan</a><a id="navNews" href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a>
+      <nav class="navlinks">
+        <a href="#beranda">Beranda</a>
+        <a href="#sop">SOP &amp; Layanan</a>
+        <a href="formsetneg.html">Form Pengajuan</a>
+        <a href="https://uinsa.ac.id/international" target="_blank">Berita IO ↗</a>
       </nav>
-      <button class="mobile-menu" id="menuToggle" aria-label="Buka menu" aria-expanded="false">☰</button>
-      <button class="btn btn-primary" data-open-login><span id="headerLogin">Masuk Pengelola</span> <span aria-hidden="true">↗</span></button>
+      <button class="btn btn-primary" data-open-login>Masuk Pengelola <span aria-hidden="true">↗</span></button>
     </div>
   </header>
 
@@ -234,156 +187,99 @@
     <section class="hero" id="beranda">
       <div class="wrap hero-grid">
         <div>
-          <span class="eyebrow"><i></i> <span id="heroEyebrow">International Office UINSA</span></span>
-          <h1 id="heroTitle">Informasi dan layanan <em>internasional UINSA.</em></h1>
-          <p class="lead" id="heroLead">Pusat panduan dan layanan International Office UIN Sunan Ampel Surabaya bagi mahasiswa internasional dan pengelola program.</p>
+          <span class="eyebrow"><i></i> <span>International Office UINSA</span></span>
+          <h1>Informasi dan layanan <em>internasional UINSA.</em></h1>
+          <p class="lead">Pusat panduan dan layanan International Office UIN Sunan Ampel Surabaya bagi mahasiswa internasional dan pengelola program.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="formsetneg.html"><span id="heroFormCta">Isi Form Pengajuan</span> <span aria-hidden="true">→</span></a>
-            <a class="btn btn-quiet" href="#sop" id="heroSopCta">Lihat SOP Izin SETNEG</a>
+            <a class="btn btn-primary" href="formsetneg.html">Isi Form Pengajuan <span aria-hidden="true">→</span></a>
+            <a class="btn btn-quiet" href="#sop">Lihat SOP Izin SETNEG</a>
           </div>
-          <div class="hero-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg> <span id="heroNote">Informasi resmi International Office UINSA</span></div>
+          <div class="hero-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg> <span>Informasi resmi International Office UINSA</span></div>
         </div>
-        <aside class="hero-aside"><small id="heroAsideLabel">Informasi layanan</small><strong id="heroAsideTitle">Urus izin dan administrasi dengan lebih terarah.</strong><p id="heroAsideText">Ikuti prosedur yang berlaku dan siapkan dokumen sebelum mengisi pengajuan.</p></aside>
+        <aside class="hero-aside"><small>Informasi layanan</small><strong>Urus izin dan administrasi dengan lebih terarah.</strong><p>Ikuti prosedur yang berlaku dan siapkan dokumen sebelum mengisi pengajuan.</p></aside>
       </div>
     </section>
 
     <div class="trust-row"><div class="wrap trust-inner">
-      <span class="trust-label" id="trustLabel">Layanan International Office</span>
-      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> <span id="trustStudents">Mahasiswa internasional</span></span>
-      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 21v-4h4v4"/></svg> <span id="trustPartners">Kerja sama global</span></span>
-      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg> <span id="trustPrograms">Program internasional</span></span>
+      <span class="trust-label">Layanan International Office</span>
+      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> <span>Mahasiswa internasional</span></span>
+      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 21v-4h4v4"/></svg> <span>Kerja sama global</span></span>
+      <span class="trust-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg> <span>Program internasional</span></span>
     </div></div>
 
     <section class="content">
       <div class="wrap">
-        <div class="section-head"><div><span class="section-kicker" id="sopKicker">Panduan dan prosedur</span><h2 id="sopTitle">SOP Izin SETNEG</h2><p id="sopIntro">Pelajari alur dan persyaratan sebelum mengirim pengajuan.</p></div></div>
+        <div class="section-head"><div><span class="section-kicker">Panduan dan prosedur</span><h2>SOP Izin SETNEG</h2><p>Pelajari alur dan persyaratan sebelum mengirim pengajuan.</p></div></div>
         <div class="setneg" id="sop">
-          <article class="setneg-info"><span class="section-kicker" id="setnegKicker">Layanan International Office</span><h3 id="setnegTitle">Pengajuan Izin SETNEG</h3><p id="setnegIntro">Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.</p><div class="steps"><div class="step"><b>1</b><span id="stepOne">Baca ketentuan dan siapkan dokumen pendukung.</span></div><div class="step"><b>2</b><span id="stepTwo">Isi formulir pengajuan dengan data yang lengkap.</span></div><div class="step"><b>3</b><span id="stepThree">Tunggu konfirmasi dan tindak lanjut dari petugas IO.</span></div></div><a class="btn application-button" href="formsetneg.html" title="Buka formulir pengurusan surat izin SETNEG"><span id="setnegFormCta">Isi Form Pengurusan Surat Izin SETNEG</span> <span>→</span></a></article>
-          <div class="image-placeholder" role="img" aria-label="Area gambar SOP Izin SETNEG"><span id="imagePlaceholderText">Area gambar</span></div>
+          <article class="setneg-info"><span class="section-kicker">Layanan International Office</span><h3>Pengajuan Izin SETNEG</h3><p>Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.</p><div class="steps"><div class="step"><b>1</b><span>Baca ketentuan dan siapkan dokumen pendukung.</span></div><div class="step"><b>2</b><span>Isi formulir pengajuan dengan data yang lengkap.</span></div><div class="step"><b>3</b><span>Tunggu konfirmasi dan tindak lanjut dari petugas IO.</span></div></div><a class="btn application-button" href="formsetneg.html">Isi Form Pengurusan Surat Izin SETNEG <span>→</span></a></article>
+          <div class="image-placeholder" role="img" aria-label="Area gambar SOP Izin SETNEG"><span>Area gambar</span></div>
         </div>
       </div>
     </section>
 
-    <section class="news-band"><div class="wrap"><div class="news-card"><div><span class="section-kicker" id="newsKicker">Kabar terbaru</span><h2 id="newsTitle">Ikuti berita dan kegiatan International Office</h2><p id="newsText">Pengumuman, cerita program, dan agenda terbaru tersedia di laman IO UINSA.</p></div><a class="btn" href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer"><span id="newsCta">Kunjungi Berita IO</span> <span>↗</span></a></div></div></section>
+    <section class="news-band"><div class="wrap"><div class="news-card"><div><span class="section-kicker">Kabar terbaru</span><h2>Ikuti berita dan kegiatan International Office</h2><p>Pengumuman, cerita program, dan agenda terbaru tersedia di laman IO UINSA.</p></div><a class="btn" href="https://uinsa.ac.id/international" target="_blank">Kunjungi Berita IO <span>↗</span></a></div></div></section>
   </main>
 
-  <footer><div class="wrap footer-inner"><div class="footer-brand"><span class="brandmark">IO</span><strong>International Office · UIN Sunan Ampel Surabaya</strong></div><div class="footer-links"><a id="footerSop" href="#sop">SOP &amp; Layanan</a><a id="footerNews" href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a><a id="footerContact" href="mailto:io@uinsby.ac.id">Kontak</a></div><span>© 2026 UINSA</span></div></footer>
+  <footer><div class="wrap footer-inner"><div class="footer-brand"><span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span><strong>International Office · UIN Sunan Ampel Surabaya</strong></div><div class="footer-links"><a href="#sop">SOP &amp; Layanan</a><a href="https://uinsa.ac.id/international" target="_blank">Berita IO ↗</a><a href="mailto:io@uinsby.ac.id">Kontak</a></div><span>© 2026 UINSA</span></div></footer>
 
-  <div class="modal-backdrop" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-    <div class="modal">
-      <div class="modal-top"><span class="brandmark">IO</span><button class="close" id="closeModal" aria-label="Tutup">×</button></div>
-      <h2 id="loginTitle">Masuk ke Sistem IO</h2><p id="loginIntro">Gunakan akun resmi yang telah terdaftar untuk mengakses ruang pengelola.</p>
-      <form id="loginForm"><label class="field"><span id="emailLabel">Email UINSA</span><input id="emailInput" type="email" placeholder="nama@uinsby.ac.id" autocomplete="username" required></label><label class="field"><span id="passwordLabel">Kata sandi</span><input id="passwordInput" type="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required></label><button type="submit" class="btn btn-primary"><span id="loginCta">Masuk</span> <span>→</span></button></form>
+  <!-- MODAL LOGIN SPLIT-SCREEN -->
+  <div class="modal-backdrop" id="loginModal" role="dialog" aria-modal="true">
+    <div class="login-split">
+      
+      <!-- Kiri: Form -->
+      <div class="login-left">
+        <button class="login-close" id="closeModal" aria-label="Tutup">×</button>
+        <h2>Masuk ke Sistem IO</h2>
+        <p>Gunakan akun resmi yang telah terdaftar untuk mengakses ruang pengelola.</p>
+        <form id="loginForm">
+          <label class="field">Email UINSA<input id="emailInput" type="email" placeholder="nama@uinsby.ac.id" autocomplete="username" required></label>
+          <label class="field">Kata sandi<input id="passwordInput" type="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required></label>
+          <button type="submit" class="btn btn-primary">Masuk <span>→</span></button>
+        </form>
+      </div>
+
+      <!-- Kanan: Ilustrasi -->
+      <div class="login-right">
+        <!-- Pastikan gambar ilustrasi-login.png ada di folder assets -->
+        <img src="assets/ilustrasi-login.png" alt="Ilustrasi Pengelola" class="login-illustration" onerror="this.style.display='none'">
+      </div>
+
     </div>
   </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     const modal = document.getElementById('loginModal');
     const toast = document.getElementById('toast');
-    const copy = {
-      id: {
-        navHome:'Beranda', navSop:'SOP & Layanan', navForm:'Form Pengajuan', navNews:'Berita IO', headerLogin:'Masuk Pengelola',
-        heroEyebrow:'International Office UINSA', heroTitle:'Informasi dan layanan <em>internasional UINSA.</em>',
-        heroLead:'Pusat panduan dan layanan International Office UIN Sunan Ampel Surabaya bagi mahasiswa internasional dan pengelola program.',
-        heroFormCta:'Isi Form Pengajuan', heroSopCta:'Lihat SOP Izin SETNEG', heroNote:'Informasi resmi International Office UINSA', imagePlaceholderText:'Area gambar',
-        heroAsideLabel:'Informasi layanan', heroAsideTitle:'Urus izin dan administrasi dengan lebih terarah.',
-        heroAsideText:'Ikuti prosedur yang berlaku dan siapkan dokumen sebelum mengisi pengajuan.',
-        trustLabel:'Layanan International Office', trustStudents:'Mahasiswa internasional', trustPartners:'Kerja sama global', trustPrograms:'Program internasional',
-        sopKicker:'Panduan dan prosedur', sopTitle:'SOP Izin SETNEG', sopIntro:'Pelajari alur dan persyaratan sebelum mengirim pengajuan.', sopFormLink:'Isi formulir',
-        setnegKicker:'Layanan International Office', setnegTitle:'Pengajuan Izin SETNEG',
-        setnegIntro:'Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.',
-        stepOne:'Baca ketentuan dan siapkan dokumen pendukung.', stepTwo:'Isi formulir pengajuan dengan data yang lengkap.', stepThree:'Tunggu konfirmasi dan tindak lanjut dari petugas IO.',
-        setnegFormCta:'Isi Form Pengurusan Surat Izin SETNEG',
-        newsKicker:'Kabar terbaru', newsTitle:'Ikuti berita dan kegiatan International Office', newsText:'Pengumuman, cerita program, dan agenda terbaru tersedia di laman IO UINSA.', newsCta:'Kunjungi Berita IO',
-        footerSop:'SOP & Layanan', footerNews:'Berita IO', footerContact:'Kontak', loginTitle:'Masuk ke Sistem IO',
-        loginIntro:'Gunakan akun resmi yang telah terdaftar untuk mengakses ruang pengelola.', emailLabel:'Email UINSA', passwordLabel:'Kata sandi',
-        loginCta:'Masuk', loginToast:'Login berhasil! Mengalihkan ke dashboard...'
-      },
-      en: {
-        navHome:'Home', navSop:'SOP & Services', navForm:'Application Form', navNews:'IO News', headerLogin:'Staff Login',
-        heroEyebrow:'UINSA International Office', heroTitle:'International information and <em>services at UINSA.</em>',
-        heroLead:'Guidance and services from the International Office of UIN Sunan Ampel Surabaya for international students and program administrators.',
-        heroFormCta:'Start an Application', heroSopCta:'View the SETNEG Permit SOP', heroNote:'Official information from UINSA International Office', imagePlaceholderText:'Image area',
-        heroAsideLabel:'Our services', heroAsideTitle:'Handle permits and administration with clear guidance.',
-        heroAsideText:'Review the procedure and prepare your supporting documents before submitting an application.',
-        trustLabel:'International Office services', trustStudents:'International students', trustPartners:'Global partnerships', trustPrograms:'International programs',
-        sopKicker:'Guides and procedures', sopTitle:'SETNEG Permit SOP', sopIntro:'Review the steps and requirements before submitting an application.', sopFormLink:'Open application form',
-        setnegKicker:'International Office service', setnegTitle:'SETNEG Permit Application',
-        setnegIntro:'Use this guide as a starting point. Final requirements and steps follow the official SOP set by UINSA International Office.',
-        stepOne:'Review the requirements and prepare supporting documents.', stepTwo:'Complete the application form with accurate information.', stepThree:'Wait for confirmation and follow-up from the IO team.',
-        setnegFormCta:'Complete SETNEG Permit Application',
-        newsKicker:'Latest updates', newsTitle:'Follow International Office news and events', newsText:'Announcements, program stories, and upcoming events are available on the UINSA IO website.', newsCta:'Visit IO News',
-        footerSop:'SOP & Services', footerNews:'IO News', footerContact:'Contact', loginTitle:'Sign in to the IO System',
-        loginIntro:'Use your registered account to access the staff workspace.', emailLabel:'UINSA email', passwordLabel:'Password',
-        loginCta:'Sign in', loginToast:'Login successful! Redirecting to dashboard...'
-      }
-    };
-    let currentLanguage = 'id';
-    function setLanguage(language) {
-      currentLanguage = language;
-      document.documentElement.lang = language;
-      document.querySelectorAll('[id]').forEach(element => {
-        const value = copy[language][element.id];
-        if (value !== undefined) element.innerHTML = value;
-      });
-      document.getElementById('languageFlag').textContent = language === 'id' ? '🇮🇩' : '🇬🇧';
-      document.getElementById('languageName').textContent = language === 'id' ? 'Bahasa Indonesia' : 'English';
-      document.getElementById('languageToggle').setAttribute('aria-label', language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia');
-      document.getElementById('menuToggle').setAttribute('aria-label', language === 'id' ? 'Buka menu' : 'Open menu');
-      document.getElementById('closeModal').setAttribute('aria-label', language === 'id' ? 'Tutup' : 'Close');
-      document.title = language === 'id' ? 'International Office — UIN Sunan Ampel Surabaya' : 'International Office — UIN Sunan Ampel Surabaya';
-      document.getElementById('emailInput').placeholder = language === 'id' ? 'nama@uinsby.ac.id' : 'name@uinsby.ac.id';
-      document.getElementById('passwordInput').placeholder = language === 'id' ? 'Masukkan kata sandi' : 'Enter your password';
-    }
-    document.getElementById('languageToggle').addEventListener('click', () => setLanguage(currentLanguage === 'id' ? 'en' : 'id'));
     
     const openModal = () => { modal.classList.add('open'); document.body.style.overflow = 'hidden'; modal.querySelector('input').focus(); };
     const closeModal = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
     
     document.querySelectorAll('[data-open-login]').forEach(button => button.addEventListener('click', openModal));
-    document.getElementById('menuToggle').addEventListener('click', event => {
-      const links = document.querySelector('.navlinks');
-      const opened = links.classList.toggle('mobile-open');
-      event.currentTarget.setAttribute('aria-expanded', String(opened));
-    });
     document.getElementById('closeModal').addEventListener('click', closeModal);
     modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); } });
 
-    // ============================================================
     // LOGIKA LOGIN SUPABASE
-    // ============================================================
     const SUPABASE_URL = 'https://kkxovkdrzhthalpchmfx.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtreG92a2Ryemh0aGFscGNobWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MjM1ODgsImV4cCI6MjEwNjE5OTU4OH0.PvLnlGIs6PEn-oUoDi25_szVJxdcGtQqftaLyonSfNA';
     
     let supabaseClient = null;
-
     async function initSupabase() {
       if (supabaseClient) return supabaseClient;
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: false
-        }
-      });
+      supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
       return supabaseClient;
     }
 
-    // Cek session saat halaman dimuat
     (async () => {
       const supabase = await initSupabase();
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.href = 'dashboard.html';
-      }
+      if (session) window.location.href = 'dashboard.html';
     })();
 
-    // Handle form submit
     document.getElementById('loginForm').addEventListener('submit', async event => {
       event.preventDefault();
-      
       const email = document.getElementById('emailInput').value;
       const password = document.getElementById('passwordInput').value;
       const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -394,30 +290,18 @@
 
       try {
         const supabase = await initSupabase();
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
         toast.textContent = 'Login berhasil! Mengalihkan...';
         toast.classList.add('show');
         toast.style.background = '#1e7a4d';
-        
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1000);
-
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
       } catch (error) {
         toast.textContent = 'Gagal: ' + (error.message === 'Invalid login credentials' ? 'Email atau password salah' : error.message);
         toast.classList.add('show');
         toast.style.background = '#c0392b';
-        
-        setTimeout(() => {
-          toast.classList.remove('show');
-          toast.style.background = '#183d33';
-        }, 3000);
+        setTimeout(() => { toast.classList.remove('show'); toast.style.background = '#183d33'; }, 3000);
       } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
