@@ -72,19 +72,6 @@ async function loadLaporanMahasiswa() {
     );
   }
   
-  // Info filter
-  let infoFilter = '';
-  if (filterStatus !== 'semua') {
-    infoFilter += `Status: <strong>${filterStatus}</strong>`;
-  }
-  if (filterSearch.trim()) {
-    if (infoFilter) infoFilter += ' · ';
-    infoFilter += `Pencarian: <strong>${filterSearch}</strong>`;
-  }
-  document.getElementById('infoFilter').innerHTML = infoFilter 
-    ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}` 
-    : '<strong>Filter yang diterapkan:</strong> Semua data';
-  
   // Hitung statistik per status
   const total = filtered.length;
   const aktif = filtered.filter(m => m.status === 'Aktif').length;
@@ -151,7 +138,7 @@ async function loadLaporanMahasiswa() {
 }
 
 // ============================================================
-// LAPORAN KERJASAMA (DENGAN FILTER DINAMIS)
+// LAPORAN KERJASAMA (DENGAN FILTER STATUS & JENIS)
 // ============================================================
 async function loadLaporanKerjasama(statusFilter = 'semua') {
   document.getElementById('judulLaporan').textContent = 'LAPORAN KERJA SAMA INTERNASIONAL';
@@ -199,24 +186,6 @@ async function loadLaporanKerjasama(statusFilter = 'semua') {
       return false;
     });
   }
-  
-  // Info filter
-  let infoFilter = '';
-  if (statusFilter !== 'semua') {
-    // Map teks agar tampilannya cantik (misal 'mou' jadi 'MoU')
-    const labelMap = {
-      'aktif': 'On Going (Aktif)',
-      'berakhir': 'Berakhir',
-      'mou': 'Dokumen MoU',
-      'moa': 'Dokumen MoA',
-      'loi': 'Dokumen LoI',
-      'loc': 'Dokumen LoC'
-    };
-    infoFilter = `Filter: <strong>${labelMap[statusFilter] || statusFilter}</strong>`;
-  }
-  document.getElementById('infoFilter').innerHTML = infoFilter
-    ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}`
-    : '<strong>Filter yang diterapkan:</strong> Semua data';
   
   const total = filtered.length;
   let aktif = 0, akanBerakhir = 0, berakhir = 0;
@@ -339,18 +308,6 @@ async function loadLaporanTempatTinggal() {
     );
   }
   
-  let infoFilter = '';
-  if (filterJenisTinggal !== 'semua') {
-    infoFilter += `Jenis Tinggal: <strong>${filterJenisTinggal}</strong>`;
-  }
-  if (filterSearch.trim()) {
-    if (infoFilter) infoFilter += ' · ';
-    infoFilter += `Pencarian: <strong>${filterSearch}</strong>`;
-  }
-  document.getElementById('infoFilter').innerHTML = infoFilter 
-    ? `<strong>Filter yang diterapkan:</strong> ${infoFilter}` 
-    : '<strong>Filter yang diterapkan:</strong> Semua data (Mahasiswa Aktif & Cuti)';
-  
   const counts = {};
   filtered.forEach(t => { counts[t.jenis_tinggal] = (counts[t.jenis_tinggal] || 0) + 1; });
   
@@ -405,21 +362,21 @@ async function loadLaporanTempatTinggal() {
 // FUNGSI FILTER TOMBOL KERJASAMA (TANPA RELOAD)
 // ============================================================
 window.filterLaporanKjs = function(status) {
-  // 1. Ubah gaya tombol
+  // 1. Ubah gaya tombol agar yang aktif berwarna hijau dan teksnya putih
   document.querySelectorAll('#filterKerjasamaBar .filter-status-btn').forEach(btn => {
     btn.classList.remove('active');
     btn.style.background = '#fff';
-    btn.style.color = '#6b7280';
+    btn.style.color = '#1a2332'; 
     btn.style.borderColor = '#e2e8f0';
     
     if (btn.dataset.status === status) {
       btn.classList.add('active');
       btn.style.background = '#0a5c4a';
-      btn.style.color = '#fff';
+      btn.style.color = '#fff'; 
       btn.style.borderColor = '#0a5c4a';
     }
   });
 
-  // 2. Panggil ulang fungsinya dengan parameter status
+  // 2. Panggil ulang fungsinya dengan parameter filter
   loadLaporanKerjasama(status);
 };
