@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laporan — International Office UINSA</title>
-  <link rel="icon" type="image/png" href="assets/logo-uinsa.png">
+<link rel="icon" type="image/png" href="assets/logo-uinsa.png">
 <link rel="stylesheet" href="css/report.css" />
 </head>
 <body>
@@ -42,23 +42,27 @@
     <div class="subjudul">International Office — UIN Sunan Ampel Surabaya</div>
   </div>
   
-  <!-- INFO FILTER -->
-  <div class="info-filter" id="infoFilter">
-    <strong>Memuat data...</strong>
-  </div>
-    <!-- Tombol Filter Khusus Kerjasama -->
+  <!-- TOMBOL FILTER (Khusus Kerjasama) -->
   <div id="filterKerjasamaBar" style="display: none; margin-bottom: 16px; gap: 8px; flex-wrap: wrap;">
-    <button class="filter-status-btn active" data-status="semua" onclick="filterLaporanKjs('semua')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">Semua</button>
-    <button class="filter-status-btn" data-status="aktif" onclick="filterLaporanKjs('aktif')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">On Going (Aktif)</button>
-    <button class="filter-status-btn" data-status="berakhir" onclick="filterLaporanKjs('berakhir')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">Berakhir</button>
+    <button class="filter-status-btn active" data-status="semua" onclick="filterLaporanKjs('semua')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">Semua</button>
+    <button class="filter-status-btn" data-status="aktif" onclick="filterLaporanKjs('aktif')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">On Going (Aktif)</button>
+    <button class="filter-status-btn" data-status="berakhir" onclick="filterLaporanKjs('berakhir')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">Berakhir</button>
+    
+    <span style="margin: 0 8px; border-left: 1px solid #cbd5e1;"></span> <!-- Garis pemisah -->
+
+    <button class="filter-status-btn" data-status="mou" onclick="filterLaporanKjs('mou')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">MoU</button>
+    <button class="filter-status-btn" data-status="moa" onclick="filterLaporanKjs('moa')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">MoA</button>
+    <button class="filter-status-btn" data-status="loi" onclick="filterLaporanKjs('loi')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">LoI</button>
+    <button class="filter-status-btn" data-status="loc" onclick="filterLaporanKjs('loc')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600;">LoC</button>
   </div>
+  
   <!-- KONTEN (tabel laporan) -->
   <div id="kontenLaporan">
     <p style="text-align:center; padding:40px; font-style:italic; color:#666;">Memuat data...</p>
   </div>
   
   <!-- TANDA TANGAN -->
-    <div class="ttd-section">
+  <div class="ttd-section">
     <div class="ttd-box">
       <div class="kota-tanggal">
         Surabaya, <span id="tanggalCetak">—</span>
