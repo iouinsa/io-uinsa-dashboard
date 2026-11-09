@@ -62,8 +62,25 @@
     .section-kicker { color: #a37b20; font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
     .section-head h2 { margin: 8px 0 0; font-size: 29px; letter-spacing: -.045em; }
     .section-head p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
-    .setneg { display:grid; grid-template-columns:.95fr 1.05fr; gap:22px; align-items:stretch; margin-top:28px; }
-    .setneg-info { padding:25px; color:#fff; border-radius:14px; background:linear-gradient(145deg,#075b4b,#063f36); }
+   .setneg { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 0; /* Menghilangkan jarak agar menyatu */
+  align-items: stretch; 
+  margin-top: 28px; 
+  border-radius: 14px; 
+  overflow: hidden; /* Memotong sudut agar tetap melengkung rapi */
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06); /* Bayangan menyatu */
+}
+    .setneg-info { 
+  padding: 35px 30px; 
+  color: #fff; 
+  border-radius: 0; /* Dihilangkan karena sudah ditangani oleh .setneg */
+  background: linear-gradient(145deg,#075b4b,#063f36); 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
     .setneg-info .section-kicker { color:#e8c95f; }
     .setneg-info h3 { margin:10px 0 9px; font-size:22px; letter-spacing:-.035em; }
     .setneg-info p { margin:0; color:#d8e8e2; font-size:12px; line-height:1.7; }
@@ -72,7 +89,13 @@
     .steps { display:grid; gap:11px; margin:20px 0 22px; }
     .step { display:flex; align-items:flex-start; gap:10px; color:#eaf2ee; font-size:11px; line-height:1.5; }
     .step b { flex:0 0 22px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; color:var(--green-dark); background:#e8c95f; font-size:10px; }
-    .image-placeholder { min-height:360px; height:100%; display:grid; place-items:center; overflow:hidden; position:relative; border-radius:14px; border:1px dashed #ccd9d4; background:linear-gradient(135deg,#e8efeb,#f7f9f8 48%,#d9e5df); }
+   .image-placeholder { 
+  min-height: 360px; 
+  height: 100%; 
+  background: url('assets/ilustrasi-login.png') center/cover no-repeat;
+  background-color: #f4f7f6; /* Warna cadangan jika gambar gagal dimuat */
+  position: relative;
+}
     .image-placeholder span { position:relative; z-index:1; padding:9px 12px; color:#62736c; background:#ffffffd9; border-radius:6px; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
     
     .news-band { padding: 25px 0 65px; }
@@ -212,7 +235,7 @@
         <div class="section-head"><div><span class="section-kicker">Panduan dan prosedur</span><h2>SOP Izin SETNEG</h2><p>Pelajari alur dan persyaratan sebelum mengirim pengajuan.</p></div></div>
         <div class="setneg" id="sop">
           <article class="setneg-info"><span class="section-kicker">Layanan International Office</span><h3>Pengajuan Izin SETNEG</h3><p>Gunakan panduan ini sebagai titik awal. Persyaratan dan tahapan final mengikuti SOP resmi yang ditetapkan International Office UINSA.</p><div class="steps"><div class="step"><b>1</b><span>Baca ketentuan dan siapkan dokumen pendukung.</span></div><div class="step"><b>2</b><span>Isi formulir pengajuan dengan data yang lengkap.</span></div><div class="step"><b>3</b><span>Tunggu konfirmasi dan tindak lanjut dari petugas IO.</span></div></div><a class="btn application-button" href="formsetneg.html">Isi Form Pengurusan Surat Izin SETNEG <span>→</span></a></article>
-          <div class="image-placeholder" role="img" aria-label="Area gambar SOP Izin SETNEG"><span>Area gambar</span></div>
+          <div class="image-placeholder" role="img" aria-label="Ilustrasi SOP Izin SETNEG"></div>
         </div>
       </div>
     </section>
