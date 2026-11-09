@@ -26,8 +26,11 @@ document.getElementById('tanggalCetak').textContent =
 if (jenis === 'mahasiswa') {
   loadLaporanMahasiswa();
 } else if (jenis === 'kerjasama') {
+  // Tampilkan tombol filter
+  document.getElementById('filterKerjasamaBar').style.display = 'flex';
   loadLaporanKerjasama();
-} else if (jenis === 'tempat_tinggal') {
+}
+ else if (jenis === 'tempat_tinggal') {
   loadLaporanTempatTinggal();
 } else {
   document.getElementById('kontenLaporan').innerHTML = '<p>Jenis laporan tidak dikenali.</p>';
@@ -358,3 +361,26 @@ async function loadLaporanTempatTinggal() {
   
   document.getElementById('kontenLaporan').innerHTML = html;
 }
+
+// ============================================================
+// FUNGSI FILTER LAPORAN (TANPA RELOAD)
+// ============================================================
+window.filterLaporanKjs = function(status) {
+  // Ubah gaya tombol yang aktif
+  document.querySelectorAll('#filterKerjasamaBar .filter-status-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.style.background = '#fff';
+    btn.style.color = '#6b7280';
+    btn.style.borderColor = '#e2e8f0';
+    
+    if (btn.dataset.status === status) {
+      btn.classList.add('active');
+      btn.style.background = '#0a5c4a';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#0a5c4a';
+    }
+  });
+
+  // Panggil fungsi load ulang, tapi kita berikan filter statusnya
+  loadLaporanKerjasama(status);
+};
