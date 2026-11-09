@@ -371,3 +371,9 @@ body {
 .tabel-laporan tbody td:nth-child(6) { /* Prodi */
   text-align: left;
 }
+
+@media print {
+  #filterKerjasamaBar {
+    display: none !important;
+  }
+}
