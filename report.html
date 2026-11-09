@@ -46,7 +46,12 @@
   <div class="info-filter" id="infoFilter">
     <strong>Memuat data...</strong>
   </div>
-  
+    <!-- Tombol Filter Khusus Kerjasama -->
+  <div id="filterKerjasamaBar" style="display: none; margin-bottom: 16px; gap: 8px; flex-wrap: wrap;">
+    <button class="filter-status-btn active" data-status="semua" onclick="filterLaporanKjs('semua')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">Semua</button>
+    <button class="filter-status-btn" data-status="aktif" onclick="filterLaporanKjs('aktif')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">On Going (Aktif)</button>
+    <button class="filter-status-btn" data-status="berakhir" onclick="filterLaporanKjs('berakhir')" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer;">Berakhir</button>
+  </div>
   <!-- KONTEN (tabel laporan) -->
   <div id="kontenLaporan">
     <p style="text-align:center; padding:40px; font-style:italic; color:#666;">Memuat data...</p>
