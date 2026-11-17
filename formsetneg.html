@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#075b4b" />
-  <link rel="icon" type="image/png" href="assets/logo-uinsa.png">
+  <link rel="icon" type="image/png" href="assets/io.png">
   <title>Form Pengajuan SETNEG — International Office UINSA</title>
   <style>
     :root {
@@ -17,97 +17,114 @@
       --line: #e3eae7;
       --paper: #fff;
       --canvas: #f7f9f8;
+      --shadow: 0 18px 50px rgba(21, 57, 47, .09);
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body { margin: 0; background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
-    
-    /* CSS Header & Footer disalin dari index.html */
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+
+    /* ================= HEADER & NAV ================= */
     .topline { height: 5px; background: linear-gradient(90deg, var(--green), #16866d 72%, var(--gold) 72%); }
     .wrap { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
-    .utility { height:32px; background:#fff; border-bottom:1px solid #edf1ef; }
-    .utility-inner { height:100%; display:flex; align-items:center; justify-content:space-between; color:#718079; font-size:10px; }
-    .socials,.utility-right { display:flex; align-items:center; gap:15px; }
-    .socials { color:var(--green); font-size:11px; font-weight:800; }
-    
-    header { background:var(--green); border-bottom:1px solid #ffffff25; }
+    header { background: var(--green); border-bottom: 1px solid #ffffff25; position: relative; z-index: 100; }
     .nav { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
-    .brand { display: flex; align-items: center; gap: 12px; min-width: 245px; text-decoration: none; }
-    .brandmark { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: var(--green); background: #fff; font-size: 15px; font-weight: 800; letter-spacing: -.04em; box-shadow: 0 5px 14px #075b4b30; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 245px; }
+    .brandmark { width: auto; height: auto; background: transparent; display: flex; align-items: center; }
+    .brandmark img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); }
     .brandcopy strong { display: block; font-size: 14px; letter-spacing: -.02em; color: #fff; }
     .brandcopy span { color: #c9e0d8; display: block; font-size: 11px; margin-top: 3px; }
     .navlinks { display: flex; align-items: center; gap: 22px; color: #fff; font-size: 12px; font-weight: 600; }
-    .navlinks a { text-decoration: none; color: inherit; }
     .navlinks a + a { border-left:1px solid #64a08a; padding-left:19px; }
     .navlinks a:hover { color:#e7c65f; }
-    
-    .btn { border: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 15px; cursor: pointer; font-size: 13px; font-weight: 700; text-decoration: none; transition: transform .18s; }
-    .btn:hover { transform: translateY(-1px); }
-    .btn-primary { color: var(--green); background: #fff; box-shadow: none; }
-    
-    /* Area Form */
+    .btn { border: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 700; transition: transform .18s; }
+    .nav .btn { color:var(--green); background:#fff; box-shadow:none; padding: 10px 15px; }
+
+    /* ================= AREA FORM ================= */
     .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
-    .form-header { padding: 24px 0 16px; text-align: center; }
+    .form-header { padding: 40px 20px 20px; text-align: center; }
     .form-header h2 { margin: 0; font-size: 22px; font-weight: 700; color: var(--green-dark); }
     .form-header p { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
     
     .iframe-container { flex: 1; width: 100%; min-height: 600px; background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     iframe { width: 100%; height: 100%; min-height: 800px; border: none; display: block; }
     
+    /* ================= FOOTER ================= */
     footer { background: #fff; border-top: 1px solid var(--line); margin-top: auto; }
     .footer-inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 18px; color: #75827d; font-size: 10px; }
     .footer-brand { display: flex; align-items: center; gap: 9px; }
-    .footer-brand .brandmark { width: 30px; height: 30px; border-radius: 9px; font-size: 11px; }
+    .footer-brand .brandmark img { height: 30px; width: 30px; }
     .footer-brand strong { color: #3e4e48; font-size: 11px; }
     .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: inherit; text-decoration: none; }
     .footer-links a:hover { color: var(--green); }
 
-    @media (max-width: 680px) {
+    /* ================= MENU HAMBURGER (MOBILE) ================= */
+    .menu-toggle { display: none; background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; padding: 5px; z-index: 101; }
+    
+    @media (max-width: 768px) {
       .wrap { width: min(100% - 32px, 520px); }
-      .navlinks { display: none; }
-      .footer-inner { padding: 20px 0; flex-wrap: wrap; }
-      .footer-links { width: 100%; gap: 15px; flex-wrap: wrap; }
+      .menu-toggle { display: block; }
+      
+      .navlinks { 
+        display: none; 
+        position: absolute; 
+        top: 78px; 
+        left: 0; 
+        right: 0; 
+        background: var(--green-dark); 
+        flex-direction: column; 
+        align-items: stretch; 
+        padding: 10px 20px 20px; 
+        gap: 0;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+      }
+      .navlinks.active { display: flex; }
+      .navlinks a { 
+        padding: 15px 0; 
+        border-bottom: 1px solid #ffffff15; 
+        font-size: 14px;
+      }
+      .navlinks a + a { border-left: none; padding-left: 0; }
+      
+      .nav .btn { display: none; } 
+      .navlinks .btn-mobile { display: inline-flex; margin-top: 15px; background: #fff; color: var(--green); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; border-bottom: none; }
+
+      .footer-inner { padding: 20px 0; flex-wrap: wrap; justify-content: center; text-align: center; gap: 12px;}
     }
   </style>
 </head>
 <body>
-
-  <!-- HEADER DISAMAKAN DENGAN INDEX -->
   <div class="topline"></div>
-  <div class="utility">
-    <div class="wrap utility-inner">
-       
-      <div class="utility-right">
-        <span style="display:inline-flex; align-items:center; gap:7px; color:#52645e; font-size:11px;">🇮🇩 Bahasa Indonesia <span aria-hidden="true">⌄</span></span>
-        <span aria-hidden="true">⌕</span>
-      </div>
-    </div>
-  </div>
   <header>
     <div class="wrap nav">
       <a class="brand" href="index.html">
-        <span class="brandmark">IO</span>
+        <span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span>
         <span class="brandcopy"><strong>International Office</strong><span>UIN Sunan Ampel Surabaya</span></span>
       </a>
-      <nav class="navlinks">
-        <a href="index.html">Beranda</a>
+      
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+      <nav class="navlinks" id="navLinks">
+        <a href="index.html#beranda">Beranda</a>
         <a href="index.html#sop">SOP &amp; Layanan</a>
+        <a href="kerjasama-publik.html">Kerjasama</a>
         <a href="formsetneg.html">Form Pengajuan</a>
-        <a href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a>
+        <a href="https://uinsa.ac.id/international" target="_blank">Berita IO ↗</a>
+        <a href="index.html" class="btn btn-mobile">Kembali ke Beranda <span aria-hidden="true">←</span></a>
       </nav>
-      <a href="index.html" class="btn btn-primary">Kembali ke Beranda <span aria-hidden="true">←</span></a>
+      
+      <a href="index.html" class="btn">Kembali ke Beranda <span aria-hidden="true">←</span></a>
     </div>
   </header>
 
-  <!-- AREA FORM -->
   <main class="main-content">
-    <div class="wrap form-header">
+    <div class="form-header">
       <h2>Formulir Pengajuan Izin SETNEG</h2>
       <p>Silakan isi data di bawah ini dengan lengkap dan benar.</p>
     </div>
     
     <div class="iframe-container">
-      <!-- GANTI URL DI BAWAH INI DENGAN URL GAS KAMU YANG BARU -->
       <iframe 
         src="https://script.google.com/macros/s/AKfycbx4PwRaGHYubbOgzPkaYo4Uk1CMVa1quxy7frd1Qy_arOLEuXKDr5Wqfzxc2tqI-WOa/exec" 
         title="Formulir Pengajuan Izin SETNEG">
@@ -115,21 +132,26 @@
     </div>
   </main>
 
-  <!-- FOOTER DISAMAKAN DENGAN INDEX -->
   <footer>
     <div class="wrap footer-inner">
       <div class="footer-brand">
-        <span class="brandmark">IO</span>
+        <span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span>
         <strong>International Office · UIN Sunan Ampel Surabaya</strong>
       </div>
       <div class="footer-links">
         <a href="index.html#sop">SOP &amp; Layanan</a>
-        <a href="https://uinsa.ac.id/international" target="_blank" rel="noreferrer">Berita IO ↗</a>
+        <a href="https://uinsa.ac.id/international" target="_blank">Berita IO ↗</a>
         <a href="mailto:io@uinsby.ac.id">Kontak</a>
       </div>
       <span>© 2026 UINSA</span>
     </div>
   </footer>
 
+  <script>
+    function toggleMenu() {
+      const nav = document.getElementById('navLinks');
+      nav.classList.toggle('active');
+    }
+  </script>
 </body>
 </html>
