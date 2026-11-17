@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kerjasama Internasional — UINSA </title>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+
+  <style>
+    :root {
+      --green: #075b4b;
+      --green-dark: #063f36;
+      --gold: #e0a51b;
+      --ink: #1c2c28;
+      --muted: #687873;
+      --line: #e3eae7;
+      --canvas: #f7f9f8;
+      --shadow: 0 10px 30px rgba(21, 57, 47, .08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    
+    header { background: var(--green); padding: 20px; text-align: center; color: white; }
+    header h1 { font-size: 24px; margin-bottom: 5px; }
+    header p { font-size: 14px; color: #c9e0d8; }
+
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+
+    .map-wrapper {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      margin-bottom: 30px;
+    }
+    #map { height: 500px; width: 100%; z-index: 1; }
+    .map-footer {
+      padding: 15px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .request-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+    .request-card h2 { font-size: 20px; margin-bottom: 10px; color: var(--green-dark); }
+    .request-card p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    
+    .form-group { display: flex; justify-content: center; gap: 10px; max-width: 500px; margin: 0 auto; }
+    .form-group input {
+      flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none;
+    }
+    .form-group input:focus { border-color: var(--green); }
+    .form-group button {
+      padding: 12px 24px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    }
+    .form-group button:hover { background: var(--green-dark); }
+    
+    .message { margin-top: 15px; font-size: 13px; font-weight: 600; display: none; }
+    .msg-error { color: #c0392b; }
+    .msg-success { color: #27ae60; }
+
+    @media (max-width: 600px) {
+      .form-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Jejaring Kerjasama Internasional</h1>
+    <p>UIN Sunan Ampel Surabaya</p>
+  </header>
+
+  <div class="container">
+    
+    <div class="map-wrapper">
+      <div id="map"></div>
+      <div class="map-footer">
+        <span>🗺️ Peta Sebaran Mitra (OpenFreeMap)</span>
+        <span id="totalNegara">Memuat...</span>
+      </div>
+    </div>
+
+    <div class="request-card">
+      <h2>Ingin Melihat Data Detail?</h2>
+      <p>Minta laporan lengkap (Nama Kampus, Jenis Dokumen, Tanggal Berlaku) dalam format PDF melalui email.</p>
+      
+      <div class="form-group">
+        <input type="email" id="emailInput" placeholder="Masukkan email kampus (@uinsby.ac.id)">
+        <button id="btnKirim" onclick="mintaPDF()">Minta Laporan PDF</button>
+      </div>
+      
+      <div id="pesan" class="message"></div>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.20/leaflet-maplibre-gl.js"></script>
+
+  <script>
+    // 1. SETUP PETA
+    const map = L.map('map').setView([10, 105], 4); 
+
+    L.maplibreGL({
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      attribution: '© OpenFreeMap © OpenMapTiles © OpenStreetMap'
+    }).addTo(map);
+
+    // Koordinat UINSA Surabaya (Pusat)
+    const UINSA_COORD = [-7.3214, 112.7344];
+
+    // Marker UINSA (Kampus)
+    L.marker(UINSA_COORD, {
+      icon: L.divIcon({
+        className: 'uinsa-marker',
+        html: '<div style="background:#0a5c4a; color:white; padding:4px 8px; border-radius:6px; font-weight:700; font-size:12px; white-space:nowrap; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏛 UINSA</div>',
+        iconSize: [80, 30], iconAnchor: [40, 15]
+      })
+    }).addTo(map).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong>');
+
+    // 2. DATA NEGARA MITRA
+    const negaraMitra = [
+      { nama: "Malaysia", lat: 4.2105, lng: 101.9758, jumlah: 15 },
+      { nama: "Mesir", lat: 26.8206, lng: 30.8025, jumlah: 12 },
+      { nama: "Arab Saudi", lat: 23.8859, lng: 45.0792, jumlah: 8 },
+      { nama: "Thailand", lat: 15.8700, lng: 100.9925, jumlah: 5 },
+      { nama: "Jepang", lat: 36.2048, lng: 138.2529, jumlah: 3 },
+      { nama: "Australia", lat: -25.2744, lng: 133.7751, jumlah: 4 }
+    ];
+
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: '<div style="width: 16px; height: 16px; background: #075b4b; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+      iconSize: [16, 16], iconAnchor: [8, 8]
+    });
+
+    // 3. FUNGSI MEMBUAT GARIS LENGKUNG (ARC)
+    function getArcPoints(start, end, numPoints = 40) {
+      const points = [];
+      const [lat1, lng1] = start;
+      const [lat2, lng2] = end;
+      
+      const midLat = (lat1 + lat2) / 2;
+      const midLng = (lng1 + lng2) / 2;
+      const dist = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
+      
+      // Offset lengkungan (makin jauh, makin melengkung)
+      const offset = dist * 0.25;
+      const ctrlLat = midLat + offset;
+      const ctrlLng = midLng;
+      
+      for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
+        const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * ctrlLng + t * t * lng2;
+        points.push([lat, lng]);
+      }
+      return points;
+    }
+
+    // 4. GAMBAR GARIS & MARKER
+    let listNegara = [];
+    negaraMitra.forEach(n => {
+      // Gambar garis melengkung dari UINSA ke Negara
+      const arcPoints = getArcPoints(UINSA_COORD, [n.lat, n.lng]);
+      L.polyline(arcPoints, {
+        color: '#e0a51b', // Warna emas (gold) agar kontras
+        weight: 2,
+        opacity: 0.7,
+        dashArray: '5, 5' // Garis putus-putus
+      }).addTo(map);
+
+      // Pasang marker di negara
+      const marker = L.marker([n.lat, n.lng], { icon: customIcon }).addTo(map);
+      marker.bindPopup(`
+        <div style="text-align:center; font-family: sans-serif;">
+          <strong style="font-size:14px; color:#075b4b;">${n.nama}</strong><br>
+          <span style="font-size:12px; color:#6b7280;">${n.jumlah} Mitra Terdaftar</span>
+        </div>
+      `);
+      
+      listNegara.push(n.nama);
+    });
+
+    document.getElementById('totalNegara').innerHTML = `Menampilkan <strong>${listNegara.length} Negara</strong> Mitra`;
+
+    // 5. FORM REQUEST (SIMULASI)
+    function mintaPDF() {
+      const email = document.getElementById('emailInput').value;
+      const btn = document.getElementById('btnKirim');
+      const pesan = document.getElementById('pesan');
+
+      pesan.style.display = 'none';
+
+      if (!email.endsWith('@uinsby.ac.id') && !email.endsWith('@uinsa.ac.id')) {
+        pesan.textContent = '❌ Hanya email resmi UINSA yang diizinkan.';
+        pesan.className = 'message msg-error';
+        pesan.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Mengirim...';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Minta Laporan PDF';
+        pesan.textContent = '✅ Sukses! Laporan PDF telah dikirim ke ' + email;
+        pesan.className = 'message msg-success';
+        pesan.style.display = 'block';
+        document.getElementById('emailInput').value = '';
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
