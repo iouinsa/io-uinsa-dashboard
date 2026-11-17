@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kerjasama Internasional — UINSA </title>
+  <title>Kerjasama Internasional — UINSA</title>
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
@@ -12,73 +12,73 @@
     :root {
       --green: #075b4b;
       --green-dark: #063f36;
+      --green-soft: #e9f3ef;
       --gold: #e0a51b;
       --ink: #1c2c28;
       --muted: #687873;
       --line: #e3eae7;
+      --paper: #fff;
       --canvas: #f7f9f8;
-      --shadow: 0 10px 30px rgba(21, 57, 47, .08);
+      --shadow: 0 18px 50px rgba(21, 57, 47, .09);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
-    
-    header { background: var(--green); padding: 20px; text-align: center; color: white; }
-    header h1 { font-size: 24px; margin-bottom: 5px; }
-    header p { font-size: 14px; color: #c9e0d8; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: inherit; text-decoration: none; }
 
-    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+    /* ================= HEADER & NAV (DARI INDEX) ================= */
+    .topline { height: 5px; background: linear-gradient(90deg, var(--green), #16866d 72%, var(--gold) 72%); }
+    .wrap { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+    header.site-header { background: var(--green); border-bottom: 1px solid #ffffff25; }
+    .nav { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 245px; }
+    .brandmark { width: auto; height: auto; background: transparent; display: flex; align-items: center; }
+    .brandmark img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); }
+    .brandcopy strong { display: block; font-size: 14px; letter-spacing: -.02em; color: #fff; }
+    .brandcopy span { color: #c9e0d8; display: block; font-size: 11px; margin-top: 3px; }
+    .navlinks { display: flex; align-items: center; gap: 22px; color: #fff; font-size: 12px; font-weight: 600; }
+    .navlinks a + a { border-left:1px solid #64a08a; padding-left:19px; }
+    .navlinks a:hover { color:#e7c65f; }
+    .btn { border: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 700; transition: transform .18s, box-shadow .18s, background .18s; }
+    .nav .btn { color:var(--green); background:#fff; box-shadow:none; padding: 10px 15px; text-decoration: none; }
 
-    .map-wrapper {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--line);
-      margin-bottom: 30px;
-    }
+    /* ================= KONTEN KERJASAMA ================= */
+    .page-title { background: #fff; padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--line); margin-bottom: 30px; }
+    .page-title h1 { font-size: 28px; color: var(--green-dark); margin-bottom: 8px; }
+    .page-title p { font-size: 14px; color: var(--muted); }
+
+    .container { max-width: 1000px; margin: 0 auto 50px auto; padding: 0 20px; }
+
+    .map-wrapper { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); margin-bottom: 30px; }
     #map { height: 500px; width: 100%; z-index: 1; }
-    .map-footer {
-      padding: 15px 20px;
-      background: #f8fafc;
-      border-top: 1px solid var(--line);
-      font-size: 13px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-    }
+    .map-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
 
-    .request-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--line);
-      text-align: center;
-    }
-    .request-card h2 { font-size: 20px; margin-bottom: 10px; color: var(--green-dark); }
-    .request-card p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    .request-card { background: #fff; border-radius: 12px; padding: 40px 30px; box-shadow: var(--shadow); border: 1px solid var(--line); text-align: center; }
+    .request-card h2 { font-size: 22px; margin-bottom: 10px; color: var(--green-dark); }
+    .request-card p { font-size: 14px; color: var(--muted); margin-bottom: 25px; }
     
     .form-group { display: flex; justify-content: center; gap: 10px; max-width: 500px; margin: 0 auto; }
-    .form-group input {
-      flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none;
-    }
-    .form-group input:focus { border-color: var(--green); }
-    .form-group button {
-      padding: 12px 24px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
-    }
+    .form-group input { flex: 1; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; transition: border .2s; }
+    .form-group input:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+    .form-group button { padding: 12px 24px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background .2s; }
     .form-group button:hover { background: var(--green-dark); }
+    .form-group button:disabled { background: var(--muted); cursor: not-allowed; }
     
     .message { margin-top: 15px; font-size: 13px; font-weight: 600; display: none; }
     .msg-error { color: #c0392b; }
     .msg-success { color: #27ae60; }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
+      .navlinks { display: none; }
       .form-group { flex-direction: column; }
     }
   </style>
 </head>
-    <div class="topline"></div>
-  <header>
+<body>
+
+  <!-- HEADER BARU -->
+  <div class="topline"></div>
+  <header class="site-header">
     <div class="wrap nav">
       <a class="brand" href="index.html">
         <span class="brandmark"><img src="https://raw.githubusercontent.com/iouinsa/io-uinsa-dashboard/main/assets/io.png" alt="Logo IO"></span>
@@ -94,13 +94,14 @@
       <a href="index.html" class="btn">Masuk Pengelola <span aria-hidden="true">↗</span></a>
     </div>
   </header>
-<body>
 
-  <header>
+  <!-- JUDUL HALAMAN -->
+  <div class="page-title">
     <h1>Jejaring Kerjasama Internasional</h1>
     <p>UIN Sunan Ampel Surabaya</p>
-  </header>
+  </div>
 
+  <!-- KONTEN UTAMA -->
   <div class="container">
     
     <div class="map-wrapper">
@@ -113,10 +114,10 @@
 
     <div class="request-card">
       <h2>Ingin Melihat Data Detail?</h2>
-      <p>Minta laporan lengkap (Nama Kampus, Jenis Dokumen, Tanggal Berlaku) dalam format PDF melalui email.</p>
+      <p>Minta laporan lengkap (Nama Kampus, Jenis Dokumen, Tanggal Berlaku) dalam format PDF melalui email kampus Anda.</p>
       
       <div class="form-group">
-        <input type="email" id="emailInput" placeholder="Masukkan email kampus (@uinsby.ac.id)">
+        <input type="email" id="emailInput" placeholder="Masukkan email (@uinsby.ac.id / @uinsa.ac.id)">
         <button id="btnKirim" onclick="mintaPDF()">Minta Laporan PDF</button>
       </div>
       
@@ -130,7 +131,9 @@
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.20/leaflet-maplibre-gl.js"></script>
 
   <script>
+    // ==========================================
     // 1. SETUP PETA
+    // ==========================================
     const map = L.map('map').setView([10, 105], 4); 
 
     L.maplibreGL({
@@ -138,10 +141,8 @@
       attribution: '© OpenFreeMap © OpenMapTiles © OpenStreetMap'
     }).addTo(map);
 
-    // Koordinat UINSA Surabaya (Pusat)
     const UINSA_COORD = [-7.3214, 112.7344];
 
-    // Marker UINSA (Kampus)
     L.marker(UINSA_COORD, {
       icon: L.divIcon({
         className: 'uinsa-marker',
@@ -150,7 +151,9 @@
       })
     }).addTo(map).bindPopup('<strong>UIN Sunan Ampel Surabaya</strong>');
 
-    // 2. DATA NEGARA MITRA
+    // ==========================================
+    // 2. DATA NEGARA MITRA (Hardcoded dulu)
+    // ==========================================
     const negaraMitra = [
       { nama: "Malaysia", lat: 4.2105, lng: 101.9758, jumlah: 15 },
       { nama: "Mesir", lat: 26.8206, lng: 30.8025, jumlah: 12 },
@@ -166,7 +169,6 @@
       iconSize: [16, 16], iconAnchor: [8, 8]
     });
 
-    // 3. FUNGSI MEMBUAT GARIS LENGKUNG (ARC)
     function getArcPoints(start, end, numPoints = 40) {
       const points = [];
       const [lat1, lng1] = start;
@@ -176,7 +178,6 @@
       const midLng = (lng1 + lng2) / 2;
       const dist = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
       
-      // Offset lengkungan (makin jauh, makin melengkung)
       const offset = dist * 0.25;
       const ctrlLat = midLat + offset;
       const ctrlLng = midLng;
@@ -190,19 +191,16 @@
       return points;
     }
 
-    // 4. GAMBAR GARIS & MARKER
     let listNegara = [];
     negaraMitra.forEach(n => {
-      // Gambar garis melengkung dari UINSA ke Negara
       const arcPoints = getArcPoints(UINSA_COORD, [n.lat, n.lng]);
       L.polyline(arcPoints, {
-        color: '#e0a51b', // Warna emas (gold) agar kontras
+        color: '#e0a51b',
         weight: 2,
         opacity: 0.7,
-        dashArray: '5, 5' // Garis putus-putus
+        dashArray: '5, 5'
       }).addTo(map);
 
-      // Pasang marker di negara
       const marker = L.marker([n.lat, n.lng], { icon: customIcon }).addTo(map);
       marker.bindPopup(`
         <div style="text-align:center; font-family: sans-serif;">
@@ -216,32 +214,59 @@
 
     document.getElementById('totalNegara').innerHTML = `Menampilkan <strong>${listNegara.length} Negara</strong> Mitra`;
 
-    // 5. FORM REQUEST (SIMULASI)
-    function mintaPDF() {
-      const email = document.getElementById('emailInput').value;
+    // ==========================================
+    // 3. FUNGSI MINTA PDF (KONEKSI KE GAS)
+    // ==========================================
+    // GANTI URL DI BAWAH INI DENGAN URL WEB APP GAS KAMU!
+    const GAS_URL = 'URL_GAS_KAMU_DISINI'; 
+
+    async function mintaPDF() {
+      const email = document.getElementById('emailInput').value.trim();
       const btn = document.getElementById('btnKirim');
       const pesan = document.getElementById('pesan');
 
+      // Reset pesan
       pesan.style.display = 'none';
+      pesan.className = 'message';
 
+      // Validasi email
       if (!email.endsWith('@uinsby.ac.id') && !email.endsWith('@uinsa.ac.id')) {
         pesan.textContent = '❌ Hanya email resmi UINSA yang diizinkan.';
-        pesan.className = 'message msg-error';
+        pesan.classList.add('msg-error');
         pesan.style.display = 'block';
         return;
       }
 
+      // Ubah tombol jadi loading
       btn.disabled = true;
-      btn.textContent = 'Mengirim...';
+      btn.textContent = 'Memproses...';
 
-      setTimeout(() => {
+      try {
+        // Tembak API Google Apps Script
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ email: email })
+        });
+
+        const result = await response.json();
+
+        if (result.ok) {
+          pesan.textContent = '✅ Sukses! Laporan PDF telah dikirim ke ' + email;
+          pesan.classList.add('msg-success');
+          document.getElementById('emailInput').value = ''; // Kosongkan input
+        } else {
+          throw new Error(result.message || 'Terjadi kesalahan di server.');
+        }
+
+      } catch (error) {
+        pesan.textContent = '❌ Gagal: ' + error.message;
+        pesan.classList.add('msg-error');
+      } finally {
+        // Kembalikan tombol ke semula
         btn.disabled = false;
         btn.textContent = 'Minta Laporan PDF';
-        pesan.textContent = '✅ Sukses! Laporan PDF telah dikirim ke ' + email;
-        pesan.className = 'message msg-success';
         pesan.style.display = 'block';
-        document.getElementById('emailInput').value = '';
-      }, 1500);
+      }
     }
   </script>
 </body>
